@@ -1,0 +1,58 @@
+SERVER
+
+
+COMMANDS
+
+  *implementation of commands:
+
+      KICK - Eject a client from the channel
+      INVITE - Invite a client to a channel
+      TOPIC - Change or view the channel topic
+      MODE - Change the channel's mode:
+         i: Set/remove Invite-only channel
+         t: Set/remove the restrictions of the TOPIC command to channel operators
+         k: Set/remove the channel key (password)
+         o: Give/take channel operator privilege
+         l: Set/remove the user limit to channel
+
+  *global authentication wall (UNAUTHENTICATED, AUTHENTICATED, REGISTERED)
+
+CHANNELS
+  
+  *list of members with permissions
+  *flow of messages (broadcasting to all members)
+  *control access (open to all, invite only, password protected)
+
+CLIENT (user)
+
+  *class with information about the users
+
+OTHER
+
+  CLIENTS to use(program):
+
+    *Halloy: 
+		+ cross-platform,
+		+ easy to use/setup, 
+		- needs cargo to run at 42
+		- less functionality
+
+    *irrsi, WeeChat:
+		+ lightweight
+		+ doesnt need cargo?
+		- needs more setup
+		- terminal-based
+    
+    *HexChat:
+		+ GUI
+		+ multi-platform
+		- more complex/bigger
+
+    *Quassel IRC, TheLounge:
+		+/- web-based (not dependent on OS)
+
+
+    
+
+
+
