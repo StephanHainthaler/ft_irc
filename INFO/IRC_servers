@@ -1,23 +1,29 @@
 IRC         Internet Relay Standard 
 
-It's a basic real-time chat server
+IRC (Internet Relay Chat) uses a client-server architecture:
+Clients connect to a central server to send/receive real-time messages.
+All communication is relayed by the server, allowing users in the same channel to communicate.
 
-General idea
-Standard client-server setup: Run a client on your PC, connect client to a server and then everyone else connected to this server can communicate with each other in real-time.
-"Relayed" by the server. 
-It is independent from any company, which is why many people perfer to use it. Even during blackout in the past, the news companies used IRC to communicate.
+IRC is decentralized and not controlled by any single company.
 
-To set it up
-could use virtual private server
-have to specify which ports to listen at
-which user classes to specify - privileges, ...
+Features to consider: 
+    Accepting multiple client connections
+    Relaying messages between clients
+    Managing channels and user sessions
+    No message history is stored on the server — it's a real-time communication platform.
+    "Non-blocking socket server" to handle real-time client communication
 
-No info is stored at server level
+Clients connect to the server using commands:
+    /join channelname       join or create a channel
+    /nick username          set or change nickname
 
-/join #servername       to connect to the server
-/nick username          to specify username
+The server has to listen on specific ports (usually TCP port 6667).
 
-can send files directly from one user to another without passing through the server 
-There is a sub-IRC protocol called DCC (Direct Client To Client)
-IRC server knows IP of user1 and IP of user2 => if both want to exchange info then it just passes it along instead of having to upload the file to the server.
+Define user classes — e.g., regular users vs. operators, with varying privileges.
+
+
+There is a sub-IRC protocol called  DCC (Direct Client-to-Client) is a sub-protocol used for:
+    Sending files or private chats directly between clients, bypassing the server
+    The server only helps exchange IP addresses between the two clients
+
 
