@@ -23,4 +23,9 @@ HTTP        - application protocols
             HTTPS is the secure version on TCP port 443 
 
 SMTP        E-Mail transfer protocol, which uses TCP port 25 
+
 SNMP        Network management protocol using UDP port 161
+
+SSL         Secure sockets Layer = security protocol used for end-to-end encryption
+
+TLS         Transport Layer Security = security protocol used for end-to-end encryption

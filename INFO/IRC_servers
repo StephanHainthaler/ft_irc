@@ -1,0 +1,23 @@
+IRC         Internet Relay Standard 
+
+It's a basic real-time chat server
+
+General idea
+Standard client-server setup: Run a client on your PC, connect client to a server and then everyone else connected to this server can communicate with each other in real-time.
+"Relayed" by the server. 
+It is independent from any company, which is why many people perfer to use it. Even during blackout in the past, the news companies used IRC to communicate.
+
+To set it up
+could use virtual private server
+have to specify which ports to listen at
+which user classes to specify - privileges, ...
+
+No info is stored at server level
+
+/join #servername       to connect to the server
+/nick username          to specify username
+
+can send files directly from one user to another without passing through the server 
+There is a sub-IRC protocol called DCC (Direct Client To Client)
+IRC server knows IP of user1 and IP of user2 => if both want to exchange info then it just passes it along instead of having to upload the file to the server.
+
