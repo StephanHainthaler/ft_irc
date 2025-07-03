@@ -19,6 +19,7 @@ close()
     Example: 
     close(client_fd);
 
+
 setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
     configure how the socket behaves — for example, allowing it to reuse an address or set timeouts — by changing options managed by the operating system
     Commonly used with SO_REUSEADDR to allow the reuse of local addresses (e.g., binding again to a recently closed port)
