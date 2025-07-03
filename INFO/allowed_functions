@@ -1,0 +1,126 @@
+send(client_fd, buffer, len, 0);
+    Sends data to a connected socket.
+    Returns the number of bytes actually sent (may be less than requested)
+    When using non-blocking sockets, may send fewer bytes; you should loop to send the remaining data.
+    Returns -1 on error
+    Example: 
+    const char* msg = "Hello, IRC!\r\n";
+    ssize_t total_sent = 0;
+    ssize_t msg_len = strlen(msg);
+
+    while (total_sent < msg_len) 
+    {
+        ssize_t sent = send(client_fd, msg + total_sent, msg_len - total_sent, 0);
+        if (sent == -1) 
+        {
+            // Handle error (e.g., EAGAIN for non-blocking)
+            break;
+        }
+        total_sent += sent;
+    }
+
+
+recv(client_fd, buffer, sizeof(buffer), 0);
+    Receives data from a connected socket.
+    Returns number of bytes received.
+    Returns 0 when the connection is closed and -1 on error (e.g., would block if non-blocking)
+
+    Example: 
+    char buffer[512];
+    ssize_t bytes_received = recv(client_fd, buffer, sizeof(buffer), 0);
+    if (bytes_received > 0) 
+        // Process received data in buffer[0..bytes_received-1]
+    else if (bytes_received == 0)
+        // Connection closed by client
+    else
+        // Error handling (e.g., EAGAIN if non-blocking)
+
+
+signal(SIGINT, handle_sigint);
+    Sets up a signal handler (like for SIGINT).
+    Not safe for complex logic but simple for things like Ctrl+C interrupts
+    Returns the previous handler on success, SIG_ERR on error.
+
+    Example:
+    void handle_sigint(int signum) 
+    {
+        std::cout << "Interrupt signal received.\n";
+        // Simple cleanup or flag setting
+    }
+    signal(SIGINT, handle_sigint);  // Register handler for Ctrl+C
+
+
+sigaction(SIGINT, &sa, NULL);
+    More robust signal handling than signal()
+    Can block signals, restart syscalls, etc.
+    Returns 0 on success, -1 on error
+
+    Example: 
+    void handle_sigint(int signum) 
+    {
+        std::cout << "Caught SIGINT, shutting down..." << std::endl;
+        // Graceful cleanup here
+    }
+    struct sigaction sa;
+    sa.sa_handler = handle_sigint;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESTART;  // Optional: restart syscalls like poll()
+    sigaction(SIGINT, &sa, NULL);  // Handle Ctrl+C
+
+
+lseek(fd, 0, SEEK_END);
+    Moves the file offset of an open fd - often used to seek to the end of a file before writing logs or appending data
+    Not used with sockets, but files
+    
+    Example: 
+    int offset = lseek(fd, 0, SEEK_END);  // Move to end of file
+    write(fd, "Log message\n", 12);       // Append log
+
+fstat(fd, &info);
+    retrieves metadata (info) about an open file descriptor, like whether it points to a socket, a regular file, a directory, etc.
+    Check the type of a file descriptor (e.g., confirm it’s a socket and not a regular file)
+
+    Field	    Meaning
+    st_mode	    File type + permission bits
+    st_size	    Size in bytes
+    st_ino	    Inode number
+    st_mtime	Last modified time
+
+    Example: 
+    struct stat info;
+    int result = fstat(fd, &info);
+    if (fstat(fd, &info) == 0) 
+    {
+        if (S_ISSOCK(info.st_mode)) // Is a socket?
+            std::cout << "This is a socket!\n";
+        else // Is it a regular file?
+            std::cout << "This is not a socket.\n";
+    }
+
+fcntl(sockfd, F_SETFL, O_NONBLOCK);
+    Modifies file/socket descriptor flags
+    Used to set non-blocking mode
+
+    Use Case	        Description
+    F_GETFL	            Get current flags (e.g. read-only, non-blocking, etc.)
+    F_SETFL	            Set new flags — like turning on O_NONBLOCK
+    F_SETFD / F_GETFD	Modify file descriptor flags (e.g. FD_CLOEXEC)
+    F_DUPFD	            Duplicate a file descriptor
+
+    Example: 
+    int flags = fcntl(sockfd, F_GETFL, 0);        // Get current flags
+    fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);   // Set non-blocking mode
+
+
+poll(fds, nfds, timeout);
+    Monitors multiple fds for I/O readiness to check if a socket is ready to read
+    Returns count of ready descriptors - it updates their revents field of each passed fd and to indicate their current Input/Output status
+    Essential for non-blocking IRC servers, because it monitors multiple client sockets simultaneously for readiness to read or write, enabling real-time communication without using blocking calls or multiple threads
+    
+    Example: 
+    pollfd fds[1];
+    fds[0].fd = client_fd;
+    fds[0].events = POLLIN; // ask: is it ready to read?
+    poll(fds, 1, -1); // wait for something to happen
+    if (fds[0].revents & POLLIN)
+        // Yes! You can safely call recv() now
