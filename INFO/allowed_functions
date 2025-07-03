@@ -1,3 +1,273 @@
+socket(AF_INET, SOCK_STREAM, 0);
+    Creates a new socket = endpoint for sending/receiving data over a network
+    Returns a file descriptor, or -1 on error
+    Use AF_INET for IPv4, SOCK_STREAM for TCP (connection-based)
+
+    Example: 
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);  // Create a TCP/IPv4 socket
+    if (sockfd < 0) 
+    {
+        std::cerr << "Failed to create socket" << std::endl;
+        return 1;
+    }
+
+
+close()
+    Closes a file descriptor (socket or file)
+    Returns 0 on success
+
+    Example: 
+    close(client_fd);
+
+setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+    configure how the socket behaves — for example, allowing it to reuse an address or set timeouts — by changing options managed by the operating system
+    Commonly used with SO_REUSEADDR to allow the reuse of local addresses (e.g., binding again to a recently closed port)
+    Helps avoid the "Address already in use" error when restarting a server quickly - 
+    use this before calling bind() when creating a server, especially during development or quick restarts
+    Returns 0 on success, -1 on failure
+
+    Example:
+    int yes = 1;  // Enable option
+    
+    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0) // Set socket option to allow address reuse
+    {
+        std::cerr << "setsockopt failed" << std::endl;
+        return 1;
+    }
+
+
+getsockname(sockfd, (sockaddr*)&addr, &len);
+    Retrieves the local address (IP and port) assigned to a socket
+    Useful after binding to port 0 (which tells the OS to choose a free port), to find out which port was actually assigned
+    Fills in a sockaddr structure with the local socket info
+    Returns 0 on success, -1 on failure
+
+    Example:
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0); // Create a TCP socket using IPv4
+    if (sockfd < 0) 
+    {
+        std::cerr << "Failed to create socket" << std::endl;
+        return 1;
+    }
+
+    // Set up the sockaddr_in struct for binding
+    struct sockaddr_in addr;
+    addr.sin_family = AF_INET; // Use IPv4
+    addr.sin_addr.s_addr = INADDR_ANY; // Bind to all local interfaces (0.0.0.0)
+    addr.sin_port = 0; // Let the OS choose an available port
+    
+    // Bind the socket to the specified address and port
+    if (bind(sockfd, (struct sockaddr*)&addr, sizeof(addr)) < 0) 
+    {
+        std::cerr << "Bind failed" << std::endl;
+        return 1;
+    }
+
+    // Get the socket's local address after binding
+    socklen_t len = sizeof(addr);  // Variable to store the size of the address struct
+    if (getsockname(sockfd, (struct sockaddr*)&addr, &len) == -1)
+        std::cerr << "getsockname failed" << std::endl;  // Error retrieving socket info
+    else
+        std::cout << "Assigned port: " << ntohs(addr.sin_port) << std::endl; // Display the port number assigned by the OS (converted from network byte order)
+
+
+getprotobyname("tcp")
+    Gets the protocol number by name (e.g., "tcp" or "udp")
+    Returns a pointer to a protoent struct containing protocol information
+    Useful when you need the protocol number to pass to functions like socket()
+
+    Example: 
+    struct protoent *proto = getprotobyname("tcp");
+    if (proto == NULL)
+        std::cerr << "Protocol not found" << std::endl;
+    else
+        int protocol_number = proto->p_proto;
+        std::cout << "TCP protocol number: " << protocol_number << std::endl;
+        // Can be used like: socket(AF_INET, SOCK_STREAM, protocol_number);
+
+
+
+gethostbyname("irc.example.com")
+    Resolves a hostname to an IPv4 address
+    Returns a pointer to a hostent structure on success, or NULL on failure
+    Deprecated: use getaddrinfo() instead for better IPv4/IPv6 support - it is not thread-safe and limited to IPv4
+    
+    Example: 
+    struct hostent *host = gethostbyname("irc.example.com");
+    if (host == NULL) 
+        std::cerr << "gethostbyname failed" << std::endl;
+    else
+    {
+        char ip[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, host->h_addr_list[0], ip, sizeof(ip));
+        std::cout << "IP address: " << ip << std::endl;
+    }
+
+
+getaddrinfo("localhost", "6667", &hints, &res);
+    Translates a hostname and port into one or more network address structures
+    Supports both IPv4 and IPv6, replacing older functions like gethostbyname()
+    Returns 0 on success and fills a linked list of addrinfo structs via a pointer argument
+    Used to prepare socket address info for socket(), connect(), or bind()
+
+    Example:
+    struct addrinfo hints, *res;
+    memset(&hints, 0, sizeof(hints)); // Initialize the hints structure to zero to avoid garbage values
+    hints.ai_family = AF_UNSPEC;      // specify that we accept any IP version (IPv4 or IPv6)
+    hints.ai_socktype = SOCK_STREAM;  // specify that we want a TCP stream socket
+
+    // Resolve the hostname ("localhost") and service ("6667") into address info structures
+    // 'res' will point to a linked list of results that match the criteria set in hints
+    int status = getaddrinfo("localhost", "6667", &hints, &res);
+
+    if (status != 0) 
+    {
+        std::cerr << "getaddrinfo error: " << gai_strerror(status) << std::endl;
+        return 1;
+    }
+
+// Use 'res' to create socket/connect...
+
+freeaddrinfo(res);  // Free memory when done
+
+
+freeaddrinfo()
+    Frees the dynamically allocated memory returned by getaddrinfo() => always call after using getaddrinfo().
+    
+    Example: 
+    struct addrinfo *res;
+    freeaddrinfo(res);
+
+
+connect(sockfd, (sockaddr*)&addr, sizeof(addr))
+    Initiates a connection from a client socket to a remote server
+    Requires a socket file descriptor and the server’s address (sockaddr)
+    Returns 0 on successful connection, -1 on error
+    Blocks unless the socket is set to non-blocking mode
+
+    Example:
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);  // Create TCP socket
+    struct sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(6667); // Server port in network byte order
+    inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr); // Server IP address
+
+    int result = connect(sockfd, (struct sockaddr*)&addr, sizeof(addr));
+    if (result == 0)
+        printf("Connected to server successfully.\n");
+    else
+        perror("connect");
+
+
+
+bind()
+    Binds a socket to an IP and port.
+    Must be done before listening.
+    Returns -1 on failure.
+    Example: bind(sockfd, (sockaddr*)&addr, sizeof(addr))
+
+
+listen(sockfd, SOMAXCONN);
+    Marks a bound socket as passive, meaning it will be used to accept incoming connection requests
+    Must be called after bind() and before accept()
+    The second argument specifies the maximum number of pending connections in the queue (use SOMAXCONN for the system-defined max)
+    Returns 0 on success, -1 on error
+
+    Example:
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);      // Create TCP socket
+    // Bind the socket to an IP and port here (not shown)
+    listen(sockfd, SOMAXCONN);                         // Mark the socket as listening for connections
+    // Now the socket can accept incoming connections using accept()
+
+
+accept(sockfd, NULL, NULL);
+    Accepts an incoming connection on a listening socket
+    Returns a new socket file descriptor for communicating with the connected client -
+    the original socket remains open to accept more connections.
+    Blocks unless the listening socket is set to non-blocking mode
+    Used in server-side code after listen()
+
+    Example:
+    int client_fd = accept(sockfd, NULL, NULL);  // Accept a new connection (no client info needed)
+    // Now `client_fd` is a new socket used to communicate with that specific client.
+    // `sockfd` remains open to accept additional connections.
+    if (client_fd == -1) 
+    {
+        perror("accept");
+        // Handle the error (e.g., would-block if non-blocking)
+    }
+
+
+htons()
+    Converts a 16-bit value (short) from host byte order to network byte order
+    Used for setting port numbers in socket structures before binding or connecting
+    Reverse of ntohs()
+
+    Example: 
+    struct sockaddr_in addr;               // Define a socket address structure (IPv4)
+    addr.sin_family = AF_INET;            // Set the address family to IPv4
+    addr.sin_port = htons(6667);          // Convert port 6667 to network byte order and assign
+    addr.sin_addr.s_addr = INADDR_ANY;    // Accept connections on any local IP address
+
+
+ntohs()
+    Converts a 32-bit integer (e.g. IP address) from network to host byte order.
+    used when reading port numbers received over the network
+    Reverse of htons().
+
+    Example: 
+    // Read and print the local port in host byte order
+    uint16_t network_port = addr.sin_port;     // Get the port in network byte order
+    uint16_t host_port = ntohs(network_port);  // Convert it to host byte order
+    printf("Listening on port: %u\n", host_port);
+
+
+
+htonl()
+    Converts long (IP) from host to network byte order.
+    Ensures big-endian format for networks.
+    Reverse of ntohl()
+
+    Example1: 
+    inet_addr("127.0.0.1") == htonl(0x7F000001);
+
+    Example2:
+    uint32_t ip_host = 0x7F000001; // 127.0.0.1
+    uint32_t ip_net = htonl(ip_host);
+    printf("Network-order IP: 0x%X\n", ip_net);
+
+
+ntohl(addr.sin_addr.s_addr);
+    Converts long from network to host byte order.
+    Reverse of htonl().
+    Used when reading IP addresses from sockets / over the network
+
+    Example: 
+    uint32_t raw_ip = addr.sin_addr.s_addr; // Get the raw IP address from the sockaddr_in structure
+    uint32_t host_ip = ntohl(raw_ip);
+    printf("Host-order IP (as integer): %u\n", host_ip);
+
+
+inet_addr("127.0.0.1");
+    Converts an IPv4 address string (e.g., "127.0.0.1") to a binary IP address (in_addr_t in network byte order)
+    Returns INADDR_NONE on error (invalid IP string)
+
+    Example:
+    struct sockaddr_in addr;
+    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+
+inet_ntoa(addr.sin_addr);
+    Converts binary IP to string.
+    Returns static char* (pointer to a static buffer) — not thread-safe (subsequent calls overwrite the buffer)
+    
+    Example: 
+    struct sockaddr_in addr;
+    // addr.sin_addr set earlier
+    char* ip_str = inet_ntoa(addr.sin_addr);
+    printf("IP address: %s\n", ip_str);
+
+
 send(client_fd, buffer, len, 0);
     Sends data to a connected socket.
     Returns the number of bytes actually sent (may be less than requested)
