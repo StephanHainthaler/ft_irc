@@ -1,6 +1,11 @@
-SERVER
+SERVER (name max. 63 characters)
 
-	protocols:
+	#services:
+		client locator (via the client protocol [IRC-CLIENT])
+		message relaying 
+		channel hosting and management (following specific rules [IRC-CHAN])
+
+	#protocols:
 		RFC 2810
 		RFC 2811
 		RFC 2812
@@ -10,7 +15,7 @@ SERVER
 
 COMMANDS
 
-  *implementation of commands:
+  #implementation of commands:
 
       KICK - Eject a client from the channel
       INVITE - Invite a client to a channel
@@ -22,40 +27,50 @@ COMMANDS
          o: Give/take channel operator privilege
          l: Set/remove the user limit to channel
 
-  *global authentication wall (UNAUTHENTICATED, AUTHENTICATED, REGISTERED)
+  #global authentication wall (UNAUTHENTICATED, AUTHENTICATED, REGISTERED)
 
 CHANNELS
   
-  *list of members with permissions
-  *flow of messages (broadcasting to all members)
-  *control access (open to all, invite only, password protected)
+	#list of members with permissions
+	#flow of messages (broadcasting to all members)
+	#control access (open to all, invite only, password protected)
 
-CLIENT (user)
+CLIENT (class with information about the users)
 
-  *class with information about the users
+	#two types of users:
+		-operators
+		-regular users
+	#nickname: max. 9 characters
+	#netwide unique identifier
+	#which server client is connected to
+
+
+
+	
+	
 
 OTHER
 
   CLIENTS to use(program):
 
-    *Halloy: 
+    #Halloy: 
 		+ cross-platform,
 		+ easy to use/setup, 
 		- needs cargo to run at 42
 		- less functionality
 
-    *irrsi, WeeChat:
+    #irrsi, WeeChat:
 		+ lightweight
 		+ doesnt need cargo?
 		- needs more setup
 		- terminal-based
     
-    *HexChat:
+    #HexChat:
 		+ GUI
 		+ multi-platform
 		- more complex/bigger
 
-    *Quassel IRC, TheLounge:
+    #Quassel IRC, TheLounge:
 		+/- web-based (not dependent on OS)
 
 
