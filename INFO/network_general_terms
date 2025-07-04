@@ -2,10 +2,9 @@
 
 Host        general term for a computer 
 
-Client      program that connects to an IRC server so you can chat with other people
+Client      program that connects to a server so you can chat with other people
             It’s what you use to send messages, join channels, and interact with the server
-            IRC client actions:
-            open a socket, connect to server, send commands in textformat, read and display server responses
+            a client can.. open a socket, connect to server, send commands in textformat, read and display server responses
             - hexchat or irssi?
     
 Network     group of hosts
