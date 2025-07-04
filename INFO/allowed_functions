@@ -6,10 +6,7 @@ socket(AF_INET, SOCK_STREAM, 0)
     Example: 
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);  // Create a TCP/IPv4 socket
     if (sockfd < 0) 
-    {
-        std::cerr << "Failed to create socket" << std::endl;
-        return 1;
-    }
+        std::cerr << "Error. Failed to create socket." << std::endl;
 
 
 close(fd)
@@ -31,10 +28,7 @@ setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) // port will be 
     int yes = 1;
     
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0) // set socket option to allow address reuse
-    {
-        std::cerr << "setsockopt failed" << std::endl;
-        return 1;
-    }
+        std::cerr << "Error. Failed to configure socket." << std::endl;
 
 
 getsockname(sockfd, (sockaddr*)&addr, &len)
@@ -46,10 +40,7 @@ getsockname(sockfd, (sockaddr*)&addr, &len)
     Example:
     int sockfd = socket(AF_INET, SOCK_STREAM, 0); // Create a TCP socket using IPv4
     if (sockfd < 0) 
-    {
-        std::cerr << "Failed to create socket" << std::endl;
-        return 1;
-    }
+        std::cerr << "Error. Failed to create socket." << std::endl;
 
     // Set up the sockaddr_in struct for binding
     struct sockaddr_in addr;
@@ -58,7 +49,7 @@ getsockname(sockfd, (sockaddr*)&addr, &len)
     // Get the socket's local address after binding
     socklen_t len = sizeof(addr);  // Variable to store the size of the address struct
     if (getsockname(sockfd, (struct sockaddr*)&addr, &len) == -1)
-        std::cerr << "getsockname failed" << std::endl;  // Error retrieving socket info
+        std::cerr << "Error. Failed to retrieve local socket address (IP/port)." << std::endl;  // Error retrieving socket info
     else
         std::cout << "Assigned port: " << ntohs(addr.sin_port) << std::endl; // Display the port number assigned by the OS (converted from network byte order)
 
@@ -71,7 +62,7 @@ getprotobyname("tcp")
     Example: 
     struct protoent *proto = getprotobyname("tcp");
     if (proto == NULL)
-        std::cerr << "Protocol not found" << std::endl;
+        std::cerr << "Error. Protocol not found." << std::endl;
     else
         int protocol_number = proto->p_proto;
         std::cout << "TCP protocol number: " << protocol_number << std::endl;
@@ -87,7 +78,7 @@ gethostbyname("irc.example.com")
     Example: 
     struct hostent *host = gethostbyname("irc.example.com");
     if (host == NULL) 
-        std::cerr << "gethostbyname failed" << std::endl;
+        std::cerr << "Error. Failed to translates hostname to an IPv4 address." << std::endl;
     else
     {
         char ip[INET_ADDRSTRLEN];
@@ -109,10 +100,7 @@ getaddrinfo("localhost", "6667", &hints, &res);
     int status = getaddrinfo("localhost", "6667", &hints, &res); // Resolve the hostname ("localhost") and service ("6667") into address info structures
     // 'res' will point to a linked list of results that match the criteria set in hints
     if (status != 0) 
-    {
-        std::cerr << "getaddrinfo error: " << gai_strerror(status) << std::endl;
-        return 1;
-    }
+        std::cerr << "Error. Failed to translate socket address: " << gai_strerror(status) << std::endl;
 
 
 freeaddrinfo()
@@ -138,7 +126,7 @@ connect(sockfd, (sockaddr*)&addr, sizeof(addr))
     if (result == 0)
         std::cout << "Connected to server successfully" << std::endl;
     else
-        std::cerr << "Error. Connect failed" << std::endl;
+        std::cerr << "Error. Failed to connect to server." << std::endl;
 
 
 bind(sockfd, (sockaddr*)&addr, sizeof(addr))
@@ -156,7 +144,8 @@ listen(sockfd, SOMAXCONN);
     Example:
     int sockfd = socket(AF_INET, SOCK_STREAM, 0); // Create TCP socket
     // Bind the socket to an IP and port here
-    listen(sockfd, SOMAXCONN); // Mark the socket as listening for connections
+    if (listen(sockfd, SOMAXCONN) == -1) 
+        std::cerr << "Error. Failed to listen on socket." << std::endl;
 
 
 accept(sockfd, NULL, NULL);
@@ -171,9 +160,7 @@ accept(sockfd, NULL, NULL);
     // => `client_fd` = socket used to communicate with that specific client
     // `sockfd` remains open to accept additional connections
     if (client_fd == -1) 
-    {
-        perror("accept");
-    }
+        std:cerr << "Error. Failed to accept connection." << std::endl;
 
 
 htons()
