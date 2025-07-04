@@ -1,0 +1,36 @@
+High-Level Architecture
+
+1. Networking Layer
+    TCP socket server (AF_INET)
+        Socket = endpoint for sending/receiving data over a network.
+        A TCP socket is created using:
+            int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+            AF_INET = IPv4
+            SOCK_STREAM = TCP
+
+    fcntl() to set sockets to non-blocking
+    poll() loop to handle:
+        Listening socket (accept new clients)
+        Client sockets (read/write)
+
+2. Parser / Command Processor
+    Buffer client input until newline
+    Parse and tokenize lines
+    Match and dispatch to command handlers
+
+3. "ClientState" Class which consists of 
+    Socket FD
+    Nickname
+    Username
+    Authentication status
+    Joined channels
+    Operator status in channels
+
+4. "ChannelState" Class which consists of 
+    Name
+    Topic
+    Members (Client class - objects)
+    Operators
+    Modes (i, t, k, o, l)
+    Key/password
+    User limit
