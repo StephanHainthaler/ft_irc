@@ -1,5 +1,16 @@
 High-Level Architecture
 
+// create a socket server for an IRC server
+// bind the socket to an IP/port
+// Mark the socket for listening incoming connections
+// Accept incoming connections
+// Create a poll loop to handle multiple clients
+// while receiving - display messages from clients and echo them back
+// Send responses to clients
+// Close connections when clients disconnect
+// Handle errors and edge cases
+// close socket
+
 1. Networking Layer
     TCP socket server (AF_INET)
         Socket = endpoint for sending/receiving data over a network.
