@@ -20,7 +20,7 @@ close(fd)
     close(fd);
 
 
-setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) // port will be specified in input
     configure how the socket behaves — for example, allowing it to reuse an address or set timeouts — by changing options managed by the operating system
     Commonly used with SO_REUSEADDR to allow the reuse of local addresses (e.g., binding again to a recently closed port)
     Helps avoid the "Address already in use" error when restarting a server quickly - 
@@ -136,9 +136,9 @@ connect(sockfd, (sockaddr*)&addr, sizeof(addr))
 
     int result = connect(sockfd, (struct sockaddr*)&addr, sizeof(addr));
     if (result == 0)
-        printf("Connected to server successfully.\n");
+        std::cout << "Connected to server successfully" << std::endl;
     else
-        perror("connect");
+        std::cerr << "Error. Connect failed" << std::endl;
 
 
 bind(sockfd, (sockaddr*)&addr, sizeof(addr))
@@ -194,7 +194,7 @@ ntohs()
     Example: 
     uint16_t network_port = addr.sin_port;     // get the port in network byte order
     uint16_t host_port = ntohs(network_port);  // convert it to host byte order => can print it or use it on host
-    printf("Listening on port: %u\n", host_port);
+    std::cout << "Listening on port: " << host_port << std::endl;
 
 
 htonl()
@@ -208,7 +208,7 @@ htonl()
     Example2:
     uint32_t ip_host = 0x7F000001; // 127.0.0.1
     uint32_t ip_net = htonl(ip_host);
-    printf("Network-order IP: 0x%X\n", ip_net);
+    std::cout << "Network-order IP: 0x" << ip_net << std::endl; // 0x0100007F
 
 
 ntohl(addr.sin_addr.s_addr);
@@ -219,7 +219,7 @@ ntohl(addr.sin_addr.s_addr);
     Example: 
     uint32_t raw_ip = addr.sin_addr.s_addr; // Get the raw IP address from the sockaddr_in structure
     uint32_t host_ip = ntohl(raw_ip);
-    printf("Host-order IP (as integer): %u\n", host_ip);
+    std::cout << "Host-order IP (as integer): %u\n", host_ip << std::endl;
 
 
 inet_addr("127.0.0.1");
