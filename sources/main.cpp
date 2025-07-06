@@ -24,22 +24,25 @@
 #include <cstring>
 
 // ./ircserv <port> <password>
-int	main(int argc, char *argv[])
+// g++ main.cpp -o ircserv -std=c++98
+int	main() //int argc, char *argv[])
 {
+	argc = 3;
+	argv[1] = "8080"; // Example port
+	argv[2] = "password"; // Example password
 	if (argc != 3)
 		return (std::cerr << RED << "Error: incorrect number of arguments" << DEFAULT << std::endl, 1);
 	
 	int port = std::atoi(argv[1]);
-	if (port <= 0 || port > 65535)
+	if (port <= 0 || port > 65535) // https://www.pico.net/kb/what-is-the-highest-tcp-port-number-allowed/
 		return (std::cerr << RED << "Error: invalid port number" << DEFAULT << std::endl, 1);
 	
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);  // Create a TCP/IPv4 socket
-    if (sockfd < 0) 
+    if (sockfd == -1) 
     {
-        std::cerr << "Failed to create socket" << std::endl;
+        std::cerr << "Error. Failed to create socket." << std::endl;
         return 1;
     }
 
-	(void)argv;
-	return (0);
+	return 0;
 }
