@@ -12,19 +12,24 @@
 
 #include "../headers/Server.hpp"
 
-	int sockfd = socket(AF_INET, SOCK_STREAM, 0);  // Create a TCP/IPv4 socket
-    if (sockfd == -1) 
+Server::Server(const unsigned int &port, const std::string &password): port(port), password(password)
+{
+    int socket_fd = socket(AF_INET, SOCK_STREAM, 0);  // Create a TCP/IPv4 socket
+    if (socket_fd == -1) 
     {
-        std::cerr << "Error. Failed to create socket." << std::endl;
+        std::cerr << "Error. Failed to create server socket." << std::endl;
         return 1;
     }
-
-	struct sockaddr_in sin; // this codepart can also be found in srv_create.c
-	memset(&sin, 0, sizeof(sin));
-	sin.sin_family = AF_INET; // IPv4
-	sin.sin_addr.s_addr = INADDR_ANY;
-	sin.sin_port = htons(port); // Converts a 16-bit value (short) from host byte order to network byte order
     
+    memset(&sin, 0, sizeof(sin)); // recommended to not store nonsense
+    sin.sin_family = AF_INET; // set the address family to IPv4 addresse
+    sin.sin_addr.s_addr = INADDR_ANY; // server should accept connections from any IP address
+    sin.sin_port = htons(port); // defines the port number the socket will use to communicate on server side (the value has to be converted from host byte order to network byte order)
+
+}
+
+
+
 	if (bind(sockfd, (struct sockaddr *)&sin, sizeof(sin)) == -1) // Binds a socket to an IP and port and must be done before listening
 	{
 		std::cerr << "Error. Failed to bind socket." << std::endl;

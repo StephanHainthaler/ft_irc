@@ -16,13 +16,7 @@
 # define GRAY "\x1b[90m"
 
 #include <iostream>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <unistd.h>
-#include <cstring>
-#include <cstdlib>
 #include "./headers/Server.hpp"
 
 bool	isPositiveNumber(char *string)
