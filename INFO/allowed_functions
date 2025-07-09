@@ -1,5 +1,6 @@
 socket(AF_INET, SOCK_STREAM, 0)
     Creates a new socket = endpoint for sending/receiving data over a network
+        bound to a specific port and IP address (each client and server has a socket)
     Returns: a file descriptor, or -1 on error
     Use AF_INET for IPv4, SOCK_STREAM for TCP (connection-based)
 

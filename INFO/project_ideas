@@ -45,3 +45,40 @@ High-Level Architecture
     Modes (i, t, k, o, l)
     Key/password
     User limit
+
+_________________
+
+ 1. Networking & I/O Person
+Responsibilities:
+    Set up the TCP socket server
+    Implement non-blocking sockets using fcntl()
+    Handle poll() loop for I/O multiplexing
+    Accept new client connections
+    Manage disconnects and errors
+
+Example tasks:
+    socket(), bind(), listen(), accept(), poll()
+    Connection timeout handling
+    Managing the file descriptors and main server loop
+
+2. Parser & Command Logic Person
+    Responsibilities:
+
+    Implement input buffering and command tokenization
+    Handle IRC commands (NICK, USER, JOIN, PRIVMSG, etc.)
+    Enforce protocol syntax and state transitions (e.g., authentication)
+    Example tasks:
+        Build a command dispatcher
+        Write a nickname parser and validator
+        Respond to commands and update client state
+
+3. State Management & Channel Logic Person
+Responsibilities:
+    Create Client and Channel classes (e.g. ClientState, ChannelState)
+    Manage user data, authentication, operator status
+    Handle channels, membership, and channel modes (+i, +t, etc.)
+
+Example tasks:
+    Channel join/part logic
+    Channel mode and operator control
+    Data structures for managing users and channels
