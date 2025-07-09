@@ -6,11 +6,11 @@
 /*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:54:03 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/09 16:30:49 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/09 17:40:57 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Client.hpp"
+#include "../headers/Client.hpp"
 
 const char* Client::NickNameTooLong::what() const throw()
 {
