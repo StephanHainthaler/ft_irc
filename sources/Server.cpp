@@ -12,3 +12,61 @@
 
 #include "../headers/Server.hpp"
 
+	int sockfd = socket(AF_INET, SOCK_STREAM, 0);  // Create a TCP/IPv4 socket
+    if (sockfd == -1) 
+    {
+        std::cerr << "Error. Failed to create socket." << std::endl;
+        return 1;
+    }
+
+	struct sockaddr_in sin; // this codepart can also be found in srv_create.c
+	memset(&sin, 0, sizeof(sin));
+	sin.sin_family = AF_INET; // IPv4
+	sin.sin_addr.s_addr = INADDR_ANY;
+	sin.sin_port = htons(port); // Converts a 16-bit value (short) from host byte order to network byte order
+    
+	if (bind(sockfd, (struct sockaddr *)&sin, sizeof(sin)) == -1) // Binds a socket to an IP and port and must be done before listening
+	{
+		std::cerr << "Error. Failed to bind socket." << std::endl;
+		close(sockfd);
+		return 1;
+	}
+
+	if (listen(sockfd, SOMAXCONN) == -1) // Marks a bound socket as passive, meaning it will be used to accept incoming connection requests
+	{
+		std::cerr << "Error. Failed to listen on socket." << std::endl;
+		close(sockfd);
+		return 1;
+	}
+
+	std::cout << GRAY << "Server is listening on port " << port << DEFAULT << std::endl;
+
+	while (true) 
+	{
+		int client_fd = accept(sockfd, NULL, NULL); // Accepts an incoming connection on a listening socket
+		// accept blocks unless the listening socket is set to non-blocking mode
+		if (client_fd == -1) 
+		{
+			std::cerr << "Error. Failed to accept connection." << std::endl;
+			close(sockfd);
+			return 1;
+		}
+
+		std::cout << YELLOW << "New client connected." << DEFAULT << std::endl;
+
+		const char *welcome_msg = "Welcome to the IRC server!\n";
+		ssize_t total_sent = 0;
+		ssize_t msg_len = strlen(welcome_msg);
+
+		while (total_sent < msg_len) 
+		{
+			ssize_t sent = send(client_fd, welcome_msg + total_sent, msg_len - total_sent, 0);
+			if (sent == -1) 
+				break;
+			total_sent += sent;
+		}
+
+		close(client_fd); // Close the client socket after sending the message
+	}
+	close(sockfd); // Close the server socket when done
+	std::cout << GRAY << "Server socket closed." << DEFAULT << std::endl;
