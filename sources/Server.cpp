@@ -46,32 +46,6 @@ Server::Server(const unsigned int &port, const std::string &password): port(port
 
 	std::cout << GRAY << "Server is listening on port " << port << DEFAULT << std::endl;
 
-	while (true) 
-	{
-		int client_fd = accept(sockfd, NULL, NULL); // Accepts an incoming connection on a listening socket
-		// accept blocks unless the listening socket is set to non-blocking mode
-		if (client_fd == -1) 
-		{
-			std::cerr << "Error. Failed to accept connection." << std::endl;
-			close(sockfd);
-			return 1;
-		}
-
-		std::cout << YELLOW << "New client connected." << DEFAULT << std::endl;
-
-		const char *welcome_msg = "Welcome to the IRC server!\n";
-		ssize_t total_sent = 0;
-		ssize_t msg_len = strlen(welcome_msg);
-
-		while (total_sent < msg_len) 
-		{
-			ssize_t sent = send(client_fd, welcome_msg + total_sent, msg_len - total_sent, 0);
-			if (sent == -1) 
-				break;
-			total_sent += sent;
-		}
-
-		close(client_fd); // Close the client socket after sending the message
-	}
+	...
 	close(sockfd); // Close the server socket when done
 	std::cout << GRAY << "Server socket closed." << DEFAULT << std::endl;
