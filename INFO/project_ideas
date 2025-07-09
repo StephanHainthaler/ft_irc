@@ -1,84 +1,44 @@
-High-Level Architecture
+1. ClientClass which consists of 
+    Client Socket FD - Socket (IP + port combo)
+    IP
+    port
+    Nickname - kann man mit NICK command ändern
+    Username
+    Realname
+    Authentication status
+    Joined channels
+    https://meta.intra.42.fr/articles/how-can-i-install-packages
 
-// create a socket server for an IRC server
-// bind the socket to an IP/port
-// Mark the socket for listening incoming connections
-// Accept incoming connections
-// Create a poll loop to handle multiple clients
-// while receiving - display messages from clients and echo them back
-// Send responses to clients
-// Close connections when clients disconnect
-// Handle errors and edge cases
-// close socket
+2. ServerClass
+    Server Socket FD - Listening socket (IP + port combo)
+    IP
+    port
+    Password
+    List of connected clients (ClientClass objs)
+    List of channels (ChannelClass objs)
 
-1. Networking Layer
-    TCP socket server (AF_INET)
-        Socket = endpoint for sending/receiving data over a network.
-        A TCP socket is created using:
-            int server_fd = socket(AF_INET, SOCK_STREAM, 0);
-            AF_INET = IPv4
-            SOCK_STREAM = TCP
+3. ChannelClass
+    name, public attribute
+    topic, public attribute
+    user_limit
+    Server that it belongs to (ServerClass obj)
+    List of clients in the channel (ClientClass objs)
+    state (open, closed, ...)
+    password (private Channels) - optional / can be NULL, _k für key    (private attribute)
+    modes (e.g., +i, +t) -                                _modes        (private attribute)
+        KICK-      Eject a client from the channel
+        INVITE-    Invite a client to a channel
+        TOPIC-     Change or view the channel topic
+        MODE-      Change the channels mode:
+            · i: Set/remove Invite-only channel
+            · t: Set/remove the restrictions of the TOPIC command to channel operators
+            · k: Set/remove the channel key (password)
+            · o: Give/take channel operator privilege
+            · l: Set/remove the user limit to channel
+    operators (ClientClass objs with operator status) -  1. = admin
 
-    fcntl() to set sockets to non-blocking
-    poll() loop to handle:
-        Listening socket (accept new clients)
-        Client sockets (read/write)
 
-2. Parser / Command Processor
+4. Parser / Command Processor
     Buffer client input until newline
     Parse and tokenize lines
     Match and dispatch to command handlers
-
-3. "ClientState" Class which consists of 
-    Socket FD
-    Nickname
-    Username
-    Authentication status
-    Joined channels
-    Operator status in channels
-
-4. "ChannelState" Class which consists of 
-    Name
-    Topic
-    Members (Client class - objects)
-    Operators
-    Modes (i, t, k, o, l)
-    Key/password
-    User limit
-
-_________________
-
- 1. Networking & I/O Person
-Responsibilities:
-    Set up the TCP socket server
-    Implement non-blocking sockets using fcntl()
-    Handle poll() loop for I/O multiplexing
-    Accept new client connections
-    Manage disconnects and errors
-
-Example tasks:
-    socket(), bind(), listen(), accept(), poll()
-    Connection timeout handling
-    Managing the file descriptors and main server loop
-
-2. Parser & Command Logic Person
-    Responsibilities:
-
-    Implement input buffering and command tokenization
-    Handle IRC commands (NICK, USER, JOIN, PRIVMSG, etc.)
-    Enforce protocol syntax and state transitions (e.g., authentication)
-    Example tasks:
-        Build a command dispatcher
-        Write a nickname parser and validator
-        Respond to commands and update client state
-
-3. State Management & Channel Logic Person
-Responsibilities:
-    Create Client and Channel classes (e.g. ClientState, ChannelState)
-    Manage user data, authentication, operator status
-    Handle channels, membership, and channel modes (+i, +t, etc.)
-
-Example tasks:
-    Channel join/part logic
-    Channel mode and operator control
-    Data structures for managing users and channels
