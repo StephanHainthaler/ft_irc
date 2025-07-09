@@ -1,0 +1,44 @@
+1. ClientClass which consists of 
+    Client Socket FD - Socket (IP + port combo)
+    IP
+    port
+    Nickname - kann man mit NICK command ändern
+    Username
+    Realname
+    Authentication status
+    Joined channels
+    https://meta.intra.42.fr/articles/how-can-i-install-packages
+
+2. ServerClass
+    Server Socket FD - Listening socket (IP + port combo)
+    IP
+    port
+    Password
+    List of connected clients (ClientClass objs)
+    List of channels (ChannelClass objs)
+
+3. ChannelClass
+    name, public attribute
+    topic, public attribute
+    user_limit
+    Server that it belongs to (ServerClass obj)
+    List of clients in the channel (ClientClass objs)
+    state (open, closed, ...)
+    password (private Channels) - optional / can be NULL, _k für key    (private attribute)
+    modes (e.g., +i, +t) -                                _modes        (private attribute)
+        KICK-      Eject a client from the channel
+        INVITE-    Invite a client to a channel
+        TOPIC-     Change or view the channel topic
+        MODE-      Change the channels mode:
+            · i: Set/remove Invite-only channel
+            · t: Set/remove the restrictions of the TOPIC command to channel operators
+            · k: Set/remove the channel key (password)
+            · o: Give/take channel operator privilege
+            · l: Set/remove the user limit to channel
+    operators (ClientClass objs with operator status) -  1. = admin
+
+
+4. Parser / Command Processor
+    Buffer client input until newline
+    Parse and tokenize lines
+    Match and dispatch to command handlers

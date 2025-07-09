@@ -9,6 +9,9 @@ Client      program that connects to a server so you can chat with other people
     
 Network     group of hosts
 
+Socket      socket = endpoint for sending/receiving data over a network
+            bound to a specific port and IP address (each client and server has a socket)
+
 Interface   actual connection from host to network such as Ethernet of Wifi 
  
 IP          Internet Protocol 
