@@ -42,9 +42,6 @@ bool	isPositiveNumber(char *string)
 
 int	main(int argc, char *argv[])
 {
-	argc = 3;
-	argv[1] = "8080"; // Example port
-	argv[2] = "password"; // Example password
 	if (argc != 3)
 		return (std::cerr << RED << "Error: incorrect number of arguments" << DEFAULT << std::endl, 1);
 	if (isPositiveNumber(argv[1]) == false)
