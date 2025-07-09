@@ -2,6 +2,7 @@ IRC         Internet Relay Standard
     [RFC 1459](https://datatracker.ietf.org/doc/html/rfc1459) — IRC Protocol
     [RFC 2812](https://datatracker.ietf.org/doc/html/rfc2812) — IRC Command Structure
 	[RFC 2813](https://datatracker.ietf.org/doc/html/rfc2813)
+	https://modern.ircdocs.horse/ - recommended by Benjamin
 
 IRC (Internet Relay Chat) uses a client-server architecture:
 Clients connect to a central server to send/receive real-time messages.
