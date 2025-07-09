@@ -6,7 +6,7 @@
 /*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/09 17:31:18 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/09 17:42:09 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ class Client
 		std::string _realName;
 	
 	public:
-		int	isNickValid(const std::string& nickName);
+		void	isNickValid(const std::string& nickName);
 
 		//USER_function
 		//NICK_function

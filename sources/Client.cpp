@@ -6,7 +6,7 @@
 /*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:54:03 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/09 17:40:57 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/09 17:45:29 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,14 +22,15 @@ const char* Client::NickNameInvalid::what() const throw()
    return ("Error: file is empty ");
 }
 
-int Client::isNickValid(const std::string& nickName)
+void	Client::isNickValid(const std::string& nickName)
 {
 	for (size_t i = 0; i < nickName.size(); i++)
 	{
 		if (nickName.size() > 9)
-			return (1);
+			throw NickNameTooLong();
 		if (nickName[i] == ' ' || nickName[i] == ',' || nickName[i] == '*' || nickName[i] == '?' || nickName[i] == '!' || nickName[i] == '@')
-			return (1);
+			throw NickNameInvalid();
+		if ()
 	
 	}
 }
