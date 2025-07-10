@@ -10,3 +10,11 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+enum ClientState
+{
+	CONNECTING,
+	UNREGISTERED,
+	REGISTERED,
+	AUTHENTICATED,
+	DISCONNECTED
+};
