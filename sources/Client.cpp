@@ -6,7 +6,7 @@
 /*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:54:03 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/09 17:45:29 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/10 14:57:04 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ const char* Client::NickNameTooLong::what() const throw()
 
 const char* Client::NickNameInvalid::what() const throw()
 {
-   return ("Error: file is empty ");
+   return ("Error: Nickname invalid ");
 }
 
 void	Client::isNickValid(const std::string& nickName)
@@ -30,8 +30,8 @@ void	Client::isNickValid(const std::string& nickName)
 			throw NickNameTooLong();
 		if (nickName[i] == ' ' || nickName[i] == ',' || nickName[i] == '*' || nickName[i] == '?' || nickName[i] == '!' || nickName[i] == '@')
 			throw NickNameInvalid();
-		if ()
-	
+		if (nickName[0] == '$' || nickName[0] == ':' || nickName[0] == '#' || nickName[0] == '~' || nickName[0] == '&' || nickName[0] == '+')
+			throw NickNameInvalid();
 	}
 }
 
