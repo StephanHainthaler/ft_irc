@@ -6,34 +6,70 @@
 /*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:54:03 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/11 14:52:24 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/11 16:37:11 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../headers/Client.hpp"
-#include <netinet/in.h>
 
-const char* Client::NickNameTooLong::what() const throw()
-{
-   return ("Error: Nickname can only");
-}
+// const char* Client::NickNameTooLong::what() const throw()
+// {
+//    return ("Error: Nickname can only be max 9 characters long");
+// }
 
-const char* Client::NickNameInvalid::what() const throw()
-{
-   return ("Error: Nickname invalid ");
-}
+// const char* Client::NickNameInvalid::what() const throw()
+// {
+//    return ("Error: Nickname invalid ");
+// }
 
-void	Client::isNickValid(const std::string& nickName)
+bool	Client::isNickValid(const std::string& nickName)
 {
 	for (size_t i = 0; i < nickName.size(); i++)
 	{
-		if (nickName.size() > 9)
-			throw NickNameTooLong();
+		if (nickName.size() > 9 || nickName.size() == 0)
+			return (std::cout << "Error: Nickname must be at least 1 character and can only be max 9 characters long.", false);
 		if (nickName[i] == ' ' || nickName[i] == ',' || nickName[i] == '*' || nickName[i] == '?' || nickName[i] == '!' || nickName[i] == '@')
-			throw NickNameInvalid();
+			return (std::cout << "Error: Nickname invalid.", false);
 		if (nickName[0] == '$' || nickName[0] == ':' || nickName[0] == '#' || nickName[0] == '~' || nickName[0] == '&' || nickName[0] == '+')
-			throw NickNameInvalid();
+			return (std::cout << "Error: Nickname invalid.", false);
 	}
+	return (true);
+}
+
+std::string trunc_name(std::string name)
+{
+	if (name.length() > USERLEN)
+		return name.substr(0, USERLEN);
+	else
+		return (name);
+}
+
+int		Client::isUserValid(const std::string& userName)
+{
+	for (size_t i = 0; i < userName.size(); i++)
+	{
+		if (userName.size() == 0)
+			return (std::cout << /* <client> */ "<USER> :Not enough parameters", 1);
+		if (userName.size() > USERLEN)
+			trunc_name(userName);
+		
+	}
+}
+
+bool	Client::isRealNameValid(const std::string& realName)
+{
+	
+}
+
+void	Client::setNick(const std::string& nickName)
+{
+	if (isNickValid(nickName))
+		_nickName = nickName;
+}
+
+void Client::setUser(const std::string& userName, 0, *, const std::string& realName)
+{
+	
 }
 
 Client::Client(int socketFD, const sockaddr_in& clientAddr) : 

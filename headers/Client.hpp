@@ -6,19 +6,21 @@
 /*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/11 12:13:24 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/11 16:38:47 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
+#include "Server.hpp"
+#include "main.hpp"
 #include <cstddef>
 #include <iostream>
 #include <string>
 #include <netinet/in.h>
-#include "main.hpp"
 #include <vector>
 
 #define MAX_CHANNELS 10
+#define USERLEN 15
 class Client
 {
 	private:
@@ -32,7 +34,10 @@ class Client
 		std::vector<std::string> _channels;
 	
 	public:
-		void	isNickValid(const std::string& nickName);
+		bool	isNickValid(const std::string& nickName);
+		int		isUserValid(const std::string& userName);
+		void	setNick(const std::string& nickName);
+		void	setUser(const std::string& userName, int zero, char *, const std::string& realName)
 
 		//USER_function
 		//NICK_function

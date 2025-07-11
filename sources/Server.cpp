@@ -18,7 +18,7 @@ Server::Server(const unsigned int &port, const std::string &password): port(port
     if (socket_fd == -1) 
     {
         std::cerr << "Error. Failed to create server socket." << std::endl;
-        return 1;
+        return (1);
     }
     
     memset(&sin, 0, sizeof(sin)); // recommended to not store nonsense
