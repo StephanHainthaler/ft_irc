@@ -1,0 +1,33 @@
+IRC         Internet Relay Standard 
+    [RFC 1459](https://datatracker.ietf.org/doc/html/rfc1459) — IRC Protocol
+    [RFC 2812](https://datatracker.ietf.org/doc/html/rfc2812) — IRC Command Structure
+	[RFC 2813](https://datatracker.ietf.org/doc/html/rfc2813)
+	https://modern.ircdocs.horse/ - recommended by Benjamin
+
+IRC (Internet Relay Chat) uses a client-server architecture:
+Clients connect to a central server to send/receive real-time messages.
+All communication is relayed by the server, allowing users in the same channel to communicate.
+
+IRC is decentralized and not controlled by any single company.
+
+Features to consider: 
+    Accepting multiple client connections
+    Relaying messages between clients
+    Managing channels and user sessions
+    No message history is stored on the server — it's a real-time communication platform.
+    "Non-blocking socket server" to handle real-time client communication
+
+Clients connect to the server using commands:
+    /join channelname       join or create a channel
+    /nick username          set or change nickname
+
+The server has to listen on specific ports (usually TCP port 6667).
+
+Define user classes — e.g., regular users vs. operators, with varying privileges.
+
+
+There is a sub-IRC protocol called  DCC (Direct Client-to-Client) is a sub-protocol used for:
+    Sending files or private chats directly between clients, bypassing the server
+    The server only helps exchange IP addresses between the two clients
+
+

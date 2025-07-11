@@ -2,7 +2,15 @@
 
 Host        general term for a computer 
 
+Client      program that connects to a server so you can chat with other people
+            It’s what you use to send messages, join channels, and interact with the server
+            a client can.. open a socket, connect to server, send commands in textformat, read and display server responses
+            - hexchat or irssi?
+    
 Network     group of hosts
+
+Socket      socket = endpoint for sending/receiving data over a network
+            bound to a specific port and IP address (each client and server has a socket)
 
 Interface   actual connection from host to network such as Ethernet of Wifi 
  
@@ -23,4 +31,9 @@ HTTP        - application protocols
             HTTPS is the secure version on TCP port 443 
 
 SMTP        E-Mail transfer protocol, which uses TCP port 25 
+
 SNMP        Network management protocol using UDP port 161
+
+SSL         Secure sockets Layer = security protocol used for end-to-end encryption
+
+TLS         Transport Layer Security = security protocol used for end-to-end encryption

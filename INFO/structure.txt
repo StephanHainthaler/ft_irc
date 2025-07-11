@@ -1,0 +1,83 @@
+SERVER (name max. 63 characters)
+
+	#services:
+		client locator (via the client protocol [IRC-CLIENT])
+		message relaying 
+		channel hosting and management (following specific rules [IRC-CHAN])
+
+	#protocols:
+		RFC 2810
+		RFC 2811
+		RFC 2812
+		RFC 2813 (maybe this because it's the newest)
+
+	there are also other protocols, but the 281x are recommended for our project.
+
+COMMANDS
+
+  #implementation of commands:
+
+      KICK - Eject a client from the channel
+      INVITE - Invite a client to a channel
+      TOPIC - Change or view the channel topic
+      MODE - Change the channel's mode:
+         i: Set/remove Invite-only channel
+         t: Set/remove the restrictions of the TOPIC command to channel operators
+         k: Set/remove the channel key (password)
+         o: Give/take channel operator privilege
+         l: Set/remove the user limit to channel
+
+  #global authentication wall (UNAUTHENTICATED, AUTHENTICATED, REGISTERED)
+
+CHANNELS
+  
+	#list of members with permissions
+	#flow of messages (broadcasting to all members)
+	#control access (open to all, invite only, password protected)
+
+CLIENT (class with information about the users)
+
+	#two types of users:
+		-operators
+		-regular users
+	#nickname:
+		Nicknames are non-empty strings with the following restrictions:
+		They MUST NOT contain any of the following characters: space (' ', 0x20), comma (',', 0x2C), asterisk ('*', 0x2A), question mark ('?', 0x3F), exclamation mark ('!', 0x21), at sign ('@', 0x40).
+		They MUST NOT start with any of the following characters: dollar ('$', 0x24), colon (':', 0x3A).
+		They MUST NOT start with a character listed as a channel type, channel membership prefix, or prefix listed in the IRCv3 multi-prefix Extension.
+		They SHOULD NOT contain any dot character ('.', 0x2E).
+		MAX 9 characters.
+	#netwide unique identifier
+	#which server client is connected to
+
+
+
+OTHER
+
+  CLIENTS to use(program):
+
+    #Halloy: 
+		+ cross-platform,
+		+ easy to use/setup, 
+		- needs cargo to run at 42
+		- less functionality
+
+    #irrsi, WeeChat:
+		+ lightweight
+		+ doesnt need cargo?
+		- needs more setup
+		- terminal-based
+    
+    #HexChat:
+		+ GUI
+		+ multi-platform
+		- more complex/bigger
+
+    #Quassel IRC, TheLounge:
+		+/- web-based (not dependent on OS)
+
+
+    
+
+
+
