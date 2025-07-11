@@ -6,7 +6,7 @@
 /*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:54:03 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/11 16:37:11 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/11 18:44:42 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,11 +27,13 @@ bool	Client::isNickValid(const std::string& nickName)
 	for (size_t i = 0; i < nickName.size(); i++)
 	{
 		if (nickName.size() > 9 || nickName.size() == 0)
-			return (std::cout << "Error: Nickname must be at least 1 character and can only be max 9 characters long.", false);
+			return (std::cout << "Error: Nickname must be at least 1 character and can only be max 9 characters long.", ERR_ERRONEUSNICKNAME);
+		// if nickname in use
+			//ERR_NICKNAMEINUSE
 		if (nickName[i] == ' ' || nickName[i] == ',' || nickName[i] == '*' || nickName[i] == '?' || nickName[i] == '!' || nickName[i] == '@')
-			return (std::cout << "Error: Nickname invalid.", false);
+			return (std::cout << "Error: Nickname invalid.", ERR_ERRONEUSNICKNAME);
 		if (nickName[0] == '$' || nickName[0] == ':' || nickName[0] == '#' || nickName[0] == '~' || nickName[0] == '&' || nickName[0] == '+')
-			return (std::cout << "Error: Nickname invalid.", false);
+			return (std::cout << "Error: Nickname invalid.", ERR_ERRONEUSNICKNAME);
 	}
 	return (true);
 }
@@ -49,7 +51,7 @@ int		Client::isUserValid(const std::string& userName)
 	for (size_t i = 0; i < userName.size(); i++)
 	{
 		if (userName.size() == 0)
-			return (std::cout << /* <client> */ "<USER> :Not enough parameters", 1);
+			return (std::cout << /* <client> */ "<USER> :Not enough parameters", ERR_NEEDMOREPARAMS);
 		if (userName.size() > USERLEN)
 			trunc_name(userName);
 		
@@ -67,7 +69,7 @@ void	Client::setNick(const std::string& nickName)
 		_nickName = nickName;
 }
 
-void Client::setUser(const std::string& userName, 0, *, const std::string& realName)
+void Client::setUser(const std::string& userName, int zero, char *, const std::string& realName)
 {
 	
 }

@@ -6,7 +6,7 @@
 /*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/11 16:38:47 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/11 18:43:52 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,17 @@
 
 #define MAX_CHANNELS 10
 #define USERLEN 15
+
+//errors
+#define ERR_NOSUCHNICK 401
+#define ERR_NOSUCHCHANNEL 403
+#define ERR_TOOMANYCHANNELS 405
+#define ERR_NONICKNAMEGIVEN 431
+#define ERR_ERRONEUSNICKNAME 432
+#define ERR_NICKNAMEINUSE 433
+#define ERR_NEEDMOREPARAMS 461
+#define ERR_ALREADYREGISTERED 462 
+
 class Client
 {
 	private:
@@ -37,7 +48,7 @@ class Client
 		bool	isNickValid(const std::string& nickName);
 		int		isUserValid(const std::string& userName);
 		void	setNick(const std::string& nickName);
-		void	setUser(const std::string& userName, int zero, char *, const std::string& realName)
+		void	setUser(const std::string& userName, int zero, char *, const std::string& realName); // 2nd parameter should always be zero and 3rd "*"
 
 		//USER_function
 		//NICK_function
