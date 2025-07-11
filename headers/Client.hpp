@@ -6,7 +6,7 @@
 /*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/10 15:19:44 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/11 12:13:24 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,9 @@
 #include <string>
 #include <netinet/in.h>
 #include "main.hpp"
+#include <vector>
 
+#define MAX_CHANNELS 10
 class Client
 {
 	private:
@@ -27,6 +29,7 @@ class Client
 		std::string _nickName;
 		std::string _realName;
 		ClientState _state;
+		std::vector<std::string> _channels;
 	
 	public:
 		void	isNickValid(const std::string& nickName);
@@ -35,11 +38,12 @@ class Client
 		//NICK_function
 		//JOIN_function
 		
-		Client(int socketFD, const sockaddr_in& client_addr);
+		Client(int socketFD, const sockaddr_in& clientAddr);
 		Client();
 		~Client();
-		Client(const Client &other);
-		Client& operator=(const Client &copy);
+		
+		// Client(const Client &other);
+		// Client& operator=(const Client &copy);
 
 		class NickNameTooLong : public std::exception
 		{
@@ -51,4 +55,7 @@ class Client
 			public:
 				virtual const char* what() const throw();
 		};
+
+		void setState(ClientState newState);
+		ClientState getState() const;
 };
