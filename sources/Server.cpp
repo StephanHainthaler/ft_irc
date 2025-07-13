@@ -18,7 +18,7 @@ Server::Server(void) // private
 
 /* sockaddr_in / sockaddr_in6 
 is a structure specifically for handling IPv4 addresses
-In subj it says "communication between client and server has to be done via TCP/IP (v4 or v6)"
+subject: "communication between client and server has to be done via TCP/IP (v4 or v6)"
 
 the IP address is specified by the computer I am running the server code on,
 and the port number is specified by the user (as a command line argument)
@@ -31,6 +31,8 @@ Server::Server(const unsigned int &port, const std::string &password): port(port
 	{
 		throw ServerException("Error. Failed to create socket.");
 	}
+
+	// subject: "All I/O operations must be non-blocking"
 	if (fcntl(socket_fd, F_SETFL, O_NONBLOCK) == -1) // allow server to handle multiple clients at once
 	{
 		close(_socket_fd);
@@ -135,6 +137,13 @@ void Server::acceptClientConnection(Client *client)
 {
 	if (client == NULL)
 		return;
+
+	// password check - subject: "The connection pw will be needed by any IRC client that tries to connect to your server"
+	if (client->get_password() != _password)
+	{
+		std::cerr << RED << "Error. Client password does not match server password." << DEFAULT << std::endl;
+		return;
+	}
 
 	int client_fd = accept(_socket_fd, NULL, NULL);
 	if (client_fd == -1) 

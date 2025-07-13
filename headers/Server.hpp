@@ -83,7 +83,8 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 
 /* 
 ***USED FUNCTIONS:
-socket(AF_INET, SOCK_STREAM, 0)close(fd)
+socket(AF_INET, SOCK_STREAM, 0)
+close(fd)
 connect(sockfd, (sockaddr*)&addr, sizeof(addr))
 bind(sockfd, (sockaddr*)&addr, sizeof(addr))
 listen(sockfd, SOMAXCONN)
