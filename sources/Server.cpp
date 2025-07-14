@@ -50,7 +50,7 @@ Server::~Server(void)
 		close(_socket_fd);
 
 	// clear client vector (BUGFIX? - needed?)
-	if (!_clients.empty())
+	/*if (!_clients.empty())
 	{
 		for (std::vector<Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 		{
@@ -67,7 +67,7 @@ Server::~Server(void)
 			delete *it;
 		}
 		_channels.clear();
-	}
+	}*/
 }
 
 void Server::run()
@@ -123,6 +123,7 @@ int Server::getState(void) const
 }
 
 // Member functions - server actions
+/*
 void Server::acceptClientConnection(Client *client)
 {
 	if (client == NULL || _state != 1) // Server must be running to accept connections
@@ -210,7 +211,7 @@ void Server::removeChannel(Channel *channel)
 			break;
 		}
 	}
-}
+}*/
 
 // Exception
 Server::ServerException::ServerException(const std::string &message): _message(message)

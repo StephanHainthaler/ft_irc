@@ -40,7 +40,7 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 		int getState(void) const;
 
 		// Member functions - server actions
-		void acceptClientConnection(Client *client);
+		/*void acceptClientConnection(Client *client);
 		void handleClientMessage(int client_fd);
 		
 		// Member functions - user triggered actions
@@ -48,7 +48,7 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 		void removeClient(Client *client);
 		
 		void addChannel(Channel *channel);
-		void removeChannel(Channel *channel);
+		void removeChannel(Channel *channel);*/
 		
 		// Exception
 		class ServerException: public std::exception
@@ -78,8 +78,8 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 		
 		const std::string			_password;
 		std::vector<Client *>		_clients;	// List of connected clients (ClientClass objs)
-		std::vector<Channel *>		_channels;	// List of channels (ChannelClass objs)
-		std::vector<std::string>	_users; // auf 10 users limitieren
+		//std::vector<Channel *>		_channels;	// List of channels (ChannelClass objs)
+		//std::vector<std::string>	_users; // auf 10 users limitieren
 
 		// clients must be unique within a channel
 
