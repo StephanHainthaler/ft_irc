@@ -47,8 +47,8 @@ bool	isPositiveNumber(char *string)
 }
 
 // ./ircserv <port> <password>
-// c++ main.cpp -o ircserv -std=c++98 && ./ircserv "8080" "password"
-// make re && ./ircserv "8080" "password"
+// c++ main.cpp -o ircserv -std=c++98 && ./ircserv "6667" "password"
+// make re && ./ircserv "6667" "password" && flatpak run io.github.Hexchat
 int	main(int argc, char *argv[])
 {
 	if (argc != 3)

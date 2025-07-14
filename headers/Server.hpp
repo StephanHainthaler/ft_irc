@@ -40,7 +40,7 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 		int getState(void) const;
 
 		// Member functions - server actions
-		/*void acceptClientConnection(Client *client);
+		/*
 		void handleClientMessage(int client_fd);
 		
 		// Member functions - user triggered actions
