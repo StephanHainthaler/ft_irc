@@ -96,7 +96,7 @@ Server::~Server(void)
 	}
 }
 
-void Server::start()
+void Server::run()
 {
 	if (bind(_socket_fd, (struct sockaddr_in6 *)&_serverAddress, sizeof(_serverAddress)) == -1)
 	{

@@ -29,7 +29,7 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 		Server(const unsigned int &port, const std::string &password);
 		~Server(void);
 		
-		start();
+		run();
 
 		// Getters
 		std::string get_password(void) const;

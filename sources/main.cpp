@@ -59,6 +59,7 @@ int	main(int argc, char *argv[])
 	try
 	{
 		Server	server(port, password);
+		server.run(); // start the server and listen for incoming connections
 	}
 	catch(const std::exception& e)
 	{
