@@ -325,7 +325,8 @@ fstat(fd, &info);
 
 fcntl(sockfd, F_SETFL, O_NONBLOCK);
     Modifies file/socket descriptor flags
-    Used to set non-blocking mode
+    Used to set a socket to non-blocking mode, allowing the server to handle multiple clients without blocking on a single read/write operation
+    returns 0 on success, -1 on error
 
     Use Case	        Description
     F_GETFL	            Get current flags (e.g. read-only, non-blocking, etc.)

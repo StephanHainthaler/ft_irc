@@ -12,4 +12,13 @@
 
 #pragma once
 
-#include <sys/socket.h>
+#include <cstring>
+
+enum ClientState
+{
+	CONNECTING,
+	UNREGISTERED,
+	REGISTERED,
+	AUTHENTICATED,
+	DISCONNECTED
+};
