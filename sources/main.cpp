@@ -59,8 +59,6 @@ int	main(int argc, char *argv[])
 	try
 	{
 		Server	server(port, password);
-		server.bindServerSocket(); // binds a socket to an IP and port
-		server.listenServerSocket(); // marks a bound socket as "listening socket"
 	}
 	catch(const std::exception& e)
 	{

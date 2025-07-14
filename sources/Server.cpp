@@ -44,13 +44,6 @@ Server::Server(const unsigned int &port, const std::string &password): port(port
 	_serverAddress.sin_port = htons(port); // defines the port number the socket will use to communicate on server side (the value has to be in network byte order)
 
 	// _clients and _channels remain empty at this point (?) - will get filled later
-
-	if (bind(_socket_fd, (struct sockaddr_in6 *)&_serverAddress, sizeof(_serverAddress)) == -1)
-	{
-		close(_socket_fd);
-		throw ServerException("Error. Failed to bind socket.");
-	}
-	std::cout << GRAY << "Server socket bound to port " << _port << DEFAULT << std::endl;
 }
 
 Server::Server(const Server &other) // private
@@ -101,7 +94,25 @@ Server::~Server(void)
 		}
 		_channels.clear();
 	}
+}
 
+void Server::start()
+{
+	if (bind(_socket_fd, (struct sockaddr_in6 *)&_serverAddress, sizeof(_serverAddress)) == -1)
+	{
+		close(_socket_fd);
+		throw ServerException("Error. Failed to bind socket.");
+	}
+	
+	// Marks a bound socket as "listening socket"
+	// Server is on receiving end of data so needs to listen for incoming connections
+	if (listen(_socket_fd, SOMAXCONN) == -1)
+	{
+		close(_socket_fd);
+		throw ServerException("Error. Failed to listen on socket.");
+	}
+
+	std::cout << "Server started on port " << _port << std::endl;
 }
 
 // Getters
@@ -121,18 +132,6 @@ Channel *Server::get_channel(const std::string &channel_name) const
 }
 
 // Member functions - server actions
-
-// Marks a bound socket as "listening socket"
-// Server is on receiving end of data so needs to listen for incoming connections
-void Server::makeListen(void)
-{
-	if (listen(_socket_fd, SOMAXCONN) == -1)
-	{
-		close(_socket_fd);
-		throw ServerException("Error. Failed to listen on socket.");
-	}
-}
-
 void Server::acceptClientConnection(Client *client)
 {
 	if (client == NULL)
@@ -141,14 +140,14 @@ void Server::acceptClientConnection(Client *client)
 	// password check - subject: "The connection pw will be needed by any IRC client that tries to connect to your server"
 	if (client->get_password() != _password)
 	{
-		std::cerr << RED << "Error. Client password does not match server password." << DEFAULT << std::endl;
+		std::cerr << RED << "Error. Wrong client password." << DEFAULT << std::endl;
 		return;
 	}
 
 	int client_fd = accept(_socket_fd, NULL, NULL);
 	if (client_fd == -1) 
 	{
-		std::cerr << "Error. Failed to accept connection." << std::endl;
+		std::cerr << RED << "Error. Failed to accept connection." << DEFAULT << std::endl;
 		return;
 	}
 	addClient(client);

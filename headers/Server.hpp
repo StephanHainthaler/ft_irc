@@ -29,17 +29,17 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 		Server(const unsigned int &port, const std::string &password);
 		~Server(void);
 		
+		start();
+
 		// Getters
 		std::string get_password(void) const;
 		Channel *get_channel(const std::string &channel_name) const;
 		
 
 		// Member functions - server actions
-		void makeListen(void);
 		void acceptClientConnection(Client *client);
 		void handleClientMessage(int client_fd);
 		
-
 		// Member functions - user triggered actions
 		void addClient(Client *client);
 		void removeClient(Client *client);
