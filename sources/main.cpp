@@ -50,8 +50,8 @@ int	main(int argc, char *argv[])
 {
 	if (argc != 3)
 		return (std::cerr << RED << "Error: incorrect number of arguments" << DEFAULT << std::endl, 1);
-	if (isPositiveNumber(argv[1]) == false)
-		return (std::cerr << RED << "Error: port MUST be a positive number between 0 and 65535" << DEFAULT << std::endl, 1);
+	// if (isPositiveNumber(argv[1]) == false)
+	// 	return (std::cerr << RED << "Error: port MUST be a positive number between 0 and 65535" << DEFAULT << std::endl, 1);
 	
 	unsigned int 	port = atoi(argv[1]);
 	std::string		password = argv[2];
@@ -67,7 +67,6 @@ int	main(int argc, char *argv[])
 	{
 		std::cerr << RED << e.what() << DEFAULT << std::endl;
 	}
-
 	return 0;
 }
 
