@@ -38,6 +38,7 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 		std::string get_password(void) const;
 		Channel *get_channel(const std::string &channel_name) const;
 		sockaddr_in get_serverAddress(void) const; // bc client will need it to connect to server
+		int get_state(void) const;
 
 		// Member functions - server actions
 		void acceptClientConnection(Client *client);
@@ -67,7 +68,6 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 		Server(const Server &other);
 		Server	&operator=(const Server &other);
 	
-		
 		int						_socket_fd; // Server Socket FD - Listening socket, can be negative
 		const unsigned int 		_port; // Port number - "door to the server"
 		struct sockaddr_in 		_serverAddress; // for IPv4 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
@@ -76,11 +76,14 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 		server creates sockaddr_in "serverAddress" to specify its own IP address and port to bind to
 		client takes this sockaddr_in "serverAddress" to specify the server's IP address and port to connect to
 		*/
-
+		
 		const std::string		_password;
 		std::vector<Client *>	_clients;	// List of connected clients (ClientClass objs)
 		std::vector<Channel *>	_channels;	// List of channels (ChannelClass objs)
 
+		// clients must be unique within a channel
+
+		int						_state; // Server state - 0: not running, 1: running, -1: error (?)
 };
 
 #endif

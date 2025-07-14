@@ -40,6 +40,8 @@ Server::Server(const unsigned int &port, const std::string &password): _port(por
 	_serverAddress.sin_port = htons(port); // defines the port number the socket will use to communicate on server side (the value has to be in network byte order)
 
 	// _clients and _channels remain empty at this point (?) - will get filled later
+
+	_state = 0; // Server state - 0: not running
 }
 
 Server::~Server(void)
@@ -90,6 +92,8 @@ void Server::run()
 	}
 
 	std::cout << "Server started on port " << _port << std::endl;
+
+	_state = 1; // Server state - 1: running
 }
 
 // Getters
@@ -113,10 +117,15 @@ sockaddr_in Server::get_serverAddress(void) const
 	return _serverAddress;
 }
 
+int Server::get_state(void) const
+{
+	return _state;
+}
+
 // Member functions - server actions
 void Server::acceptClientConnection(Client *client)
 {
-	if (client == NULL)
+	if (client == NULL || _state != 1) // Server must be running to accept connections
 		return;
 
 	// password check - subject: "The connection pw will be needed by any IRC client that tries to connect to your server"
