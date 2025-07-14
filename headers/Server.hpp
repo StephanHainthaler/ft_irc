@@ -35,10 +35,10 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 		void run(void);
 
 		// Getters
-		std::string get_password(void) const;
-		Channel *get_channel(const std::string &channel_name) const;
-		sockaddr_in get_serverAddress(void) const; // bc client will need it to connect to server
-		int get_state(void) const;
+		std::string getPassword(void) const;
+		Channel *getChannel(const std::string &channel_name) const;
+		sockaddr_in getServerAddress(void) const; // bc client will need it to connect to server
+		int getState(void) const;
 
 		// Member functions - server actions
 		void acceptClientConnection(Client *client);
