@@ -30,8 +30,6 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 	public:
 		Server(const unsigned int &port, const std::string &password);
 		~Server(void);
-		
-		void run(void);
 
 		// Getters
 		std::string getPassword(void) const;
@@ -40,9 +38,8 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 		int getState(void) const;
 
 		// Member functions - server actions
+		void sendMessageToClient(int client_fd, const char* msg);
 		/*
-		void handleClientMessage(int client_fd);
-		
 		// Member functions - user triggered actions
 		void addClient(Client *client);
 		void removeClient(Client *client);
@@ -50,6 +47,8 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 		void addChannel(Channel *channel);
 		void removeChannel(Channel *channel);*/
 		
+		void run(void);
+
 		// Exception
 		class ServerException: public std::exception
 		{

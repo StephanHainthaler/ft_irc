@@ -73,52 +73,6 @@ Server::~Server(void)
 	}*/
 }
 
-void Server::run()
-{
-	/* sockaddr_in vs sockaddr
-	sockaddr_in is specifically for handling IPv4 addresses
-	sockaddr is a generic structure that can be used for both IPv4 and IPv6 addresses
-	and it is what the bind function expects
-	*/
-	if (bind(_socket_fd, (struct sockaddr *)&_serverAddress, sizeof(_serverAddress)) == -1)
-	{
-		close(_socket_fd);
-		throw ServerException("Error. Failed to bind socket.");
-	}
-	
-	// Marks a bound socket as "listening socket"
-	// Server is on receiving end of data so needs to listen for incoming connections
-	if (listen(_socket_fd, SOMAXCONN) == -1)
-	{
-		close(_socket_fd);
-		throw ServerException("Error. Failed to listen on socket.");
-	}
-	std::cout << "Server started on port " << _port << std::endl;
-	_state = 1; // Server state - 1: running
-
-	// waits for an incoming connection from a client (IRC client = Hexchat)
-	int client_fd = accept(_socket_fd, NULL, NULL);
-	if (client_fd == -1) 
-	{
-		std::cerr << RED << "Error. Failed to accept connection." << DEFAULT << std::endl;
-		return;
-	}
-
-	const char* msg =
-	"Hello Stephan and Julian\r\n";
-	
-	long long total_sent = 0;
-	long long msg_len = strlen(msg);
-
-	while (total_sent < msg_len) 
-	{
-		long long sent = send(client_fd, msg + total_sent, msg_len - total_sent, 0);
-		if (sent == -1) 
-			break;
-		total_sent += sent;
-	}
-}
-
 // Getters
 std::string Server::getPassword(void) const
 {
@@ -146,18 +100,27 @@ int Server::getState(void) const
 }
 
 // Member functions - server actions
-/*
-void Server::handleClientMessage(int client_fd)
+void Server::sendMessageToClient(int client_fd, const char* msg)
 {
 	if (client_fd < 0)
 	{
 		std::cerr << RED << "Error. Invalid client fd." << DEFAULT << std::endl;
 		return;
 	}
+	
+	long long total_sent = 0;
+	long long msg_len = strlen(msg);
 
-	// in progress
+	while (total_sent < msg_len) 
+	{
+		long long sent = send(client_fd, msg + total_sent, msg_len - total_sent, 0);
+		if (sent == -1) 
+			break;
+		total_sent += sent;
+	}
 }
 
+/*
 // Member functions - user triggered actions
 void Server::addClient(Client *client)
 {
@@ -214,6 +177,41 @@ void Server::removeChannel(Channel *channel)
 		}
 	}
 }*/
+
+void Server::run()
+{
+	/* sockaddr_in vs sockaddr
+	sockaddr_in is specifically for handling IPv4 addresses
+	sockaddr is a generic structure that can be used for both IPv4 and IPv6 addresses
+	and it is what the bind function expects
+	*/
+	if (bind(_socket_fd, (struct sockaddr *)&_serverAddress, sizeof(_serverAddress)) == -1)
+	{
+		close(_socket_fd);
+		throw ServerException("Error. Failed to bind socket.");
+	}
+	
+	// Marks a bound socket as "listening socket"
+	// Server is on receiving end of data so needs to listen for incoming connections
+	if (listen(_socket_fd, SOMAXCONN) == -1)
+	{
+		close(_socket_fd);
+		throw ServerException("Error. Failed to listen on socket.");
+	}
+	std::cout << "Server started on port " << _port << std::endl;
+	_state = 1; // Server state - 1: running
+
+	// waits for an incoming connection from a client (IRC client = Hexchat)
+	int client_fd = accept(_socket_fd, NULL, NULL);
+	if (client_fd == -1) 
+	{
+		std::cerr << RED << "Error. Failed to accept connection." << DEFAULT << std::endl;
+		return;
+	}
+
+	sendMessageToClient(client_fd, "Hello Stephan and Julian\r\n");
+}
+
 
 // Exception
 Server::ServerException::ServerException(const std::string &message): _message(message)
