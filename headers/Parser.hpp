@@ -16,10 +16,11 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
-#include <sstream> 
+#include <sstream>
+#include <cstring> 
 
 void	handleInput(void);
-void    parseInputToVector(std::string &input, std::vector<std::string> &command);
+void    parseInputToVector(std::string &input, std::vector<std::string> *command);
 void	executeCommand(std::vector<std::string> command);
 void    printVector(std::vector<std::string> vector);
 

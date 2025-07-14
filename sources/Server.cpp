@@ -97,12 +97,12 @@ void Server::run()
 }
 
 // Getters
-std::string Server::getPassword(void) const
+std::string Server::get_password(void) const
 {
 	return _password;
 }
 
-Channel *Server::getChannel(const std::string &channel_name) const
+Channel *Server::get_channel(const std::string &channel_name) const
 {
 	for (std::vector<Channel *>::const_iterator it = _channels.begin(); it != _channels.end(); ++it)
 	{
@@ -112,12 +112,12 @@ Channel *Server::getChannel(const std::string &channel_name) const
 	return NULL;
 }
 
-sockaddr_in Server::getServerAddress(void) const
+sockaddr_in Server::get_serverAddress(void) const
 {
 	return _serverAddress;
 }
 
-int Server::getState(void) const
+int Server::get_state(void) const
 {
 	return _state;
 }
