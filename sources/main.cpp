@@ -16,7 +16,10 @@
 # define GRAY "\x1b[90m"
 
 #include <iostream>
-#include "./headers/Server.hpp"
+#include <cstring>
+#include <cstdlib>
+#include "../headers/Server.hpp"
+#include "../headers/Parser.hpp"
 
 bool	isPositiveNumber(char *string)
 {
@@ -50,14 +53,21 @@ int	main(int argc, char *argv[])
 	unsigned int	port = std::atoi(argv[1]);
 	std::string		password = argv[2];
 
-	try
-	{
-		Server	server(port, password);
-	}
-	catch(const std::exception& e)
-	{
-		std::cerr << RED << e.what() << DEFAULT << std::endl;
-	}
+	(void)port;
+	(void)password;
+
+	handleInput();
+
+	// try
+	// {
+	// 	Server	server(port, password);
+	// }
+	// catch(const std::exception& e)
+	// {
+	// 	std::cerr << RED << e.what() << DEFAULT << std::endl;
+	// }
+
+
 
 	return (0);
 }

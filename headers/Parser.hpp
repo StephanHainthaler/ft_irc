@@ -1,0 +1,27 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Parser.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: shaintha <shaintha@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/09 23:37:07 by shaintha          #+#    #+#             */
+/*   Updated: 2025/07/09 23:37:07 by shaintha         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#ifndef PARSER_HPP
+# define PARSER_HPP
+
+#include <iostream>
+#include <iomanip>
+#include <vector>
+#include <sstream> 
+
+void	handleInput(void);
+void    parseInputToVector(std::string &input, std::vector<std::string> &command);
+void	executeCommand(std::vector<std::string> command);
+void    printVector(std::vector<std::string> vector);
+
+
+#endif
