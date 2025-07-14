@@ -19,10 +19,10 @@ SRC_DIR := sources
 OBJ_DIR := objects
 
 SRCS := $(SRC_DIR)/main.cpp \
-		$(SRC_DIR)/Server.cpp \
-		# $(SRC_DIR)/Client.cpp \
-		# $(SRC_DIR)/Channel.cpp \
-
+	$(SRC_DIR)/Server.cpp \
+	$(SRC_DIR)/Client.cpp \
+	$(SRC_DIR)/Channel.cpp \
+	$(SRC_DIR)/Parser.cpp
 
 OBJS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRCS))
 

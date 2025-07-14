@@ -16,6 +16,8 @@
 #include <cstring> // BUGFIX: allowed?
 
 #include "../headers/Server.hpp"
+#include "../headers/Parser.hpp"
+
 
 bool	isPositiveNumber(char *string)
 {
@@ -54,6 +56,8 @@ int	main(int argc, char *argv[])
 	unsigned int 	port = atoi(argv[1]);
 	std::string		password = argv[2];
 
+	handleInput();
+	
 	try
 	{
 		Server	server(port, password);
