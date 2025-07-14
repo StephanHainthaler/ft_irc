@@ -102,7 +102,7 @@ std::string Server::getPassword(void) const
 	return _password;
 }
 
-Channel *Server::getChannel(const std::string &channel_name) const
+/*Channel *Server::getChannel(const std::string &channel_name) const
 {
 	for (std::vector<Channel *>::const_iterator it = _channels.begin(); it != _channels.end(); ++it)
 	{
@@ -110,7 +110,7 @@ Channel *Server::getChannel(const std::string &channel_name) const
 			return *it;
 	}
 	return NULL;
-}
+}*/
 
 sockaddr_in Server::getServerAddress(void) const
 {

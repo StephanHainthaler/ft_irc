@@ -36,7 +36,7 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 
 		// Getters
 		std::string getPassword(void) const;
-		Channel *getChannel(const std::string &channel_name) const;
+		// Channel *getChannel(const std::string &channel_name) const;
 		sockaddr_in getServerAddress(void) const; // bc client will need it to connect to server
 		int getState(void) const;
 
@@ -68,22 +68,23 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 		Server(const Server &other);
 		Server	&operator=(const Server &other);
 	
-		int						_socket_fd; // Server Socket FD - Listening socket, can be negative
-		const unsigned int 		_port; // Port number - "door to the server"
-		struct sockaddr_in 		_serverAddress; // for IPv4 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
-		// struct sockaddr_in6 	_serverAddress; // for IPv6 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
+		int							_socket_fd; // Server Socket FD - Listening socket, can be negative
+		const unsigned int 			_port; // Port number - "door to the server"
+		struct sockaddr_in 			_serverAddress; // for IPv4 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
+		// struct sockaddr_in6 		_serverAddress; // for IPv6 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
 		/*
 		server creates sockaddr_in "serverAddress" to specify its own IP address and port to bind to
 		client takes this sockaddr_in "serverAddress" to specify the server's IP address and port to connect to
 		*/
 		
-		const std::string		_password;
-		std::vector<Client *>	_clients;	// List of connected clients (ClientClass objs)
-		std::vector<Channel *>	_channels;	// List of channels (ChannelClass objs)
+		const std::string			_password;
+		std::vector<Client *>		_clients;	// List of connected clients (ClientClass objs)
+		std::vector<Channel *>		_channels;	// List of channels (ChannelClass objs)
+		std::vector<std::string>	_users; // auf 10 users limitieren
 
 		// clients must be unique within a channel
 
-		int						_state; // Server state - 0: not running, 1: running, -1: error (?)
+		int							_state; // Server state - 0: not running, 1: running, -1: error (?)
 };
 
 #endif

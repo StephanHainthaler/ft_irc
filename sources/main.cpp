@@ -17,6 +17,9 @@
 
 #include "../headers/Server.hpp"
 #include "../headers/Parser.hpp"
+#include "../headers/Client.hpp"
+#include "../headers/Channel.hpp"
+#include "../headers/main.hpp"
 
 
 bool	isPositiveNumber(char *string)
