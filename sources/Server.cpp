@@ -104,6 +104,19 @@ void Server::run()
 		return;
 	}
 
+	const char* msg =
+	"Hello Stephan and Julian\r\n";
+	
+	long long total_sent = 0;
+	long long msg_len = strlen(msg);
+
+	while (total_sent < msg_len) 
+	{
+		long long sent = send(client_fd, msg + total_sent, msg_len - total_sent, 0);
+		if (sent == -1) 
+			break;
+		total_sent += sent;
+	}
 }
 
 // Getters

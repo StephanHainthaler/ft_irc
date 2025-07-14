@@ -46,9 +46,12 @@ bool	isPositiveNumber(char *string)
 	return (true);
 }
 
-// ./ircserv <port> <password>
-// c++ main.cpp -o ircserv -std=c++98 && ./ircserv "6667" "password"
-// make re && ./ircserv "6667" "password" && flatpak run io.github.Hexchat
+/* HowTo start the chat:
+on 1st Terminal run: ./ircserv <port> <password>
+	make re && ./ircserv "6667" "password" 
+on 2nd Terminal run: 
+	flatpak run io.github.Hexchat
+*/
 int	main(int argc, char *argv[])
 {
 	if (argc != 3)
