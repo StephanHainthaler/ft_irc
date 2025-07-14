@@ -1,33 +1,27 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.hpp                                           :+:      :+:    :+:   */
+/*   Parser.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: shaintha <shaintha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/07/01 16:39:53 by shaintha          #+#    #+#             */
-/*   Updated: 2025/07/01 16:39:53 by shaintha         ###   ########.fr       */
+/*   Created: 2025/07/09 23:37:07 by shaintha          #+#    #+#             */
+/*   Updated: 2025/07/09 23:37:07 by shaintha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef PARSER_HPP
+# define PARSER_HPP
 
-#include <cstring>
-# define DEFAULT "\x1b[0m"
-# define RED "\x1b[31m"
-# define YELLOW "\x1b[33m"
-# define GRAY "\x1b[90m"
+#include <iostream>
+#include <iomanip>
+#include <vector>
+#include <sstream> 
 
-# define DEFAULT "\x1b[0m"
-# define RED "\x1b[31m"
-# define YELLOW "\x1b[33m"
-# define GRAY "\x1b[90m"
+void	handleInput(void);
+void    parseInputToVector(std::string &input, std::vector<std::string> &command);
+void	executeCommand(std::vector<std::string> command);
+void    printVector(std::vector<std::string> vector);
 
-enum ClientState
-{
-	CONNECTING,
-	UNREGISTERED,
-	REGISTERED,
-	AUTHENTICATED,
-	DISCONNECTED
-};
+
+#endif

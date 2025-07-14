@@ -16,34 +16,107 @@
 # include <iostream>
 #include <sys/socket.h> // for socket, bind, listen, accept
 #include <netinet/in.h> // for sockaddr_in
+#include <fcntl.h>
 
-class Server
+#include <unistd.h>
+#include <exception>
+#include <vector>
+
+#include "main.hpp"
+#include "Client.hpp"
+#include "Channel.hpp"
+
+class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in-cpp/
 {
 	public:
 		Server(const unsigned int &port, const std::string &password);
 		~Server(void);
 		
-		void bindServerSocket(void);
-		void listenServerSocket(void);
-		void acceptClientConnections(void);
-		
+		void run(void);
+
+		// Getters
+		std::string getPassword(void) const;
+		Channel *getChannel(const std::string &channel_name) const;
+		sockaddr_in getServerAddress(void) const; // bc client will need it to connect to server
+		int getState(void) const;
+
+		// Member functions - server actions
+		void acceptClientConnection(Client *client);
 		void handleClientMessage(int client_fd);
+		
+		// Member functions - user triggered actions
+		void addClient(Client *client);
+		void removeClient(Client *client);
+		
+		void addChannel(Channel *channel);
+		void removeChannel(Channel *channel);
+		
+		// Exception
+		class ServerException: public std::exception
+		{
+			public:
+				ServerException(const std::string &message);
+				virtual const char* what() const throw();
+				virtual ~ServerException() throw();
+
+			private:
+				const std::string _message;
+		};
 
 	private:
 		Server(void);
 		Server(const Server &other);
 		Server	&operator=(const Server &other);
-
+	
+		int						_socket_fd; // Server Socket FD - Listening socket, can be negative
+		const unsigned int 		_port; // Port number - "door to the server"
+		struct sockaddr_in 		_serverAddress; // for IPv4 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
+		// struct sockaddr_in6 	_serverAddress; // for IPv6 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
+		/*
+		server creates sockaddr_in "serverAddress" to specify its own IP address and port to bind to
+		client takes this sockaddr_in "serverAddress" to specify the server's IP address and port to connect to
+		*/
 		
-		const unsigned int	socket_fd; // Server Socket FD - Listening socket (IP + port combo)
-		// IP
-		const unsigned int port;		
-		struct sockaddr_in sin; // holds network info - like IP address and port number - that the server uses to know where to listen or connect
-		
-		const std::string	password;
-			// List of connected clients (ClientClass objs)
-			// List of channels (ChannelClass objs)
+		const std::string		_password;
+		std::vector<Client *>	_clients;	// List of connected clients (ClientClass objs)
+		std::vector<Channel *>	_channels;	// List of channels (ChannelClass objs)
 
+		// clients must be unique within a channel
+
+		int						_state; // Server state - 0: not running, 1: running, -1: error (?)
 };
 
 #endif
+
+/* 
+***USED FUNCTIONS:
+socket(AF_INET, SOCK_STREAM, 0)
+close(fd)
+connect(sockfd, (sockaddr*)&addr, sizeof(addr))
+bind(sockfd, (sockaddr*)&addr, sizeof(addr))
+listen(sockfd, SOMAXCONN)
+accept(sockfd, NULL, NULL)
+htons()
+fcntl(sockfd, F_SETFL, O_NONBLOCK)
+
+***MIGHT BE USEFUL:
+setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes))
+recv(client_fd, buffer, sizeof(buffer), 0)
+lseek(fd, 0, SEEK_END)
+
+***UNUSED FUNCTIONS:
+getsockname(sockfd, (sockaddr*)&addr, &len)getprotobyname("tcp")
+gethostbyname("irc.example.com")
+getaddrinfo("localhost", "6667", &hints, &res)
+freeaddrinfo()
+ntohs()
+htonl()
+ntohl(addr.sin_addr.s_addr)
+inet_addr("127.0.0.1")
+inet_ntoa(addr.sin_addr)
+send(client_fd, buffer, len, 0)
+signal(SIGINT, handle_sigint)
+sigaction(SIGINT, &sa, NULL)
+fstat(fd, &info)
+poll(fds, nfds, timeout)
+*/
