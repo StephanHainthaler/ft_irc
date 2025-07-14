@@ -15,7 +15,7 @@
 # include <iostream>
 # include <sys/socket.h> // for socket, bind, listen, accept
 # include <netinet/in.h> // for sockaddr_in
-# include <fcntl.h>
+# include <fcntl.h> // to set socket to non-blocking mode
 
 # include <unistd.h>
 # include <exception>
@@ -25,7 +25,8 @@
 # include "Client.hpp"
 # include "Channel.hpp"
 
-class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in-cpp/
+// useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in-cpp/
+class Server
 {
 	public:
 		Server(const unsigned int &port, const std::string &password);
@@ -95,6 +96,7 @@ listen(sockfd, SOMAXCONN)
 accept(sockfd, NULL, NULL)
 htons()
 fcntl(sockfd, F_SETFL, O_NONBLOCK)
+send(client_fd, buffer, len, 0)
 
 ***MIGHT BE USEFUL:
 setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes))
@@ -111,7 +113,6 @@ htonl()
 ntohl(addr.sin_addr.s_addr)
 inet_addr("127.0.0.1")
 inet_ntoa(addr.sin_addr)
-send(client_fd, buffer, len, 0)
 signal(SIGINT, handle_sigint)
 sigaction(SIGINT, &sa, NULL)
 fstat(fd, &info)

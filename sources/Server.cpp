@@ -74,7 +74,7 @@ Server::~Server(void)
 }
 
 // Getters
-std::string Server::get_password(void) const
+std::string Server::getPassword(void) const
 {
 	return _password;
 }
@@ -89,12 +89,12 @@ std::string Server::get_password(void) const
 	return NULL;
 }*/
 
-sockaddr_in Server::get_serverAddress(void) const
+sockaddr_in Server::getServerAddress(void) const
 {
 	return _serverAddress;
 }
 
-int Server::get_state(void) const
+int Server::getState(void) const
 {
 	return _state;
 }

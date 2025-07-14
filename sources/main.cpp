@@ -10,14 +10,10 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-# define DEFAULT "\x1b[0m"
-# define RED "\x1b[31m"
-# define YELLOW "\x1b[33m"
-# define GRAY "\x1b[90m"
-
 #include <iostream>
 #include <cstring>
 #include <cstdlib>
+
 #include "../headers/Server.hpp"
 #include "../headers/Parser.hpp"
 #include "../headers/Client.hpp"
@@ -60,11 +56,8 @@ int	main(int argc, char *argv[])
 	if (isPositiveNumber(argv[1]) == false)
 		return (std::cerr << RED << "Error: port MUST be a positive number" << DEFAULT << std::endl, 1);
 	
-	unsigned int	port = std::atoi(argv[1]);
+	unsigned int	port = atoi(argv[1]);
 	std::string		password = argv[2];
-
-	(void)port;
-	(void)password;
 
 	//handleInput();
 	
