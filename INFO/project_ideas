@@ -1,5 +1,6 @@
 https://hexchat.github.io/ - das Programm, auf dem unser server laufen wird
 (beim Installieren choose Flatpack für Ubuntu)
+
 1. ClientClass which consists of 
     Client Socket FD - Socket (IP + port combo)
     IP
