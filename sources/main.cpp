@@ -10,11 +10,14 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <iostream>
-#include <unistd.h>
-#include <cstdlib>
-#include <cstring> // BUGFIX: allowed?
+# define DEFAULT "\x1b[0m"
+# define RED "\x1b[31m"
+# define YELLOW "\x1b[33m"
+# define GRAY "\x1b[90m"
 
+#include <iostream>
+#include <cstring>
+#include <cstdlib>
 #include "../headers/Server.hpp"
 #include "../headers/Parser.hpp"
 #include "../headers/Client.hpp"
@@ -41,8 +44,6 @@ bool	isPositiveNumber(char *string)
 	}
 	if (i != end)
 		return (false);
-	if (atoi(string) <= 0 || atoi(string) > 65535) // https://www.pico.net/kb/what-is-the-highest-tcp-port-number-allowed/
-		return (false);
 	return (true);
 }
 
@@ -56,11 +57,14 @@ int	main(int argc, char *argv[])
 {
 	if (argc != 3)
 		return (std::cerr << RED << "Error: incorrect number of arguments" << DEFAULT << std::endl, 1);
-	// if (isPositiveNumber(argv[1]) == false)
-	// 	return (std::cerr << RED << "Error: port MUST be a positive number between 0 and 65535" << DEFAULT << std::endl, 1);
+	if (isPositiveNumber(argv[1]) == false)
+		return (std::cerr << RED << "Error: port MUST be a positive number" << DEFAULT << std::endl, 1);
 	
-	unsigned int 	port = atoi(argv[1]);
+	unsigned int	port = std::atoi(argv[1]);
 	std::string		password = argv[2];
+
+	(void)port;
+	(void)password;
 
 	//handleInput();
 	
@@ -75,13 +79,3 @@ int	main(int argc, char *argv[])
 	}
 	return 0;
 }
-
-/* Socket vs Server
-The difference between a socket and a server is that a socket is an endpoint for communication,
-while a server is a program that listens for incoming connections on a specific port 
-and can handle multiple clients. 
-A server uses sockets to accept connections from clients, 
-allowing them to communicate over the network.
-A server can have multiple sockets, each representing a different client connection, 
-while a socket is a single communication endpoint.
-*/

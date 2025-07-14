@@ -21,38 +21,22 @@ void	handleInput(void)
 	{
 		std::cout << "TYPE the COMMAND" << std::endl;
 		getline(std::cin, input);
-		parseInputToVector(input, command);
+		parseInputToVector(input, &command);
+		// printVector(&command);
 		executeCommand(command);
 		command.clear();
 	}
 }
 
-//DOES NOT WORK PROPERLY YET (AND DONT USE WITH VALGRIND)
-void    parseInputToVector(std::string &input, std::vector<std::string> &command)
+void    parseInputToVector(std::string &input, std::vector<std::string> *command)
 {
-	std::cout << "String to parse: '" << input << "'" << std::endl;
-
-	for (size_t i = 0, j; i < input.length(); i++)
-	{
-		while (input[i] == ' ' || input[i] == '\f' || input[i] == '\n' || input[i] == '\r' || input[i] == '\t' || input[i] == '\v')
-			i++;
-		if (i == input.length())
-			break ;
-		j = i;
-		while (i < input.length() && (input[i] != ' ' && input[i] != '\f' && input[i] != '\n' && input[i] != '\r' && input[i] != '\t' && input[i] != '\v'))
-			i++;
-		std::cout << "Substring: " << input.substr(j, i) << std::endl;
-		command.push_back(input.substr(j, i));
-	}
-	
-	std::cout << "TEST: Printing the vector" << std::endl;
-	printVector(command);
+    const char* delimiters = " \f\n\r\t\v";
+	for (char* token = std::strtok((char *)input.c_str(), delimiters); token; token = std::strtok(NULL, delimiters))
+		command->push_back(token);
 }
-
 
 void	executeCommand(std::vector<std::string> command)
 {
-	//std::cout << "Command = " << command[0] << std::endl; 
 	if (command.size() == 0)
 		return ;
 	else if (command[0].compare("AUTHENTICATE") == 0)
@@ -79,11 +63,13 @@ void	executeCommand(std::vector<std::string> command)
 
 void printVector(std::vector<std::string> vector)
 {
-	for (std::vector<std::string>::iterator it = vector.begin(); it != vector.end(); it++)
+	if (vector.size() == 0)
 	{
-		std::string	temp = *it;
-		if (temp.size() == 0)
-			break ;
-		std::cout << *it++ << std::endl;
+		std::cout << "EMPTY VECTOR!!" << std::endl;
+		return ;
+	}
+	for (size_t i = 0; i < vector.size(); i++)
+	{			
+		std::cout << vector[i] << std::endl;
 	}
 }
