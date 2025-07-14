@@ -155,7 +155,13 @@ void Server::acceptClientConnection(Client *client)
 
 void Server::handleClientMessage(int client_fd)
 {
-	return; // think about this
+	if (client_fd < 0)
+	{
+		std::cerr << RED << "Error. Invalid client fd." << DEFAULT << std::endl;
+		return;
+	}
+
+	// in progress
 }
 
 // Member functions - user triggered actions
@@ -216,6 +222,10 @@ void Server::removeChannel(Channel *channel)
 }
 
 // Exception
+ServerException(std::string &message): _message(message) 
+{
+}
+
 const char* Server::ServerException::what() const throw()
 {
 	return _message.c_str();

@@ -17,7 +17,10 @@
 
 #include <iostream>
 #include <unistd.h>
-#include "./headers/Server.hpp"
+#include <cstdlib>
+#include <cstring> // BUGFIX: allowed?
+#include <fcntl.h>
+#include "../headers/Server.hpp"
 
 bool	isPositiveNumber(char *string)
 {
@@ -38,7 +41,7 @@ bool	isPositiveNumber(char *string)
 	}
 	if (i != end)
 		return (false);
-	if (port <= 0 || port > 65535) // https://www.pico.net/kb/what-is-the-highest-tcp-port-number-allowed/
+	if (atoi(string) <= 0 || atoi(string) > 65535) // https://www.pico.net/kb/what-is-the-highest-tcp-port-number-allowed/
 		return (false);
 	return (true);
 }
@@ -53,7 +56,7 @@ int	main(int argc, char *argv[])
 	if (isPositiveNumber(argv[1]) == false)
 		return (std::cerr << RED << "Error: port MUST be a positive number between 0 and 65535" << DEFAULT << std::endl, 1);
 	
-	unsigned int 	port = std::atoi(argv[1]);
+	unsigned int 	port = atoi(argv[1]);
 	std::string		password = argv[2];
 
 	try

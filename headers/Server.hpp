@@ -29,7 +29,7 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 		Server(const unsigned int &port, const std::string &password);
 		~Server(void);
 		
-		run();
+		void run(void);
 
 		// Getters
 		std::string get_password(void) const;
@@ -47,14 +47,14 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 		void addChannel(Channel *channel);
 		void removeChannel(Channel *channel);
 		
-
+		// Exception
 		class ServerException: public std::exception
 		{
 			public:
-				ServerException(std::string message) : _message(message) {}
-				const char* what() const throw();
-			
-			private :
+				ServerException(std::string &message);
+				virtual const char* what() const throw();
+
+			private:
 				std::string _message;
 		};
 
