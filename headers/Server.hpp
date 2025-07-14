@@ -10,21 +10,20 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef SERVER_HPP
-# define SERVER_HPP
+#pragma once
 
 # include <iostream>
-#include <sys/socket.h> // for socket, bind, listen, accept
-#include <netinet/in.h> // for sockaddr_in
-#include <fcntl.h>
+# include <sys/socket.h> // for socket, bind, listen, accept
+# include <netinet/in.h> // for sockaddr_in
+# include <fcntl.h>
 
-#include <unistd.h>
-#include <exception>
-#include <vector>
+# include <unistd.h>
+# include <exception>
+# include <vector>
 
-#include "main.hpp"
-#include "Client.hpp"
-#include "Channel.hpp"
+# include "main.hpp"
+# include "Client.hpp"
+# include "Channel.hpp"
 
 class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in-cpp/
 {
@@ -86,8 +85,6 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 
 		int							_state; // Server state - 0: not running, 1: running, -1: error (?)
 };
-
-#endif
 
 /* 
 ***USED FUNCTIONS:
