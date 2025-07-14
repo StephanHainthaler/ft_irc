@@ -12,10 +12,6 @@
 
 #include "../headers/Server.hpp"
 
-Server::Server(void) // private
-{
-}
-
 /* sockaddr_in / sockaddr_in6 
 is a structure specifically for handling IPv4 addresses
 subject: "communication between client and server has to be done via TCP/IP (v4 or v6)"
@@ -23,7 +19,7 @@ subject: "communication between client and server has to be done via TCP/IP (v4 
 the IP address is specified by the computer I am running the server code on,
 and the port number is specified by the user (as a command line argument)
 */
-Server::Server(const unsigned int &port, const std::string &password): port(port), password(password)
+Server::Server(const unsigned int &port, const std::string &password): _port(port), _password(password)
 {
 	// AF_INET specifies IPv4 protocol family, SOCK_STREAM specifies TCP protocol
     _socket_fd = socket(AF_INET, SOCK_STREAM, 0); // Create a TCP/IPv4 socket
@@ -33,7 +29,7 @@ Server::Server(const unsigned int &port, const std::string &password): port(port
 	}
 
 	// subject: "All I/O operations must be non-blocking"
-	if (fcntl(socket_fd, F_SETFL, O_NONBLOCK) == -1) // allow server to handle multiple clients at once
+	if (fcntl(_socket_fd, F_SETFL, SOCK_NONBLOCK) == -1) // allow server to handle multiple clients at once
 	{
 		close(_socket_fd);
 		throw ServerException("Error. Failed to set socket to non-blocking mode.");
@@ -46,34 +42,10 @@ Server::Server(const unsigned int &port, const std::string &password): port(port
 	// _clients and _channels remain empty at this point (?) - will get filled later
 }
 
-Server::Server(const Server &other) // private
-{
-	_socket_fd = other._socket_fd;
-	_port = other._port;
-	_serverAddress = other. _serverAddress;
-	_password = other._password;
-	_clients = other._clients;
-	_channels = other._channels;
-}
-
-Server	&Server::operator=(const Server &other) // private
-{
-	if (this != &other)
-	{
-		_socket_fd = other._socket_fd;
-		_port = other._port;
-		_serverAddress = other. _serverAddress;
-		_password = other._password;
-		_clients = other._clients;
-		_channels = other._channels;
-	}
-	return *this;
-}
-
 Server::~Server(void)
 {
-	if (socket_fd != -1)
-		close(socket_fd);
+	if (_socket_fd != -1)
+		close(_socket_fd);
 
 	// clear client vector (BUGFIX? - needed?)
 	if (!_clients.empty())
@@ -98,7 +70,12 @@ Server::~Server(void)
 
 void Server::run()
 {
-	if (bind(_socket_fd, (struct sockaddr_in6 *)&_serverAddress, sizeof(_serverAddress)) == -1)
+	/* sockaddr_in vs sockaddr
+	sockaddr_in is specifically for handling IPv4 addresses
+	sockaddr is a generic structure that can be used for both IPv4 and IPv6 addresses
+	and it is what the bind function expects
+	*/
+	if (bind(_socket_fd, (struct sockaddr *)&_serverAddress, sizeof(_serverAddress)) == -1)
 	{
 		close(_socket_fd);
 		throw ServerException("Error. Failed to bind socket.");
@@ -129,6 +106,11 @@ Channel *Server::get_channel(const std::string &channel_name) const
 			return *it;
 	}
 	return NULL;
+}
+
+sockaddr_in Server::get_serverAddress(void) const
+{
+	return _serverAddress;
 }
 
 // Member functions - server actions
@@ -222,11 +204,15 @@ void Server::removeChannel(Channel *channel)
 }
 
 // Exception
-ServerException(std::string &message): _message(message) 
+Server::ServerException::ServerException(const std::string &message): _message(message)
 {
 }
 
 const char* Server::ServerException::what() const throw()
 {
 	return _message.c_str();
+}
+
+Server::ServerException::~ServerException() throw() 
+{
 }

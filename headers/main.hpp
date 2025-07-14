@@ -12,4 +12,9 @@
 
 #pragma once
 
+# define DEFAULT "\x1b[0m"
+# define RED "\x1b[31m"
+# define YELLOW "\x1b[33m"
+# define GRAY "\x1b[90m"
+
 #include <sys/socket.h>

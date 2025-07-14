@@ -16,10 +16,13 @@
 # include <iostream>
 #include <sys/socket.h> // for socket, bind, listen, accept
 #include <netinet/in.h> // for sockaddr_in
+#include <fcntl.h>
 
+#include <unistd.h>
 #include <exception>
 #include <vector>
 
+#include "main.hpp"
 #include "Client.hpp"
 #include "Channel.hpp"
 
@@ -34,7 +37,7 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 		// Getters
 		std::string get_password(void) const;
 		Channel *get_channel(const std::string &channel_name) const;
-		
+		sockaddr_in get_serverAddress(void) const; // bc client will need it to connect to server
 
 		// Member functions - server actions
 		void acceptClientConnection(Client *client);
@@ -51,11 +54,12 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 		class ServerException: public std::exception
 		{
 			public:
-				ServerException(std::string &message);
+				ServerException(const std::string &message);
 				virtual const char* what() const throw();
+				virtual ~ServerException() throw();
 
 			private:
-				std::string _message;
+				const std::string _message;
 		};
 
 	private:

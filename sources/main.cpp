@@ -10,16 +10,11 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-# define DEFAULT "\x1b[0m"
-# define RED "\x1b[31m"
-# define YELLOW "\x1b[33m"
-# define GRAY "\x1b[90m"
-
 #include <iostream>
 #include <unistd.h>
 #include <cstdlib>
 #include <cstring> // BUGFIX: allowed?
-#include <fcntl.h>
+
 #include "../headers/Server.hpp"
 
 bool	isPositiveNumber(char *string)
