@@ -32,7 +32,7 @@ void    parseInputToVector(std::string &input, std::vector<std::string> &command
 {
 	std::cout << "String to parse: '" << input << "'" << std::endl;
 
-	for (size_t i = 0, j; i < input.length(); i++)
+	for (size_t i = 0, j, k = 0; i < input.length(); i++)
 	{
 		while (input[i] == ' ' || input[i] == '\f' || input[i] == '\n' || input[i] == '\r' || input[i] == '\t' || input[i] == '\v')
 			i++;
@@ -42,7 +42,7 @@ void    parseInputToVector(std::string &input, std::vector<std::string> &command
 		while (i < input.length() && (input[i] != ' ' && input[i] != '\f' && input[i] != '\n' && input[i] != '\r' && input[i] != '\t' && input[i] != '\v'))
 			i++;
 		std::cout << "Substring: " << input.substr(j, i) << std::endl;
-		command.push_back(input.substr(j, i));
+		command[k++] = (input.substr(j, i));
 	}
 	
 	std::cout << "TEST: Printing the vector" << std::endl;
