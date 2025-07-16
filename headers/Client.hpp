@@ -6,7 +6,7 @@
 /*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/16 09:27:54 by codespace        ###   ########.fr       */
+/*   Updated: 2025/07/16 10:12:59 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,8 @@
 #include <string>
 #include <netinet/in.h>
 #include <vector>
+#include <algorithm>
+#include <cctype>
 
 #define CHANLIMIT 10
 #define USERLEN 15
@@ -39,16 +41,23 @@ class Client
 		size_t		_socketFD;
 		std::string	_IP;
 		std::string _userName;
-		std::string _nickName;
+		std::string _nickname;
 		std::string _realName;
 		ClientState _state;
 		std::vector<std::string> _channels;
 	
 	public:
-		int		isNickValid(const std::string& nickName);
+		int		isNickValid(const std::string& nickname) const;
 		int		isUserValid(std::string& userName);
-		void	setNick(const std::string& nickName);
+		bool	isNicknameAvailable(const std::string& nickname) const;
+        bool	isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const;
+		void	setNick(const std::string& nickname);
 		void	setUser(const std::string& userName, int zero, char *, const std::string& realName); // 2nd parameter should always be zero and 3rd "*"
+
+		// Getters
+		std::string getNickname() const;
+		std::string getUsername() const;
+		std::string getRealname() const;
 
 		//USER_function
 		//NICK_function
