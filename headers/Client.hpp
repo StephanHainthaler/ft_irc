@@ -6,7 +6,7 @@
 /*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/14 10:46:04 by codespace        ###   ########.fr       */
+/*   Updated: 2025/07/16 09:27:54 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 #include <netinet/in.h>
 #include <vector>
 
-#define MAX_CHANNELS 10
+#define CHANLIMIT 10
 #define USERLEN 15
 
 //errors

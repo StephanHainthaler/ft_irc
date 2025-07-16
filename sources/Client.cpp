@@ -6,7 +6,7 @@
 /*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:54:03 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/16 09:14:00 by codespace        ###   ########.fr       */
+/*   Updated: 2025/07/16 09:22:12 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,14 +48,11 @@ std::string truncName(std::string name)
 
 int		Client::isUserValid(std::string& userName)
 {
-	for (size_t i = 0; i < userName.size(); i++)
-	{
-		if (userName.size() == 0)
-			return (std::cout << /* <client> */ "<USER> :Not enough parameters", ERR_NEEDMOREPARAMS);
-		if (userName.size() > USERLEN)
-			truncName(userName);
-		
-	}
+	if (userName.size() == 0)
+		return (std::cout << /* <client> */ "<USER> :Not enough parameters", ERR_NEEDMOREPARAMS);
+	if (userName.size() > USERLEN)
+		userName = truncName(userName);
+	return (0);
 }
 
 bool	Client::isRealNameValid(const std::string& realName)
@@ -69,9 +66,10 @@ void	Client::setNick(const std::string& nickName)
 		_nickName = nickName;
 }
 
-void Client::setUser(const std::string& userName, int zero, char *, const std::string& realName)
+void Client::setUser(std::string& userName, int zero, char *, std::string& realName)
 {
-	
+	if (isUserValid(userName))
+		_userName = userName;
 }
 
 Client::Client(int socketFD, const sockaddr_in& clientAddr) : 
