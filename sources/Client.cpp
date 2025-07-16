@@ -6,7 +6,7 @@
 /*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:54:03 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/14 09:40:08 by codespace        ###   ########.fr       */
+/*   Updated: 2025/07/16 09:14:00 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@
 //    return ("Error: Nickname invalid ");
 // }
 
-bool	Client::isNickValid(const std::string& nickName)
+int	Client::isNickValid(const std::string& nickName)
 {
 	for (size_t i = 0; i < nickName.size(); i++)
 	{
@@ -35,10 +35,10 @@ bool	Client::isNickValid(const std::string& nickName)
 		if (nickName[0] == '$' || nickName[0] == ':' || nickName[0] == '#' || nickName[0] == '~' || nickName[0] == '&' || nickName[0] == '+')
 			return (std::cout << "Error: Nickname invalid.", ERR_ERRONEUSNICKNAME);
 	}
-	return (true);
+	return (0);
 }
 
-std::string trunc_name(std::string name)
+std::string truncName(std::string name)
 {
 	if (name.length() > USERLEN)
 		return name.substr(0, USERLEN);
@@ -46,14 +46,14 @@ std::string trunc_name(std::string name)
 		return (name);
 }
 
-int		Client::isUserValid(const std::string& userName)
+int		Client::isUserValid(std::string& userName)
 {
 	for (size_t i = 0; i < userName.size(); i++)
 	{
 		if (userName.size() == 0)
 			return (std::cout << /* <client> */ "<USER> :Not enough parameters", ERR_NEEDMOREPARAMS);
 		if (userName.size() > USERLEN)
-			trunc_name(userName);
+			truncName(userName);
 		
 	}
 }

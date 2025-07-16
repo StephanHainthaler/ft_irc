@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
+/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/11 18:43:52 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/14 10:46:04 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,8 +45,8 @@ class Client
 		std::vector<std::string> _channels;
 	
 	public:
-		bool	isNickValid(const std::string& nickName);
-		int		isUserValid(const std::string& userName);
+		int		isNickValid(const std::string& nickName);
+		int		isUserValid(std::string& userName);
 		void	setNick(const std::string& nickName);
 		void	setUser(const std::string& userName, int zero, char *, const std::string& realName); // 2nd parameter should always be zero and 3rd "*"
 
