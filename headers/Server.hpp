@@ -20,10 +20,18 @@
 # include <unistd.h>
 # include <exception>
 # include <vector>
+# include <poll.h>
 
 # include "main.hpp"
 # include "Client.hpp"
 # include "Channel.hpp"
+
+# define MAX_CLIENTS 10 // max #clients that can connect to the server at the same time
+
+// Server states
+# define RUNNING 1
+# define NOT_RUNNING 0
+# define ERROR -1
 
 // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in-cpp/
 class Server
@@ -39,15 +47,18 @@ class Server
 		int getState(void) const;
 
 		// Member functions - server actions
-		void sendMessageToClient(int client_fd, const char* msg);
-		/*
+		void sendMessageToIRCClient(const char* msg);
+		void handleClientConnections(void);
+
 		// Member functions - user triggered actions
 		void addClient(Client *client);
 		void removeClient(Client *client);
 		
+		/*
 		void addChannel(Channel *channel);
-		void removeChannel(Channel *channel);*/
-		
+		void removeChannel(Channel *channel);
+		*/
+
 		void run(void);
 
 		// Exception
@@ -67,7 +78,7 @@ class Server
 		Server(const Server &other);
 		Server	&operator=(const Server &other);
 	
-		int							_socket_fd; // Server Socket FD - Listening socket, can be negative
+		int							_server_fd; // Server Socket FD - Listening socket, can be negative
 		const unsigned int 			_port; // Port number - "door to the server"
 		struct sockaddr_in 			_serverAddress; // for IPv4 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
 		// struct sockaddr_in6 		_serverAddress; // for IPv6 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
@@ -84,6 +95,7 @@ class Server
 		// clients must be unique within a channel
 
 		int							_state; // Server state - 0: not running, 1: running, -1: error (?)
+		int							_IRC_client_fd; // FD of the IRC client (Hexchat) that connects to the server
 };
 
 /* 
@@ -97,10 +109,10 @@ accept(sockfd, NULL, NULL)
 htons()
 fcntl(sockfd, F_SETFL, O_NONBLOCK)
 send(client_fd, buffer, len, 0)
+recv(client_fd, buffer, sizeof(buffer), 0)
 
 ***MIGHT BE USEFUL:
 setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes))
-recv(client_fd, buffer, sizeof(buffer), 0)
 lseek(fd, 0, SEEK_END)
 
 ***UNUSED FUNCTIONS:
