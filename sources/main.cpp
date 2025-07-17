@@ -20,7 +20,13 @@
 #include "../headers/Client.hpp"
 
 
-bool	isPositiveNumber(char *string)
+int main(void)
+{
+	Client client;
+	
+}
+
+/* bool	isPositiveNumber(char *string)
 {
 	size_t	i = 0, end = std::strlen(string);
 
@@ -42,12 +48,12 @@ bool	isPositiveNumber(char *string)
 	if (atoi(string) <= 0 || atoi(string) > 65535) // https://www.pico.net/kb/what-is-the-highest-tcp-port-number-allowed/
 		return (false);
 	return (true);
-}
+} */
 
 // ./ircserv <port> <password>
 // c++ main.cpp -o ircserv -std=c++98 && ./ircserv "8080" "password"
 // make re && ./ircserv "8080" "password"
-int	main(int argc, char *argv[])
+/* int	main(int argc, char *argv[])
 {
 	if (argc != 3)
 		return (std::cerr << RED << "Error: incorrect number of arguments" << DEFAULT << std::endl, 1);
@@ -69,7 +75,7 @@ int	main(int argc, char *argv[])
 		std::cerr << RED << e.what() << DEFAULT << std::endl;
 	}
 	return 0;
-}
+} */
 
 /* Socket vs Server
 The difference between a socket and a server is that a socket is an endpoint for communication,

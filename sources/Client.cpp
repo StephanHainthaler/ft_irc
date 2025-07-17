@@ -6,18 +6,9 @@
 /*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/07/16 10:15:17 by codespace        ###   ########.fr       */
+/*   Updated: 2025/07/17 09:25:38 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
-
-// Helper function to convert string to lowercase for case-insensitive comparison
-void toLowercase(const std::string& str)
-{
-	std::string result = str;
-	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
-	return (result);
-}
 
 // const char* Client::NickNameTooLong::what() const throw()
 // {
@@ -43,17 +34,55 @@ int	Client::isNickValid(const std::string& nickname) const
 	return (0);
 }
 
-bool isNicknameAvailable(const std::string& nickName, const std::vector<Client*>& clients)
+void toLowercase(const std::string& str)
 {
-    std::string lowerNick = toLowercase(nickName);
+	std::string result = str;
+	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+	return (result);
+}
+
+bool Server::isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const
+{
+    std::string lowerNick = nickname;
+    toLowercase(lowerNick);
     
-    for (std::vector<Client*>::const_iterator it = clients.begin(); it != clients.end(); ++it)
+    for (std::vector<Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
     {
         const Client* client = *it;
-        if (client && toLowercase(client->getNickname()) == lowerNick)
-            return (false);
+        if (client && client != excludeClient)
+        {
+            std::string clientNick = client->getNickname();
+            toLowercase(clientNick);
+            if (clientNick == lowerNick)
+                return (false);
+        }
     }
     return (true);
+}
+
+bool Server::isNicknameAvailable(const std::string& nickname) const
+{
+    return (isNicknameAvailable(nickname, NULL));
+}
+
+void Server::handleNickCommand(Client* client, const std::string& newNickname)
+{
+    // First check format using Client's validation
+    if (client->isNickFormatValid(newNickname) != 0)
+    {
+        // Send format error to client
+        return ;
+    }
+    
+    // Then check uniqueness using Server's validation
+    if (!isNicknameAvailable(newNickname, client))
+    {
+        // Send ERR_NICKNAMEINUSE (433) to client
+        return ;
+    }
+    
+    // Nickname is valid and available
+    client->setNick(newNickname);
 }
 
 std::string truncName(std::string name)
@@ -105,7 +134,6 @@ ClientState Client::getState() const
 	return (_state);
 }
 
-// Getter implementations
 std::string Client::getNickname() const
 {
 	return (_nickName);
