@@ -6,12 +6,60 @@
 /*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/07/17 10:45:49 by codespace        ###   ########.fr       */
+/*   Updated: 2025/07/17 20:10:48 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../headers/Client.hpp"
 #include "../headers/main.hpp"
+
+int Client::connectToServer(const std::string& serverIP, int serverPort)
+{
+    // Create socket
+    _socketFD = socket(AF_INET, SOCK_STREAM, 0);
+    if (_socketFD == -1)
+    {
+        std::cerr << "Error: Failed to create socket" << std::endl;
+        return (-1);
+    }
+    
+    // Set up server address
+    struct sockaddr_in serverAddr;
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(serverPort);
+    
+    // Convert IP address (with error checking)
+    int errorCheck = 0;
+	errorCheck = inet_pton(AF_INET, serverIP.c_str(), &serverAddr.sin_addr);
+    if (errorCheck == 0)
+    {
+        std::cerr << "Error: Invalid IP address format: " << serverIP << std::endl;
+        close(_socketFD);
+        return (-1);
+    }
+    else if (errorCheck == -1)
+    {
+        std::cerr << "Error: System error in inet_pton" << std::endl;
+        close(_socketFD);
+        return (-1);
+    }
+    
+    // 4. Connect to server
+    if (connect(_socketFD, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
+    {
+        std::cerr << "Error: Failed to connect to server " << serverIP << ":" << serverPort << std::endl;
+        close(_socketFD);
+        return (-1);
+    }
+    
+    _IP = serverIP;
+    _port = serverPort;
+    setState(CONNECTING);
+    
+    std::cout << "Connected to server " << serverIP << ":" << serverPort << std::endl;
+    return (_socketFD);
+}
+
 
 // Will have to send the error messages from server, but I will keep it for now for reference
 

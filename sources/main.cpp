@@ -24,7 +24,13 @@ int main(void)
 {
 	Client client;
 
-	client.setNick("julianwadawd");
+	if (client.connectToServer("127.0.0.1", 6667) == -1)
+	{
+		std::cerr << "Failed to connect to server" << std::endl;
+		return (1);
+	}
+
+	client.setNick("julian");
 	if (!client.getNickname().empty())
 		std::cout << "Nick: " << client.getNickname() << std::endl;
 

@@ -6,7 +6,7 @@
 /*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/17 10:46:15 by codespace        ###   ########.fr       */
+/*   Updated: 2025/07/17 20:03:09 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,8 @@
 #include <vector>
 #include <algorithm>
 #include <cctype>
+#include <unistd.h>
+#include <arpa/inet.h>
 
 #define CHANLIMIT 10
 #define USERLEN 15
@@ -37,8 +39,8 @@
 class Client
 {
 	private:
-		size_t		_port;
-		size_t		_socketFD;
+		int		_port;
+		int		_socketFD;
 		std::string	_IP;
 		std::string _userName;
 		std::string _nickname;
@@ -50,11 +52,15 @@ class Client
         static	std::string truncName(const std::string& name);
 		
 	public:
+
+		// Format checks
 		int		isNickValid(const std::string& nickname) const;
 		bool	isRealNameValid(const std::string& realName) const;
 		int		isUserValid(std::string& userName);
-		bool	isNicknameAvailable(const std::string& nickname) const;
-        bool	isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const;
+		//bool	isNicknameAvailable(const std::string& nickname) const;
+        //bool	isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const;
+		
+		// Setters
 		void	setNick(const std::string& nickname);
 		void	setUser(std::string& userName, int zero, char asterisk, std::string& realName); // 2nd parameter should always be zero and 3rd "*"
 		void	setState(ClientState newState);
@@ -64,6 +70,9 @@ class Client
 		std::string getUsername() const;
 		std::string getRealname() const;
 		ClientState getState() const;
+
+		// Connection
+		int connectToServer(const std::string& serverIP, int serverPort);
 
 		//USER_function
 		//NICK_function
