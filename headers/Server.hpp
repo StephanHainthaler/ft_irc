@@ -57,10 +57,13 @@ class Server
 		/*
 		void addChannel(Channel *channel);
 		void removeChannel(Channel *channel);
-		*/
 
-		void run(void);
-
+		// Nickname availability checks
+		void toLowercase(const std::string& str);
+		bool isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const;
+		bool isNicknameAvailable(const std::string& nickname) const;
+		void handleNickCommand(Client* client, const std::string& newNickname);
+		
 		// Exception
 		class ServerException: public std::exception
 		{
