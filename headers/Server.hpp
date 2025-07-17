@@ -50,6 +50,12 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 		
 		void addChannel(Channel *channel);
 		void removeChannel(Channel *channel);
+
+		// Nickname availability checks
+		void toLowercase(const std::string& str);
+		bool isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const;
+		bool isNicknameAvailable(const std::string& nickname) const;
+		void handleNickCommand(Client* client, const std::string& newNickname);
 		
 		// Exception
 		class ServerException: public std::exception
