@@ -6,12 +6,12 @@
 /*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/17 09:14:37 by codespace        ###   ########.fr       */
+/*   Updated: 2025/07/17 10:46:15 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
-#include "Server.hpp"
+//#include "Server.hpp"
 #include "main.hpp"
 #include <cstddef>
 #include <iostream>
@@ -45,14 +45,18 @@ class Client
 		std::string _realName;
 		ClientState _state;
 		std::vector<std::string> _channels;
-	
+
+		static	std::string toLowercase(const std::string& str);
+        static	std::string truncName(const std::string& name);
+		
 	public:
 		int		isNickValid(const std::string& nickname) const;
+		bool	isRealNameValid(const std::string& realName) const;
 		int		isUserValid(std::string& userName);
 		bool	isNicknameAvailable(const std::string& nickname) const;
         bool	isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const;
 		void	setNick(const std::string& nickname);
-		void	setUser(const std::string& userName, int zero, char *, const std::string& realName); // 2nd parameter should always be zero and 3rd "*"
+		void	setUser(std::string& userName, int zero, char asterisk, std::string& realName); // 2nd parameter should always be zero and 3rd "*"
 		void	setState(ClientState newState);
 
 		// Getters

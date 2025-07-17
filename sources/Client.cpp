@@ -6,42 +6,38 @@
 /*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/07/17 09:25:38 by codespace        ###   ########.fr       */
+/*   Updated: 2025/07/17 10:45:49 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-// const char* Client::NickNameTooLong::what() const throw()
-// {
-//    return ("Error: Nickname can only be max 9 characters long");
-// }
+#include "../headers/Client.hpp"
+#include "../headers/main.hpp"
 
-// const char* Client::NickNameInvalid::what() const throw()
-// {
-//    return ("Error: Nickname invalid ");
-// }
+// Will have to send the error messages from server, but I will keep it for now for reference
 
 int	Client::isNickValid(const std::string& nickname) const
 {
-	for (size_t i = 0; i < nickName.size(); i++)
-	{
-		if (nickName.size() > 9 || nickName.size() == 0)
+	if (nickname.size() > 9 || nickname.size() == 0)
 			return (std::cout << "Error: Nickname must be at least 1 character and can only be max 9 characters long." << std::endl, ERR_ERRONEUSNICKNAME);
-		if (nickName[0] == '$' || nickName[0] == ':' || nickName[0] == '#' || nickName[0] == '~' || nickName[0] == '&' || nickName[0] == '+')
+	if (nickname[0] == '$' || nickname[0] == ':' || nickname[0] == '#' || nickname[0] == '~' || nickname[0] == '&' || nickname[0] == '+')
 			return (std::cout << "Error: Nickname invalid." << std::endl, ERR_ERRONEUSNICKNAME);
-		if (nickName[i] == ' ' || nickName[i] == ',' || nickName[i] == '*' || nickName[i] == '?' || nickName[i] == '!' || nickName[i] == '@')
+
+	for (size_t i = 0; i < nickname.size(); i++)
+	{
+		if (nickname[i] == ' ' || nickname[i] == ',' || nickname[i] == '*' || nickname[i] == '?' || nickname[i] == '!' || nickname[i] == '@')
 			return (std::cout << "Error: Nickname invalid." << std::endl, ERR_ERRONEUSNICKNAME);
 	}
 	return (0);
 }
 
-void toLowercase(const std::string& str)
+std::string Client::toLowercase(const std::string& str)
 {
 	std::string result = str;
 	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
 	return (result);
 }
 
-bool Server::isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const
+/* bool Server::isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const
 {
     std::string lowerNick = nickname;
     toLowercase(lowerNick);
@@ -83,9 +79,9 @@ void Server::handleNickCommand(Client* client, const std::string& newNickname)
     
     // Nickname is valid and available
     client->setNick(newNickname);
-}
+} */
 
-std::string truncName(std::string name)
+std::string Client::truncName(const std::string& name)
 {
 	if (name.length() > USERLEN)
 		return name.substr(0, USERLEN);
@@ -102,29 +98,37 @@ int		Client::isUserValid(std::string& userName)
 	return (0);
 }
 
-bool	Client::isRealNameValid(const std::string& realName)
+bool	Client::isRealNameValid(const std::string& realName) const
 {
-	
+	if (realName.length() <= 50)
+		return (true);
+	return (false);
 }
 
 void	Client::setNick(const std::string& nickName)
 {
-	if (isNickValid(nickName))
-		_nickName = nickName;
+	if (isNickValid(nickName) == 0)
+		_nickname = nickName;
 }
 
-void Client::setUser(std::string& userName, int zero, char *, std::string& realName)
+void Client::setUser(std::string& userName, int zero, char asterisk, std::string& realName)
 {
-	if (isUserValid(userName))
+	(void) zero;
+	(void) asterisk;
+	if (isUserValid(userName) == 0)
 		_userName = userName;
+	if (isRealNameValid(realName) == 0)
+		_realName = realName;
+	else
+		_realName = realName.substr(0, 50);
 }
 
-Client::Client(int socketFD, const sockaddr_in& clientAddr) : 
+/* Client::Client(int socketFD, const sockaddr_in& clientAddr) : 
 	_socketFD(socketFD),
 	_state(CONNECTING),
-	_channels(MAX_CHANNELS)
+	_channels(CHANLIMIT)
 {
-}
+} */
 void Client::setState(ClientState newState)
 { 
 	_state = newState; 
@@ -136,7 +140,7 @@ ClientState Client::getState() const
 
 std::string Client::getNickname() const
 {
-	return (_nickName);
+	return (_nickname);
 }
 
 std::string Client::getUsername() const

@@ -15,15 +15,26 @@
 #include <cstdlib>
 #include <cstring> // BUGFIX: allowed?
 
-#include "../headers/Server.hpp"
-#include "../headers/Parser.hpp"
+/* #include "../headers/Server.hpp"
+#include "../headers/Parser.hpp" */
 #include "../headers/Client.hpp"
 
 
 int main(void)
 {
 	Client client;
-	
+
+	client.setNick("julianwadawd");
+	if (!client.getNickname().empty())
+		std::cout << "Nick: " << client.getNickname() << std::endl;
+
+	std::string userName = "Julian";
+    std::string realName = "Julian Uitz";
+
+	client.setUser(userName, 0, '*', realName);
+		std::cout << "User: " << client.getUsername() << "\n" << "Real name: " << client.getRealname() << std::endl;
+
+	return (0);
 }
 
 /* bool	isPositiveNumber(char *string)
