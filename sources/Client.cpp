@@ -5,34 +5,120 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/07/09 13:54:03 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/14 16:11:03 by marvin           ###   ########.fr       */
+/*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
+/*   Updated: 2025/07/16 10:15:17 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../headers/Client.hpp"
 
-const char* Client::NickNameTooLong::what() const throw()
+// Helper function to convert string to lowercase for case-insensitive comparison
+void toLowercase(const std::string& str)
 {
-   return ("Error: Nickname can only");
+	std::string result = str;
+	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+	return (result);
 }
+
+// const char* Client::NickNameTooLong::what() const throw()
+// {
+//    return ("Error: Nickname can only be max 9 characters long");
+// }
 
 const char* Client::NickNameInvalid::what() const throw()
 {
    return ("Error: file is empty ");
 }
 
-int Client::isNickValid(const std::string& nickName)
+int	Client::isNickValid(const std::string& nickname) const
 {
 	for (size_t i = 0; i < nickName.size(); i++)
 	{
-		if (nickName.size() > 9)
-			return (1);
+		if (nickName.size() > 9 || nickName.size() == 0)
+			return (std::cout << "Error: Nickname must be at least 1 character and can only be max 9 characters long." << std::endl, ERR_ERRONEUSNICKNAME);
+		if (nickName[0] == '$' || nickName[0] == ':' || nickName[0] == '#' || nickName[0] == '~' || nickName[0] == '&' || nickName[0] == '+')
+			return (std::cout << "Error: Nickname invalid." << std::endl, ERR_ERRONEUSNICKNAME);
 		if (nickName[i] == ' ' || nickName[i] == ',' || nickName[i] == '*' || nickName[i] == '?' || nickName[i] == '!' || nickName[i] == '@')
-			return (1);
-	
+			return (std::cout << "Error: Nickname invalid." << std::endl, ERR_ERRONEUSNICKNAME);
 	}
 	return (0);
+}
+
+bool isNicknameAvailable(const std::string& nickName, const std::vector<Client*>& clients)
+{
+    std::string lowerNick = toLowercase(nickName);
+    
+    for (std::vector<Client*>::const_iterator it = clients.begin(); it != clients.end(); ++it)
+    {
+        const Client* client = *it;
+        if (client && toLowercase(client->getNickname()) == lowerNick)
+            return (false);
+    }
+    return (true);
+}
+
+std::string truncName(std::string name)
+{
+	if (name.length() > USERLEN)
+		return name.substr(0, USERLEN);
+	else
+		return (name);
+}
+
+int		Client::isUserValid(std::string& userName)
+{
+	if (userName.size() == 0)
+		return (std::cout << /* <client> */ "<USER> :Not enough parameters" << std::endl, ERR_NEEDMOREPARAMS);
+	if (userName.size() > USERLEN)
+		userName = truncName(userName);
+	return (0);
+}
+
+bool	Client::isRealNameValid(const std::string& realName)
+{
+	
+}
+
+void	Client::setNick(const std::string& nickName)
+{
+	if (isNickValid(nickName))
+		_nickName = nickName;
+}
+
+void Client::setUser(std::string& userName, int zero, char *, std::string& realName)
+{
+	if (isUserValid(userName))
+		_userName = userName;
+}
+
+Client::Client(int socketFD, const sockaddr_in& clientAddr) : 
+	_socketFD(socketFD),
+	_state(CONNECTING),
+	_channels(MAX_CHANNELS)
+{
+}
+void Client::setState(ClientState newState)
+{ 
+	_state = newState; 
+}
+ClientState Client::getState() const
+{ 
+	return (_state);
+}
+
+// Getter implementations
+std::string Client::getNickname() const
+{
+	return (_nickName);
+}
+
+std::string Client::getUsername() const
+{
+	return (_userName);
+}
+
+std::string Client::getRealname() const
+{
+	return (_realName);
 }
 
 Client::Client() {}
