@@ -6,7 +6,7 @@
 /*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/19 14:16:55 by codespace        ###   ########.fr       */
+/*   Updated: 2025/07/19 18:00:31 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@ class Client
 		std::string _userName;
 		std::string _nickname;
 		std::string _realName;
+		std::string _hostname;
 		ClientState _state;
 		std::vector<std::string> _channels;
 
@@ -70,9 +71,13 @@ class Client
 		std::string getUsername() const;
 		std::string getRealname() const;
 		ClientState getState() const;
+		int			getSocketFD() const;
 
 		// Connection
-		int connectToServer(const std::string& serverIP, int serverPort);
+		int 		connectToServer(const std::string& serverIP, int serverPort);
+		int 		sendMessage(const std::string& message);
+		std::string receiveMessage();
+		
 
 		//USER_function
 		//NICK_function
