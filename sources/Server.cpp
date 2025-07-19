@@ -28,17 +28,20 @@ Server::Server(const unsigned int &port, const std::string &password): _port(por
 		throw ServerException("Error. Failed to create socket.");
 	}
 
-	// subject: "All I/O operations must be non-blocking"
+	/*// subject: "All I/O operations must be non-blocking"
+	// I think for this will need to use poll later
 	if (fcntl(_socket_fd, F_SETFL, SOCK_NONBLOCK) == -1) // allow server to handle multiple clients at once
 	{
 		close(_socket_fd);
 		throw ServerException("Error. Failed to set socket to non-blocking mode.");
-	}
+	}*/
     
 	_serverAddress.sin_family = AF_INET; // set the address family to IPv4 addresses
 	_serverAddress.sin_addr.s_addr = INADDR_ANY; // server should accept connections from any IPv4 address, used when we don't want to bind our socket to any particular IP, to mak eit listen to all available IPs
 	_serverAddress.sin_port = htons(port); // defines the port number the socket will use to communicate on server side (the value has to be in network byte order)
 
+	std::cout << GRAY << "Server created with socket fd: " << _socket_fd << ", port: " << port << ", password: " << password << DEFAULT << std::endl;
+	
 	// _clients and _channels remain empty at this point (?) - will get filled later
 
 	_state = 0; // Server state - 0: not running
@@ -50,7 +53,7 @@ Server::~Server(void)
 		close(_socket_fd);
 
 	// clear client vector (BUGFIX? - needed?)
-	if (!_clients.empty())
+	/*if (!_clients.empty())
 	{
 		for (std::vector<Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 		{
@@ -67,33 +70,7 @@ Server::~Server(void)
 			delete *it;
 		}
 		_channels.clear();
-	}
-}
-
-void Server::run()
-{
-	/* sockaddr_in vs sockaddr
-	sockaddr_in is specifically for handling IPv4 addresses
-	sockaddr is a generic structure that can be used for both IPv4 and IPv6 addresses
-	and it is what the bind function expects
-	*/
-	if (bind(_socket_fd, (struct sockaddr *)&_serverAddress, sizeof(_serverAddress)) == -1)
-	{
-		close(_socket_fd);
-		throw ServerException("Error. Failed to bind socket.");
-	}
-	
-	// Marks a bound socket as "listening socket"
-	// Server is on receiving end of data so needs to listen for incoming connections
-	if (listen(_socket_fd, SOMAXCONN) == -1)
-	{
-		close(_socket_fd);
-		throw ServerException("Error. Failed to listen on socket.");
-	}
-
-	std::cout << "Server started on port " << _port << std::endl;
-
-	_state = 1; // Server state - 1: running
+	}*/
 }
 
 // Getters
@@ -102,7 +79,7 @@ std::string Server::getPassword(void) const
 	return _password;
 }
 
-Channel *Server::getChannel(const std::string &channel_name) const
+/*Channel *Server::getChannel(const std::string &channel_name) const
 {
 	for (std::vector<Channel *>::const_iterator it = _channels.begin(); it != _channels.end(); ++it)
 	{
@@ -110,7 +87,7 @@ Channel *Server::getChannel(const std::string &channel_name) const
 			return *it;
 	}
 	return NULL;
-}
+}*/
 
 sockaddr_in Server::getServerAddress(void) const
 {
@@ -123,38 +100,27 @@ int Server::getState(void) const
 }
 
 // Member functions - server actions
-void Server::acceptClientConnection(Client *client)
-{
-	if (client == NULL || _state != 1) // Server must be running to accept connections
-		return;
-
-	// password check - subject: "The connection pw will be needed by any IRC client that tries to connect to your server"
-	if (client->get_password() != _password)
-	{
-		std::cerr << RED << "Error. Wrong client password." << DEFAULT << std::endl;
-		return;
-	}
-
-	int client_fd = accept(_socket_fd, NULL, NULL);
-	if (client_fd == -1) 
-	{
-		std::cerr << RED << "Error. Failed to accept connection." << DEFAULT << std::endl;
-		return;
-	}
-	addClient(client);
-}	
-
-void Server::handleClientMessage(int client_fd)
+void Server::sendMessageToClient(int client_fd, const char* msg)
 {
 	if (client_fd < 0)
 	{
 		std::cerr << RED << "Error. Invalid client fd." << DEFAULT << std::endl;
 		return;
 	}
+	
+	long long total_sent = 0;
+	long long msg_len = strlen(msg);
 
-	// in progress
+	while (total_sent < msg_len) 
+	{
+		long long sent = send(client_fd, msg + total_sent, msg_len - total_sent, 0);
+		if (sent == -1) 
+			break;
+		total_sent += sent;
+	}
 }
 
+/*
 // Member functions - user triggered actions
 void Server::addClient(Client *client)
 {
@@ -210,7 +176,42 @@ void Server::removeChannel(Channel *channel)
 			break;
 		}
 	}
+}*/
+
+void Server::run()
+{
+	/* sockaddr_in vs sockaddr
+	sockaddr_in is specifically for handling IPv4 addresses
+	sockaddr is a generic structure that can be used for both IPv4 and IPv6 addresses
+	and it is what the bind function expects
+	*/
+	if (bind(_socket_fd, (struct sockaddr *)&_serverAddress, sizeof(_serverAddress)) == -1)
+	{
+		close(_socket_fd);
+		throw ServerException("Error. Failed to bind socket.");
+	}
+	
+	// Marks a bound socket as "listening socket"
+	// Server is on receiving end of data so needs to listen for incoming connections
+	if (listen(_socket_fd, SOMAXCONN) == -1)
+	{
+		close(_socket_fd);
+		throw ServerException("Error. Failed to listen on socket.");
+	}
+	std::cout << "Server started on port " << _port << std::endl;
+	_state = 1; // Server state - 1: running
+
+	// waits for an incoming connection from a client (IRC client = Hexchat)
+	int client_fd = accept(_socket_fd, NULL, NULL);
+	if (client_fd == -1) 
+	{
+		std::cerr << RED << "Error. Failed to accept connection." << DEFAULT << std::endl;
+		return;
+	}
+
+	sendMessageToClient(client_fd, "Hello Stephan and Julian\r\n");
 }
+
 
 // Exception
 Server::ServerException::ServerException(const std::string &message): _message(message)

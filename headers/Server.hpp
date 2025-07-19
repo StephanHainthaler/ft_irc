@@ -10,53 +10,46 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef SERVER_HPP
-# define SERVER_HPP
+#pragma once
 
 # include <iostream>
-#include <sys/socket.h> // for socket, bind, listen, accept
-#include <netinet/in.h> // for sockaddr_in
-#include <fcntl.h>
+# include <sys/socket.h> // for socket, bind, listen, accept
+# include <netinet/in.h> // for sockaddr_in
+# include <fcntl.h> // to set socket to non-blocking mode
 
-#include <unistd.h>
-#include <exception>
-#include <vector>
+# include <unistd.h>
+# include <exception>
+# include <vector>
 
-#include "main.hpp"
-#include "Client.hpp"
-#include "Channel.hpp"
+# include "main.hpp"
+# include "Client.hpp"
+# include "Channel.hpp"
 
-class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in-cpp/
+// useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in-cpp/
+class Server
 {
 	public:
 		Server(const unsigned int &port, const std::string &password);
 		~Server(void);
-		
-		void run(void);
 
 		// Getters
 		std::string getPassword(void) const;
-		Channel *getChannel(const std::string &channel_name) const;
+		// Channel *getChannel(const std::string &channel_name) const;
 		sockaddr_in getServerAddress(void) const; // bc client will need it to connect to server
 		int getState(void) const;
 
 		// Member functions - server actions
-		void acceptClientConnection(Client *client);
-		void handleClientMessage(int client_fd);
-		
+		void sendMessageToClient(int client_fd, const char* msg);
+		/*
 		// Member functions - user triggered actions
 		void addClient(Client *client);
 		void removeClient(Client *client);
 		
 		void addChannel(Channel *channel);
-		void removeChannel(Channel *channel);
-
-		// Nickname availability checks
-		void toLowercase(const std::string& str);
-		bool isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const;
-		bool isNicknameAvailable(const std::string& nickname) const;
-		void handleNickCommand(Client* client, const std::string& newNickname);
+		void removeChannel(Channel *channel);*/
 		
+		void run(void);
+
 		// Exception
 		class ServerException: public std::exception
 		{
@@ -74,25 +67,24 @@ class Server // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in
 		Server(const Server &other);
 		Server	&operator=(const Server &other);
 	
-		int						_socket_fd; // Server Socket FD - Listening socket, can be negative
-		const unsigned int 		_port; // Port number - "door to the server"
-		struct sockaddr_in 		_serverAddress; // for IPv4 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
-		// struct sockaddr_in6 	_serverAddress; // for IPv6 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
+		int							_socket_fd; // Server Socket FD - Listening socket, can be negative
+		const unsigned int 			_port; // Port number - "door to the server"
+		struct sockaddr_in 			_serverAddress; // for IPv4 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
+		// struct sockaddr_in6 		_serverAddress; // for IPv6 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
 		/*
 		server creates sockaddr_in "serverAddress" to specify its own IP address and port to bind to
 		client takes this sockaddr_in "serverAddress" to specify the server's IP address and port to connect to
 		*/
 		
-		const std::string		_password;
-		std::vector<Client *>	_clients;	// List of connected clients (ClientClass objs)
-		std::vector<Channel *>	_channels;	// List of channels (ChannelClass objs)
+		const std::string			_password;
+		std::vector<Client *>		_clients;	// List of connected clients (ClientClass objs)
+		//std::vector<Channel *>		_channels;	// List of channels (ChannelClass objs)
+		//std::vector<std::string>	_users; // auf 10 users limitieren
 
 		// clients must be unique within a channel
 
-		int						_state; // Server state - 0: not running, 1: running, -1: error (?)
+		int							_state; // Server state - 0: not running, 1: running, -1: error (?)
 };
-
-#endif
 
 /* 
 ***USED FUNCTIONS:
@@ -104,6 +96,7 @@ listen(sockfd, SOMAXCONN)
 accept(sockfd, NULL, NULL)
 htons()
 fcntl(sockfd, F_SETFL, O_NONBLOCK)
+send(client_fd, buffer, len, 0)
 
 ***MIGHT BE USEFUL:
 setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes))
@@ -120,7 +113,6 @@ htonl()
 ntohl(addr.sin_addr.s_addr)
 inet_addr("127.0.0.1")
 inet_ntoa(addr.sin_addr)
-send(client_fd, buffer, len, 0)
 signal(SIGINT, handle_sigint)
 sigaction(SIGINT, &sa, NULL)
 fstat(fd, &info)

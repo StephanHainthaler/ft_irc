@@ -11,16 +11,17 @@
 /* ************************************************************************** */
 
 #include <iostream>
-#include <unistd.h>
+#include <cstring>
 #include <cstdlib>
-#include <cstring> // BUGFIX: allowed?
 
-/* #include "../headers/Server.hpp"
-#include "../headers/Parser.hpp" */
+#include "../headers/Server.hpp"
+#include "../headers/Parser.hpp"
 #include "../headers/Client.hpp"
+#include "../headers/Channel.hpp"
+#include "../headers/main.hpp"
 
 
-/* bool	isPositiveNumber(char *string)
+bool	isPositiveNumber(char *string)
 {
 	size_t	i = 0, end = std::strlen(string);
 
@@ -39,25 +40,26 @@
 	}
 	if (i != end)
 		return (false);
-	if (atoi(string) <= 0 || atoi(string) > 65535) // https://www.pico.net/kb/what-is-the-highest-tcp-port-number-allowed/
-		return (false);
 	return (true);
-} */
+}
 
-// ./ircserv <port> <password>
-// c++ main.cpp -o ircserv -std=c++98 && ./ircserv "8080" "password"
-// make re && ./ircserv "8080" "password"
-/* int	main(int argc, char *argv[])
+/* HowTo start the chat:
+on 1st Terminal run: ./ircserv <port> <password>
+	make re && ./ircserv "6667" "password" 
+on 2nd Terminal run: 
+	flatpak run io.github.Hexchat
+*/
+int	main(int argc, char *argv[])
 {
 	if (argc != 3)
 		return (std::cerr << RED << "Error: incorrect number of arguments" << DEFAULT << std::endl, 1);
-	// if (isPositiveNumber(argv[1]) == false)
-	// 	return (std::cerr << RED << "Error: port MUST be a positive number between 0 and 65535" << DEFAULT << std::endl, 1);
+	if (isPositiveNumber(argv[1]) == false)
+		return (std::cerr << RED << "Error: port MUST be a positive number" << DEFAULT << std::endl, 1);
 	
-	unsigned int 	port = atoi(argv[1]);
+	unsigned int	port = atoi(argv[1]);
 	std::string		password = argv[2];
 
-	handleInput();
+	//handleInput();
 	
 	try
 	{
@@ -69,42 +71,4 @@
 		std::cerr << RED << e.what() << DEFAULT << std::endl;
 	}
 	return 0;
-} */
-
-/* Socket vs Server
-The difference between a socket and a server is that a socket is an endpoint for communication,
-while a server is a program that listens for incoming connections on a specific port 
-and can handle multiple clients. 
-A server uses sockets to accept connections from clients, 
-allowing them to communicate over the network.
-A server can have multiple sockets, each representing a different client connection, 
-while a socket is a single communication endpoint.
-*/
-
-
-
-
-
-
-/* int main(void)
-{
-	Client client;
-
-	if (client.connectToServer("127.0.0.1", 6667) == -1)
-	{
-		std::cerr << "Failed to connect to server" << std::endl;
-		return (1);
-	}
-
-	client.setNick("julian");
-	if (!client.getNickname().empty())
-		std::cout << "Nick: " << client.getNickname() << std::endl;
-
-	std::string userName = "Julian";
-    std::string realName = "Julian Uitz";
-
-	client.setUser(userName, 0, '*', realName);
-		std::cout << "User: " << client.getUsername() << "\n" << "Real name: " << client.getRealname() << std::endl;
-
-	return (0);
-} */
+}

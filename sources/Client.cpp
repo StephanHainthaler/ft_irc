@@ -6,7 +6,7 @@
 /*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/07/19 14:14:00 by codespace        ###   ########.fr       */
+/*   Updated: 2025/07/19 14:15:52 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -205,18 +205,18 @@ Client::Client() {}
 
 Client::~Client() {}
 
-// Client::Client(const Client& other)
-// {
-// 	_nickName = other._nickName;
-// 	_realName = other._realName;
-// }
+Client::Client(const Client& other)
+{
+	_nickName = other._nickName;
+	_realName = other._realName;
+}
 
-// Client& Client::operator=(const Client& copy)
-// {
-// 	if (this != &copy)
-// 	{
-// 		_nickName = copy._nickName;
-// 		_realName = copy._realName;
-// 	}
-// 	return (*this);
-// }
+Client& Client::operator=(const Client& copy)
+{
+	if (this != &copy)
+	{
+		_nickName = copy._nickName;
+		_realName = copy._realName;
+	}
+	return (*this);
+}
