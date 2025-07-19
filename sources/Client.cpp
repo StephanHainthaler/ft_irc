@@ -6,7 +6,7 @@
 /*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/07/17 20:10:48 by codespace        ###   ########.fr       */
+/*   Updated: 2025/07/19 14:14:00 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ int Client::connectToServer(const std::string& serverIP, int serverPort)
         return (-1);
     }
     
-    // 4. Connect to server
+    // Connect to server
     if (connect(_socketFD, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
     {
         std::cerr << "Error: Failed to connect to server " << serverIP << ":" << serverPort << std::endl;
