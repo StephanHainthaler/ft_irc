@@ -20,29 +20,6 @@
 #include "../headers/Client.hpp"
 
 
-int main(void)
-{
-	Client client;
-
-	if (client.connectToServer("127.0.0.1", 6667) == -1)
-	{
-		std::cerr << "Failed to connect to server" << std::endl;
-		return (1);
-	}
-
-	client.setNick("julian");
-	if (!client.getNickname().empty())
-		std::cout << "Nick: " << client.getNickname() << std::endl;
-
-	std::string userName = "Julian";
-    std::string realName = "Julian Uitz";
-
-	client.setUser(userName, 0, '*', realName);
-		std::cout << "User: " << client.getUsername() << "\n" << "Real name: " << client.getRealname() << std::endl;
-
-	return (0);
-}
-
 /* bool	isPositiveNumber(char *string)
 {
 	size_t	i = 0, end = std::strlen(string);
@@ -103,3 +80,31 @@ allowing them to communicate over the network.
 A server can have multiple sockets, each representing a different client connection, 
 while a socket is a single communication endpoint.
 */
+
+
+
+
+
+
+/* int main(void)
+{
+	Client client;
+
+	if (client.connectToServer("127.0.0.1", 6667) == -1)
+	{
+		std::cerr << "Failed to connect to server" << std::endl;
+		return (1);
+	}
+
+	client.setNick("julian");
+	if (!client.getNickname().empty())
+		std::cout << "Nick: " << client.getNickname() << std::endl;
+
+	std::string userName = "Julian";
+    std::string realName = "Julian Uitz";
+
+	client.setUser(userName, 0, '*', realName);
+		std::cout << "User: " << client.getUsername() << "\n" << "Real name: " << client.getRealname() << std::endl;
+
+	return (0);
+} */
