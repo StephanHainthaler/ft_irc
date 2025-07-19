@@ -3,26 +3,30 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/14 12:25:24 by marvin           ###   ########.fr       */
+/*   Updated: 2025/07/19 14:16:55 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
-#include "Server.hpp"
+//#include "Server.hpp"
 #include "main.hpp"
 #include <cstddef>
 #include <iostream>
 #include <string>
 #include <netinet/in.h>
 #include <vector>
+#include <algorithm>
+#include <cctype>
+#include <unistd.h>
+#include <arpa/inet.h>
 
-#define MAX_CHANNELS 10
+#define CHANLIMIT 10
 #define USERLEN 15
 
-//errors
+// Errors
 #define ERR_NOSUCHNICK 401
 #define ERR_NOSUCHCHANNEL 403
 #define ERR_TOOMANYCHANNELS 405
@@ -35,20 +39,40 @@
 class Client
 {
 	private:
-		size_t		_port;
-		size_t		_socketFD;
+		int		_port;
+		int		_socketFD;
 		std::string	_IP;
 		std::string _userName;
-		std::string _nickName;
+		std::string _nickname;
 		std::string _realName;
 		ClientState _state;
 		std::vector<std::string> _channels;
-	
+
+		static	std::string toLowercase(const std::string& str);
+        static	std::string truncName(const std::string& name);
+		
 	public:
-		bool	isNickValid(const std::string& nickName);
-		int		isUserValid(const std::string& userName);
-		void	setNick(const std::string& nickName);
-		void	setUser(const std::string& userName, int zero, char *, const std::string& realName); // 2nd parameter should always be zero and 3rd "*"
+
+		// Format checks
+		int		isNickValid(const std::string& nickname) const;
+		bool	isRealNameValid(const std::string& realName) const;
+		int		isUserValid(std::string& userName);
+		//bool	isNicknameAvailable(const std::string& nickname) const;
+        //bool	isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const;
+		
+		// Setters
+		void	setNick(const std::string& nickname);
+		void	setUser(std::string& userName, int zero, char asterisk, std::string& realName); // 2nd parameter should always be zero and 3rd "*"
+		void	setState(ClientState newState);
+
+		// Getters
+		std::string getNickname() const;
+		std::string getUsername() const;
+		std::string getRealname() const;
+		ClientState getState() const;
+
+		// Connection
+		int connectToServer(const std::string& serverIP, int serverPort);
 
 		//USER_function
 		//NICK_function
@@ -72,6 +96,4 @@ class Client
 				virtual const char* what() const throw();
 		};
 
-		void setState(ClientState newState);
-		ClientState getState() const;
 };

@@ -41,7 +41,7 @@ bool	isPositiveNumber(char *string)
 	if (i != end)
 		return (false);
 	return (true);
-}
+} */
 
 /* HowTo start the chat:
 on 1st Terminal run: ./ircserv <port> <password>

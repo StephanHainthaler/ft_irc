@@ -226,3 +226,56 @@ const char* Server::ServerException::what() const throw()
 Server::ServerException::~ServerException() throw() 
 {
 }
+
+void toLowercase(const std::string& str)
+{
+	std::string result = str;
+	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+	return (result);
+}
+
+// For nickname changes within the same Client -- this will allow lower/upper case changes, for example: pia to Pia
+bool Server::isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const
+{
+    std::string lowerNick = nickname;
+    toLowercase(lowerNick);
+    
+    for (std::vector<Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
+    {
+        const Client* client = *it;
+        if (client && client != excludeClient)
+        {
+            std::string clientNick = client->getNickname();
+            toLowercase(clientNick);
+            if (clientNick == lowerNick)
+                return (false);
+        }
+    }
+    return (true);
+}
+
+// For new nicknames
+bool Server::isNicknameAvailable(const std::string& nickname) const
+{
+    return (isNicknameAvailable(nickname, NULL));
+}
+
+void Server::handleNickCommand(Client* client, const std::string& newNickname)
+{
+    // First check format using Client's validation
+    if (client->isNickFormatValid(newNickname) != 0)
+    {
+        // Send format error to client
+        return ;
+    }
+    
+    // Then check uniqueness using Server's validation
+    if (!isNicknameAvailable(newNickname, client))
+    {
+        // Send ERR_NICKNAMEINUSE (433) to client
+        return ;
+    }
+    
+    // Nickname is valid and available
+    client->setNick(newNickname);
+}
