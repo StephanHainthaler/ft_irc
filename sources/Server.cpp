@@ -202,14 +202,19 @@ void Server::run()
 	_state = 1; // Server state - 1: running
 
 	// waits for an incoming connection from a client (IRC client = Hexchat)
-	int client_fd = accept(_socket_fd, NULL, NULL);
-	if (client_fd == -1) 
-	{
-		std::cerr << RED << "Error. Failed to accept connection." << DEFAULT << std::endl;
-		return;
-	}
+    while (true)
+    {
+        int client_fd = accept(_socket_fd, NULL, NULL);
+        if (client_fd == -1) 
+        {
+            std::cerr << RED << "Error. Failed to accept connection." << DEFAULT << std::endl;
+            continue ;
+        }
 
-	sendMessageToClient(client_fd, "Hello Stephan and Julian\r\n");
+        std::cout << "Client connected with fd: " << client_fd << std::endl;
+        sendMessageToClient(client_fd, "Hello Stephan and Julian\r\n");
+        // TODO: Handle client commands here
+    }
 }
 
 
@@ -227,7 +232,7 @@ Server::ServerException::~ServerException() throw()
 {
 }
 
-void toLowercase(const std::string& str)
+/* void toLowercase(const std::string& str)
 {
 	std::string result = str;
 	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
@@ -278,4 +283,4 @@ void Server::handleNickCommand(Client* client, const std::string& newNickname)
     
     // Nickname is valid and available
     client->setNick(newNickname);
-}
+} */
