@@ -6,7 +6,7 @@
 /*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/19 18:00:31 by codespace        ###   ########.fr       */
+/*   Updated: 2025/07/20 09:00:20 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,7 @@ class Client
 		std::string _nickname;
 		std::string _realName;
 		std::string _hostname;
+		std::string _messageBuffer;
 		ClientState _state;
 		std::vector<std::string> _channels;
 
