@@ -49,7 +49,7 @@ on 1st Terminal run: ./ircserv <port> <password>
 on 2nd Terminal run: 
 	flatpak run io.github.Hexchat
 */
-int	main(int argc, char *argv[])
+/* int	main(int argc, char *argv[])
 {
 	if (argc != 3)
 		return (std::cerr << RED << "Error: incorrect number of arguments" << DEFAULT << std::endl, 1);
@@ -71,4 +71,40 @@ int	main(int argc, char *argv[])
 		std::cerr << RED << e.what() << DEFAULT << std::endl;
 	}
 	return 0;
+} */
+
+// Client main
+
+#include <iostream>
+#include <unistd.h>
+#include <cstdlib>
+#include <cstring> // BUGFIX: allowed?
+
+#include "../headers/Server.hpp"
+#include "../headers/Parser.hpp"
+#include "../headers/Client.hpp"
+
+
+int main(void)
+{
+	Client client;
+
+	client.setNick("julianwadawd");
+	if (client.connectToServer("127.0.0.1", 6667) == -1)
+	{
+		std::cerr << "Failed to connect to server" << std::endl;
+		return (1);
+	}
+
+	client.setNick("julian");
+	if (!client.getNickname().empty())
+		std::cout << "Nick: " << client.getNickname() << std::endl;
+
+	std::string userName = "Julian";
+    std::string realName = "Julian Uitz";
+
+	client.setUser(userName, 0, '*', realName);
+		std::cout << "User: " << client.getUsername() << "\n" << "Real name: " << client.getRealname() << std::endl;
+
+	return (0);
 }
