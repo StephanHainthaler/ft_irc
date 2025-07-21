@@ -24,5 +24,6 @@ void    parseStringToVector(std::string &input, std::vector<std::string> *vector
 void	executeCommand(std::vector<std::string> command);
 void    printVector(std::vector<std::string> vector);
 size_t	kick(std::vector<std::string> command, size_t cmdNumber, std::string operatorName);
+size_t	invite(std::vector<std::string> command, size_t cmdNumber, std::string operatorName);
 
 #endif
