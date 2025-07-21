@@ -48,6 +48,7 @@ on 1st Terminal run: ./ircserv <port> <password>
 	make re && ./ircserv "6667" "password" 
 on 2nd Terminal run: 
 	flatpak run io.github.Hexchat
+	hexchat
 */
 int	main(int argc, char *argv[])
 {

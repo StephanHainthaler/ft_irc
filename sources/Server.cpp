@@ -131,7 +131,7 @@ void Server::handleClientConnections(void)
 	}
 	std::cout << "Client connected with fd: " << clientFd << std::endl;
 
-	sendMessageToClient(_ircClientFd, "Hello Stephan and Julian\r\n"); // welcome message
+	sendMessageToClient(_ircClientFd, "Hello Stephan and Julian\r\n"); // Welcome message
 
 	/* pollfd  (useful: https://www.ibm.com/docs/en/i/7.4.0?topic=ssw_ibm_i_74/apis/poll.htm)
 	is a structure used by poll() to monitor fds for readiness (for reading, writing, or errors)
