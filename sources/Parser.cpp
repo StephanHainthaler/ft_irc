@@ -21,47 +21,56 @@ void	handleInput(void)
 	{
 		std::cout << "TYPE the COMMAND" << std::endl;
 		getline(std::cin, input);
-		parseInputToVector(input, &command);
+		parseStringToVector(input, &command, " \f\n\r\t\v");
 		// printVector(&command);
 		executeCommand(command);
 		command.clear();
 	}
 }
 
-void    parseInputToVector(std::string &input, std::vector<std::string> *vector)
-{
-    const char* delimiters = " \f\n\r\t\v";
-	for (char* token = std::strtok((char *)input.c_str(), delimiters); token; token = std::strtok(NULL, delimiters))
-		vector->push_back(token);
-}
-
-void    parseInputToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters)
+void    parseStringToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters)
 {
 	for (char* token = std::strtok((char *)input.c_str(), delimiters); token; token = std::strtok(NULL, delimiters))
-		vector->push_back(token);
+	{
+		if (token[0] == '\0')
+			vector->push_back("");	
+		else
+			vector->push_back(token);
+	}
+		
 }
 
 void	executeCommand(std::vector<std::string> command)
 {
+	std::string	operatorName = "";
+	size_t 		i = 0;
+
+	//DOES OPERATOR_NAME EXIST?
+	if (command[i][0] == ':')
+	{
+		operatorName = command[0];
+		i = 1;
+	}
+
 	if (command.size() == 0)
 		return ;
-	else if (command[0].compare("AUTHENTICATE") == 0)
+	else if (command[i].compare("AUTHENTICATE") == 0)
 		std::cout << "AUTHENTICATE" << std::endl;
-	else if (command[0].compare("NICK") == 0)
+	else if (command[i].compare("NICK") == 0)
 		std::cout << "NICK" << std::endl;
-	else if (command[0].compare("USER") == 0)
+	else if (command[i].compare("USER") == 0)
 		std::cout << "USER" << std::endl;
-	else if (command[0].compare("JOIN") == 0)
+	else if (command[i].compare("JOIN") == 0)
 		std::cout << "JOIN" << std::endl;
-	else if (command[0].compare("PRIVMSG") == 0)
+	else if (command[i].compare("PRIVMSG") == 0)
 		std::cout << "PRIVMSG" << std::endl; // (is the same for recieving?)
-	else if (command[0].compare("KICK") == 0)
-		std::cout << "KICK" << std::endl;
-	else if (command[0].compare("INVITE") == 0)
+	else if (command[i].compare("KICK") == 0)
+		kick(command, i + 1, operatorName);
+	else if (command[i].compare("INVITE") == 0)
 		std::cout << "INVITE" << std::endl;
-	else if (command[0].compare("TOPIC") == 0)
+	else if (command[i].compare("TOPIC") == 0)
 		std::cout << "TOPIC" << std::endl;
-	else if (command[0].compare("MODE") == 0)
+	else if (command[i].compare("MODE") == 0)
 		std::cout << "MODE" << std::endl; // -i -t -k -o -l
 	else
 		std::cerr << "Command NOT found" << std::endl;
@@ -80,46 +89,56 @@ void printVector(std::vector<std::string> vector)
 	}
 }
 
-size_t	kickClient(std::vector<std::string> command) //:operatorName <channel> <user> [:<comment>]
+size_t	kick(std::vector<std::string> command, size_t cmdNumber, std::string operatorName) //:operatorName <channel> <user> [:<comment>]
 {
-	std::vector<std::string>	channels, users;
-	std::string 				operatorName = "UNKNOWN";
-	size_t 						cmdNumber = 1;
+	std::vector<std::string>	users;
+	std::string					channel, comment = "for NO Reason";
 
 	//CHECK AUTHORITY
 	//	"<channel> :You're not channel operator" --> ERR_CHANOPRIVSNEEDED
+
+
 	if (command.size() < 3)
-		return (461); //ERR_NEEDMOREPARAMS == 461
+		return (std::cerr << "KICK: MISSING PARAMETERS" << std::endl, 461); //ERR_NEEDMOREPARAMS == 461
 	
-	//Checking if there is a operator name and storing it in a string
-	if (command[cmdNumber][0] == ':')
-		operatorName = command[cmdNumber++];
-	
-	//Parsing the command argument into channel name(s) stored in a vector
-	if (command[cmdNumber].find(","))
-		parseInputToVector(command[cmdNumber++], &channels, ",");
-	else
-		channels.push_back(command[cmdNumber++]);
+	//CHECK IF CHANNEL EXISTS IF NOT SKIP OR END COMD --> ERR_NOSUCHCHANNEL
+	channel = command[cmdNumber++];
 
 	//Parsing the command argument into user name(s) stored in a vector
 	if (command[cmdNumber].find(","))
-		parseInputToVector(command[cmdNumber++], &users, ",");
+		parseStringToVector(command[cmdNumber++], &users, ",");
 	else
 		users.push_back(command[cmdNumber++]);
-	
-	for (size_t i = 0; i < channels.size(); i++)
+
+	//Check for a KICK message (that starts with ':')
+	if (cmdNumber < command.size())
 	{
-		//CHECK IF CHANNEL EXISTS IF NOT SKIP OR END COMD --> ERR_NOSUCHCHANNEL
-		for (size_t j = 0; j < users.size(); j++)
-		{
-			//CHECK IF USER EXISTS IF NOT SKIP OR END COMD --> ERR_NOTONCHANNEL
-			std::cout << "KICKED the user " << users[j] << " out of channel " << channels[i] << "by operator " << operatorName << "!" << std::endl;
-		}
+		if (command[cmdNumber][0] == ':')
+			comment = command[cmdNumber];
+		cmdNumber++;
 	}
 
+	if (cmdNumber < command.size())
+		return (std::cerr << "TOO MANY PARAMETERS" << std::endl, 1);
+	
+	//Looping through the channels and users to be KICKED
+	for (size_t i = 0; i < users.size(); i++)
+	{
+		//CHECK IF USER EXISTS IF NOT SKIP OR END COMD --> ERR_NOTONCHANNEL
+		if (operatorName.size() != 0)
+			std::cout << "KICKED the user '" << users[i] << "' out of channel '" << channel << "' by operator " << operatorName << " because of " << comment << "!" << std::endl;
+		else
+			std::cout << "KICKED the user " << users[i] << " out of channel '" << channel << "' because of " << comment << "!" << std::endl;
+	
+	}
 
-        //	ERR_BADCHANMASK                 
+    //	ERR_BADCHANMASK                 
 
 	return (0);
 
 }
+
+// size_t	invite(std::vector<std::string> command, size_t cmdNumber, std::string operatorName) //:operatorName <channel> <user> [:<comment>]
+// {
+//		return (0);
+// }
