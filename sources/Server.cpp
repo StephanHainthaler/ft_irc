@@ -397,15 +397,15 @@ bool Server::isNicknameAvailable(const std::string& nickname) const
 
 void Server::handleNickCommand(Client* client, const std::string& newNickname)
 {
-    // First check format using Client's validation
+	int clientFd = client->getSocketFD();
+    
+	// First check format using Client's validation
     if (client->isNickValid(newNickname) != 0)
     {
-        // Send format error to client
-		int clientFd = client->getSocketFD();
-		
-		// std::string msg = client; // https://modern.ircdocs.horse/#errnicknameinuse-433
+		// ERR_ERRONEUSNICKNAME (432) message, see https://modern.ircdocs.horse/#errnicknameinuse-433
+		// std::string msg = client;
 		std::string msg = newNickname;
-		msg += " :Nickname is already in use";
+		msg += " :Erroneus nickname";
 
 		sendMessageToClient(clientFd, msg.c_str());
         return ;
@@ -414,7 +414,12 @@ void Server::handleNickCommand(Client* client, const std::string& newNickname)
     // Then check uniqueness using Server's validation
     if (!isNicknameAvailable(newNickname, client))
     {
-        // Send ERR_NICKNAMEINUSE (433) to client
+        // ERR_NICKNAMEINUSE (433) message, see https://modern.ircdocs.horse/#errnicknameinuse-433
+		// std::string msg = client;
+		std::string msg = newNickname;
+		msg += " :Nickname is already in use";
+
+		sendMessageToClient(clientFd, msg.c_str());
         return ;
     }
     
