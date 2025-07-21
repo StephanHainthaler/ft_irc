@@ -7,3 +7,6 @@ https://meta.intra.42.fr/articles/how-can-i-install-packages
 
 #home
 https://hexchat.github.io/
+  wget https://raw.githubusercontent.com/PanoramixDeDruide/Codam_apt/main/INSTALL.sh && chmod +x INSTALL.sh && ./INSTALL.sh
+restart shell
+  capt install hexchat
