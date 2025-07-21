@@ -22,7 +22,6 @@
 # include <unistd.h>
 # include <exception>
 # include <vector>
-# include <map>
 
 # include "main.hpp"
 # include "Client.hpp"
@@ -35,6 +34,8 @@
 # define RUNNING 1
 # define NOT_RUNNING 0
 # define ERROR -1
+
+void toLowercase(const std::string& str);
 
 // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in-cpp/
 class Server
@@ -50,7 +51,7 @@ class Server
 		int getState(void) const;
 
 		// Member functions - server actions
-		void sendMessageToIRCClient(const char* msg);
+		void sendMessageTolient(int clientFD, const char* msg);
 		void handleClientConnections(void);
 		std::vector<std::string>  handleClientMessage(int i);
 		void handleEvents(void);
@@ -63,7 +64,6 @@ class Server
 		*/
 
 		// Nickname availability checks
-		void toLowercase(const std::string& str);
 		bool isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const;
 		bool isNicknameAvailable(const std::string& nickname) const;
 		void handleNickCommand(Client* client, const std::string& newNickname);
@@ -95,7 +95,7 @@ class Server
 		*/
 		
 		const std::string			_password;
-		std::map<int, Client *>		_clients;	// List of connected clients (ClientClass objs)
+		std::vector<Client *>		_clients;	// List of connected clients (ClientClass objs)
 		std::vector<pollfd>			_pollfds; // +1 for the server socket
 		//std::vector<Channel *>		_channels;	// List of channels (ChannelClass objs)
 		//std::vector<std::string>	_users; // auf 10 users limitieren
@@ -118,6 +118,7 @@ htons()
 fcntl(sockfd, F_SETFL, O_NONBLOCK)
 send(client_fd, buffer, len, 0)
 recv(client_fd, buffer, sizeof(buffer), 0)
+poll(fds, nfds, timeout)
 
 ***MIGHT BE USEFUL:
 setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes))
@@ -136,5 +137,4 @@ inet_ntoa(addr.sin_addr)
 signal(SIGINT, handle_sigint)
 sigaction(SIGINT, &sa, NULL)
 fstat(fd, &info)
-poll(fds, nfds, timeout)
 */

@@ -49,9 +49,9 @@ Server::~Server(void)
 	// clear client map (WIP - needed?)
 	if (!_clients.empty())
 	{
-		for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+		for (std::vector<Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 		{
-			delete it->second;
+			delete *it;
 		}
 		_clients.clear();
 	}
@@ -59,7 +59,7 @@ Server::~Server(void)
 	// clear channel map (WIP - needed?)
 	if (!_channels.empty())
 	{
-		for (std::map<int, Client *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+		for (std::vector<Client *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
 		{
 			delete *it;
 		}
@@ -97,34 +97,34 @@ int Server::getState(void) const
 }
 
 // Member functions - server actions
-void Server::sendMessageToIRCClient(const char* msg)
+void Server::sendMessageTolient(int clientFD, const char* msg)
 {
-	if (_ircClientFd < 0)
+	if (clientFD < 0)
 	{
 		std::cerr << RED << "Error. Invalid IRC client fd." << DEFAULT << std::endl;
 		return;
 	}
 	
-	long long total_sent = 0;
-	long long msg_len = strlen(msg);
+	long long totalSent = 0;
+	long long msgLength = strlen(msg);
 
-	while (total_sent < msg_len) 
+	while (totalSent < msgLength) 
 	{
-		long long sent = send(_ircClientFd, msg + total_sent, msg_len - total_sent, 0);
+		long long sent = send(clientFD, msg + totalSent, msgLength - totalSent, 0);
 		if (sent == -1) 
 			break;
-		total_sent += sent;
+		totalSent += sent;
 	}
 }
 
-void Server::handleClientConnections()
+void Server::handleClientConnections(void)
 {
 	sockaddr_in clientAddress = {}; // need to catch it with accept
 	socklen_t clientAddressLen = sizeof(clientAddress);
 	
 	// Handle incoming connections
-	int client_fd = accept(_serverFd, (sockaddr *)&clientAddress, &clientAddressLen);
-	if (client_fd < 0) // if a new client connected
+	int clientFd = accept(_serverFd, (sockaddr *)&clientAddress, &clientAddressLen);
+	if (clientFd < 0) // if a new client connected
 		throw ServerException("Error. Failed to accept client connection.");
 	
 	/* pollfd  (useful: https://www.ibm.com/docs/en/i/7.4.0?topic=ssw_ibm_i_74/apis/poll.htm)
@@ -137,14 +137,14 @@ void Server::handleClientConnections()
 	};
 	*/
 	pollfd pfd = {};
-	pfd.fd = client_fd;
+	pfd.fd = clientFd;
 	pfd.events = POLLIN;
 	pfd.revents = 0; // initially no events
 
 	_pollfds.push_back(pfd);
 
-	Client *newClient = new Client(client_fd, clientAddress); // create a new Client object
-	_clients.insert(std::make_pair(client_fd, newClient)); // add the new client to the map
+	Client *newClient = new Client(clientFd, clientAddress); // create a new Client object
+	_clients.push_back(newClient); // add the new client to the map
 }
 
 /* https://modern.ircdocs.horse/
@@ -249,7 +249,7 @@ void Server::handleEvents(void)
 			{
 				std::cout << GRAY << "Client disconnected: " << _pollfds[i].fd << DEFAULT << std::endl;
 				close(_pollfds[i].fd); // close hotel room (socket)
-				_clients.erase(_pollfds[i].fd);
+				_clients.erase(_clients.begin() + i);
 				_pollfds.erase(_pollfds.begin() + i);
 				continue;
 			}
@@ -363,11 +363,10 @@ Server::ServerException::~ServerException() throw()
 {
 }
 
-/* void toLowercase(const std::string& str)
+void toLowercase(const std::string& str)
 {
 	std::string result = str;
 	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
-	return (result);
 }
 
 // For nickname changes within the same Client -- this will allow lower/upper case changes, for example: pia to Pia
@@ -399,9 +398,11 @@ bool Server::isNicknameAvailable(const std::string& nickname) const
 void Server::handleNickCommand(Client* client, const std::string& newNickname)
 {
     // First check format using Client's validation
-    if (client->isNickFormatValid(newNickname) != 0)
+    if (client->isNickValid(newNickname) != 0)
     {
         // Send format error to client
+		int clientFd = client->getSocketFD();
+		sendMessageTolient(clientFd, "Error. Nick name already in use. Please choose another nickname.");
         return ;
     }
     
@@ -414,4 +415,4 @@ void Server::handleNickCommand(Client* client, const std::string& newNickname)
     
     // Nickname is valid and available
     client->setNick(newNickname);
-} */
+}
