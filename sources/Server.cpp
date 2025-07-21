@@ -97,7 +97,7 @@ int Server::getState(void) const
 }
 
 // Member functions - server actions
-void Server::sendMessageTolient(int clientFD, const char* msg)
+void Server::sendMessageToClient(int clientFD, const char* msg)
 {
 	if (clientFD < 0)
 	{
@@ -402,7 +402,12 @@ void Server::handleNickCommand(Client* client, const std::string& newNickname)
     {
         // Send format error to client
 		int clientFd = client->getSocketFD();
-		sendMessageTolient(clientFd, "Error. Nick name already in use. Please choose another nickname.");
+		
+		// std::string msg = client; // https://modern.ircdocs.horse/#errnicknameinuse-433
+		std::string msg = newNickname;
+		msg += " :Nickname is already in use";
+
+		sendMessageToClient(clientFd, msg.c_str());
         return ;
     }
     

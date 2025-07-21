@@ -22,6 +22,7 @@
 # include <unistd.h>
 # include <exception>
 # include <vector>
+#include <stdio.h>
 
 # include "main.hpp"
 # include "Client.hpp"
@@ -51,7 +52,7 @@ class Server
 		int getState(void) const;
 
 		// Member functions - server actions
-		void sendMessageTolient(int clientFD, const char* msg);
+		void sendMessageToClient(int clientFD, const char* msg);
 		void handleClientConnections(void);
 		std::vector<std::string>  handleClientMessage(int i);
 		void handleEvents(void);
