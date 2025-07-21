@@ -6,7 +6,7 @@
 /*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/20 09:00:20 by codespace        ###   ########.fr       */
+/*   Updated: 2025/07/21 14:26:50 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,7 @@ class Client
 		// Connection
 		int 		connectToServer(const std::string& serverIP, int serverPort);
 		int 		sendMessage(const std::string& message);
-		std::string receiveMessage();
+		std::vector<std::string> receiveCompleteMessages();
 		
 
 		//USER_function
