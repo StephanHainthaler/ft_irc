@@ -20,7 +20,8 @@
 #include <cstring> 
 
 void	handleInput(void);
-void    parseInputToVector(std::string &input, std::vector<std::string> *command);
+void    parseInputToVector(std::string &input, std::vector<std::string> *vector);
+void    parseInputToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters);
 void	executeCommand(std::vector<std::string> command);
 void    printVector(std::vector<std::string> vector);
 

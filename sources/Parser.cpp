@@ -28,11 +28,17 @@ void	handleInput(void)
 	}
 }
 
-void    parseInputToVector(std::string &input, std::vector<std::string> *command)
+void    parseInputToVector(std::string &input, std::vector<std::string> *vector)
 {
     const char* delimiters = " \f\n\r\t\v";
 	for (char* token = std::strtok((char *)input.c_str(), delimiters); token; token = std::strtok(NULL, delimiters))
-		command->push_back(token);
+		vector->push_back(token);
+}
+
+void    parseInputToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters)
+{
+	for (char* token = std::strtok((char *)input.c_str(), delimiters); token; token = std::strtok(NULL, delimiters))
+		vector->push_back(token);
 }
 
 void	executeCommand(std::vector<std::string> command)
@@ -72,4 +78,48 @@ void printVector(std::vector<std::string> vector)
 	{			
 		std::cout << vector[i] << std::endl;
 	}
+}
+
+size_t	kickClient(std::vector<std::string> command) //:operatorName <channel> <user> [:<comment>]
+{
+	std::vector<std::string>	channels, users;
+	std::string 				operatorName = "UNKNOWN";
+	size_t 						cmdNumber = 1;
+
+	//CHECK AUTHORITY
+	//	"<channel> :You're not channel operator" --> ERR_CHANOPRIVSNEEDED
+	if (command.size() < 3)
+		return (461); //ERR_NEEDMOREPARAMS == 461
+	
+	//Checking if there is a operator name and storing it in a string
+	if (command[cmdNumber][0] == ':')
+		operatorName = command[cmdNumber++];
+	
+	//Parsing the command argument into channel name(s) stored in a vector
+	if (command[cmdNumber].find(","))
+		parseInputToVector(command[cmdNumber++], &channels, ",");
+	else
+		channels.push_back(command[cmdNumber++]);
+
+	//Parsing the command argument into user name(s) stored in a vector
+	if (command[cmdNumber].find(","))
+		parseInputToVector(command[cmdNumber++], &users, ",");
+	else
+		users.push_back(command[cmdNumber++]);
+	
+	for (size_t i = 0; i < channels.size(); i++)
+	{
+		//CHECK IF CHANNEL EXISTS IF NOT SKIP OR END COMD --> ERR_NOSUCHCHANNEL
+		for (size_t j = 0; j < users.size(); j++)
+		{
+			//CHECK IF USER EXISTS IF NOT SKIP OR END COMD --> ERR_NOTONCHANNEL
+			std::cout << "KICKED the user " << users[j] << " out of channel " << channels[i] << "by operator " << operatorName << "!" << std::endl;
+		}
+	}
+
+
+        //	ERR_BADCHANMASK                 
+
+	return (0);
+
 }
