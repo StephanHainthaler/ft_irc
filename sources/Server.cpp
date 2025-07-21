@@ -213,6 +213,7 @@ void Server::run()
 
         std::cout << "Client connected with fd: " << client_fd << std::endl;
         sendMessageToClient(client_fd, "Hello Stephan and Julian\r\n");
+		
         // TODO: Handle client commands here
     }
 }

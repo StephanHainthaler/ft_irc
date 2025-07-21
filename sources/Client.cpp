@@ -6,7 +6,7 @@
 /*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/07/21 16:41:59 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/21 19:06:02 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,6 +61,8 @@ int Client::sendMessage(const std::string& message)
     std::string fullMessage = message + "\r\n"; 
     int bytesSent = send(_socketFD, fullMessage.c_str(), fullMessage.length(), 0);
     
+	if (bytesSent > 512)
+		return (std::cerr <<  "<client> :Input line was too long" << std::endl, ERR_INPUTTOOLONG);
     if (bytesSent == -1)
         std::cerr << "Error: Failed to send message" << std::endl;
     
@@ -85,7 +87,7 @@ std::vector<std::string> Client::receiveCompleteMessages()
         // Prevent buffer from growing too large
         if (_messageBuffer.length() > 4096)
         {
-            std::cerr << "Message buffer overflow - clearing" << std::endl;
+            std::cerr <<  "<client> :Input line was too long" << std::endl;
             _messageBuffer.clear();
             return (completeMessages);
         }
