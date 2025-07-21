@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/19 18:00:31 by codespace        ###   ########.fr       */
+/*   Updated: 2025/07/21 15:42:09 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,7 +76,7 @@ class Client
 		// Connection
 		int 		connectToServer(const std::string& serverIP, int serverPort);
 		int 		sendMessage(const std::string& message);
-		std::string receiveMessage();
+		std::vector<std::string> receiveCompleteMessages();
 		
 
 		//USER_function
