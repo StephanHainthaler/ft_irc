@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
+/*   By: pgober <pgober@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/07/21 16:41:59 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/21 17:13:15 by pgober           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -241,12 +241,13 @@ void Client::setUser(std::string& userName, int zero, char asterisk, std::string
 		_realName = realName.substr(0, 50);
 }
 
-/* Client::Client(int socketFD, const sockaddr_in& clientAddr) : 
+Client::Client(int socketFD, const sockaddr_in& clientAddr) : 
 	_socketFD(socketFD),
 	_state(CONNECTING),
 	_channels(CHANLIMIT)
 {
-} */
+    (void)clientAddr;
+}
 void Client::setState(ClientState newState)
 { 
 	_state = newState; 

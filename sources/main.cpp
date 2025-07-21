@@ -49,7 +49,7 @@ on 1st Terminal run: ./ircserv <port> <password>
 on 2nd Terminal run: 
 	flatpak run io.github.Hexchat
 */
-/* int	main(int argc, char *argv[])
+int	main(int argc, char *argv[])
 {
 	if (argc != 3)
 		return (std::cerr << RED << "Error: incorrect number of arguments" << DEFAULT << std::endl, 1);
@@ -70,10 +70,10 @@ on 2nd Terminal run:
 		std::cerr << RED << e.what() << DEFAULT << std::endl;
 	}
 	return 0;
-} */
+}
 
 // Client main
-
+/*
 #include <iostream>
 #include <unistd.h>
 #include <cstdlib>
@@ -106,4 +106,4 @@ int main(void)
 		std::cout << "User: " << client.getUsername() << "\n" << "Real name: " << client.getRealname() << std::endl;
 
 	return (0);
-}
+}*/
