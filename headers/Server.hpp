@@ -20,6 +20,7 @@
 # include <unistd.h>
 # include <exception>
 # include <vector>
+# include <map>
 # include <poll.h>
 
 # include "main.hpp"
@@ -27,6 +28,7 @@
 # include "Channel.hpp"
 
 # define MAX_CLIENTS 10 // max #clients that can connect to the server at the same time
+# define MAX_MSG_LEN 1042
 
 // Server states
 # define RUNNING 1
@@ -49,14 +51,15 @@ class Server
 		// Member functions - server actions
 		void sendMessageToIRCClient(const char* msg);
 		void handleClientConnections(void);
+		std::string readclientMessage(int client_fd);
+		void handleEvents(void);
+		void run(void);
 
 		// Member functions - user triggered actions
-		void addClient(Client *client);
-		void removeClient(Client *client);
-		
 		/*
 		void addChannel(Channel *channel);
 		void removeChannel(Channel *channel);
+		*/
 
 		// Nickname availability checks
 		void toLowercase(const std::string& str);
@@ -91,7 +94,8 @@ class Server
 		*/
 		
 		const std::string			_password;
-		std::vector<Client *>		_clients;	// List of connected clients (ClientClass objs)
+		std::map<int, Client *>		_clients;	// List of connected clients (ClientClass objs)
+		pollfd						_pollfds[MAX_CLIENTS + 1]; // +1 for the server socket
 		//std::vector<Channel *>		_channels;	// List of channels (ChannelClass objs)
 		//std::vector<std::string>	_users; // auf 10 users limitieren
 

@@ -14,8 +14,8 @@
 #include <cstring>
 #include <cstdlib>
 
-/* #include "../headers/Server.hpp"
-#include "../headers/Parser.hpp" */
+#include "../headers/Server.hpp"
+/*#include "../headers/Parser.hpp" */
 #include "../headers/Client.hpp"
 #include "../headers/Channel.hpp"
 #include "../headers/main.hpp"
@@ -41,7 +41,7 @@ bool	isPositiveNumber(char *string)
 	if (i != end)
 		return (false);
 	return (true);
-} */
+}
 
 /* HowTo start the chat:
 on 1st Terminal run: ./ircserv <port> <password>
@@ -56,14 +56,13 @@ int	main(int argc, char *argv[])
 	if (isPositiveNumber(argv[1]) == false)
 		return (std::cerr << RED << "Error: port MUST be a positive number" << DEFAULT << std::endl, 1);
 	
-	unsigned int	port = atoi(argv[1]);
 	std::string		password = argv[2];
 
 	//handleInput();
 	
 	try
 	{
-		Server	server(port, password);
+		Server	server(atoi(argv[1]), password);
 		server.run(); // start the server and listen for incoming connections
 	}
 	catch(const std::exception& e)

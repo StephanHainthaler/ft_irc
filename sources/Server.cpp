@@ -21,6 +21,8 @@ and the port number is specified by the user (as a command line argument)
 */
 Server::Server(const unsigned int &port, const std::string &password): _port(port), _password(password)
 {
+	if (atoi(port.c_str()) <= 0 || atoi(port.c_str()) > 65535)
+		throw ServerException("Error. Invalid port number.");
 	// AF_INET specifies IPv4 protocol family, SOCK_STREAM specifies TCP protocol
     _server_fd = socket(AF_INET, SOCK_STREAM, 0); // Create a TCP/IPv4 socket
     if (_server_fd == -1) 
@@ -117,63 +119,124 @@ void Server::sendMessageToIRCClient(const char* msg)
 
 void Server::handleClientConnections()
 {
-	pollfd fds[MAX_CLIENTS + 1]; // +1 for the server socket
+	sockaddr_in clientAddress = {}; // need to catch it with accept
+	socklen_t clientAddressLen = sizeof(clientAddress);
+	
+	// Handle incoming connections
+	int client_fd = accept(_server_fd, (sockaddr *)&clientAddress, &clientAddressLen);
+	if (client_fd < 0) // if a new client connected
+		throw ServerException("Error. Failed to accept client connection.");
+	
+	/* pollfd
+	is a structure used by poll() to monitor fds for readiness (for reading, writing, or errors)
+	It contains:
+	struct pollfd {
+		int fd	// file descriptor to monitor, 
+		int events;	//the events to monitor: POLLIN, POLLOUT
+		int revents;	//what actually happened, which is set by poll()
+	};
+	*/
+	pollfd pfd = {0};
+	pfd.fd = client_fd;
+	pfd.events = POLLIN;
+	pfd.revents = 0; // initially no events
 
-	fds[0].fd = _server_fd; // server socket
-	fds[0].events = POLLIN; // listen for incoming connections
-	for (size_t i = 1; i <= MAX_CLIENTS; ++i) // initialize the rest of the fds
+	_pollfds.push_back(pfd);
+
+	Client *newClient = new Client(client_fd, clientAddress); // create a new Client object
+	_clients.insert(std::make_pair(client_fd, newClient)); // add the new client to the map
+}
+
+std::string Server::handleClientlientMessage(int i)
+{
+	std::string	message;
+	
+	char 	buffer[MAX_MSG_LEN];
+	bzero(buffer, MAX_MSG_LEN);
+
+	
+	int bytesReceived = recv(_pollfds[i].fd, buffer, sizeof(buffer) - 1, 0);
+	if (bytesReceived > 0)
 	{
-		fds[i].fd = -1; // -1 means no client connected
-		fds[i].events = POLLIN; // listen for incoming data
+		buffer[bytesReceived] = '\0';
+		std::cout << "Received from client: " << buffer << std::endl;
 	}
-	int nfds = 1; // number of file descriptors to poll, starts with the server socket
+	else if (bytesReceived == 0)
+	{
+		std::cout << "Client disconnected: " << _pollfds[i].fd << std::endl;
+		// removeClient(_pollfds[i].fd); // WIP
+		close(_pollfds[i].fd);
+		_pollfds.erase(i);
+	}
+	else
+		std::cerr << RED << "Error receiving data from client. " << DEFAULT << std::endl;
+	
+}
 
+void Server::handleEvents(void)
+{
+	pollfd sfd;
+	sfd.fd = _server_fd; // server socket
+	sfd.events = POLLIN; // listen for incoming connections
+	// POLLOUT = ready to write, POLLERR = error on the fd, POLLHUP = client closed socket
+	sfd.revents = 0; // initially no events
+	
 	while (_state == RUNNING) // while server is running
 	{
 		// Handle client input with poll
-		int poll_count = poll(fds, nfds, -1);
-		if (poll_count < 0)
+		int poll_count = poll(_pollfds, _pollfds.size(), -1);
+		if (poll_count < 0) // poll returns the number of fds, which are ready to read, because of POLLIN
 		{
-			std::cerr << RED << "Error polling sockets. " << DEFAULT << std::endl;
+			std::cerr << RED << "Error checking sockets for readiness. " << DEFAULT << std::endl;
 			break;
 		}
-		
-		// Handle incoming connections
-		int client_fd = accept(_server_fd, NULL, NULL);
-		if (client_fd >= 0) // if a new client connected
+		else if (poll_count == 0) // no events occurred
 		{
-			Client *newClient = new Client(client_fd, clientAddress); // create a new Client object
-			addClient(newClient); // add the new client to the server's list of clients
+			std::cout << "No events occurred." << std::endl;
+			continue; // retry polling
 		}
+		
+		// else: if one or more sockets / fds are ready for reading
 
 		// Check for events on each client socket
 		for (size_t i = 1; i <= MAX_CLIENTS; ++i)
 		{
-			if (fds[i].revents & POLLIN) // if there's data to read
+			// Case 1: there was no event with that fd
+			if (_pollfds[i].revents == 0)
+				continue; // skip to next fd
+
+			// Case 2: the client disconnected
+			/*
+			Since revents is in binary, we can check for specific events using bitwise AND
+			if they have the 1 in common, it will have true as a return
+			*/
+			if (_pollfds[i].revents & POLLHUP) // if the client closed the connection
 			{
-				char buffer[1024];
-				int bytesReceived = recv(fds[i].fd, buffer, sizeof(buffer) - 1, 0);
-				if (bytesReceived > 0)
+				std::cout << GRAY << "Client disconnected: " << _pollfds[i].fd << DEFAULT << std::endl;
+				close(_pollfds[i].fd); // close hotel room (socket)
+				_clients.erase(_pollfds[i].fd);
+				_pollfds.erase(_pollfds.begin() + i);
+				continue;
+			}
+
+			// Case 3: there was an event with that fd
+			if (_pollfds[i].revents & POLLIN) // if there's data to read
+			{
+				// for the server socket, data to read can be a new client connection
+				if (_pollfds[i].fd == _server_fd) // if the server socket is
 				{
-					buffer[bytesReceived] = '\0';
-					std::cout << "Received from client: " << buffer << std::endl;
-					// handleClientInput(fds[i].fd); // WIP
+					handleClientConnections(); // accept new client connection
+					continue; // skip to next fd
 				}
-				else if (bytesReceived == 0)
-				{
-					std::cout << "Client disconnected: " << fds[i].fd << std::endl;
-					// removeClient(fds[i].fd); // WIP
-					close(fds[i].fd);
-					fds[i].fd = -1;
-				}
-				else
-					std::cerr << RED << "Error receiving data from client. " << DEFAULT << std::endl;
+				
+				// for client sockets, data to read can be a message from another client
+				handleClientMessage(i);
 			}
 		}
 	}
 }
 
-void Server::run()
+void Server::run(void)
 {
 	/* sockaddr_in vs sockaddr
 	sockaddr_in is specifically for handling IPv4 addresses
@@ -218,37 +281,10 @@ void Server::run()
 	}
 
 	// Now the server is ready to handle incoming connections and client input
-	handleClientConnections();
+	handleEvents();
 }
 
 // Member functions - user triggered actions
-void Server::addClient(Client *client)
-{
-	if (client == NULL)
-		return;
-	
-	for (std::vector<Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
-	{
-		if (*it == client)
-			return; 
-	}
-	_clients.push_back(client);
-}
-
-void Server::removeClient(Client *client)
-{
-	if (client == NULL)
-		return;
-
-	for (std::vector<Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
-	{
-		if (*it == client)
-		{
-			_clients.erase(it);
-			break;
-		}
-	}
-}
 /*
 void Server::addChannel(Channel *channel)
 {
