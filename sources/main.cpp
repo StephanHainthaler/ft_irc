@@ -58,7 +58,7 @@ int	main(int argc, char *argv[])
 	
 	std::string		password = argv[2];
 
-	handleInput();
+	//handleInput();
 	
 	try
 	{
