@@ -6,7 +6,7 @@
 /*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/07/19 18:52:05 by codespace        ###   ########.fr       */
+/*   Updated: 2025/07/20 08:59:51 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,7 +72,7 @@ std::vector<std::string> Client::receiveCompleteMessages()
     std::vector<std::string> completeMessages;
     
     if (_socketFD == -1)
-        return completeMessages;
+        return (completeMessages);
     
     char buffer[1024];
     int bytesReceived = recv(_socketFD, buffer, sizeof(buffer) - 1, MSG_DONTWAIT); // Flag for non-blocking
@@ -87,7 +87,7 @@ std::vector<std::string> Client::receiveCompleteMessages()
         {
             std::cerr << "Message buffer overflow - clearing" << std::endl;
             _messageBuffer.clear();
-            return completeMessages;
+            return (completeMessages);
         }
         
         // Extract complete messages
