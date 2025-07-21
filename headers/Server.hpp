@@ -68,6 +68,8 @@ class Server
 		bool isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const;
 		bool isNicknameAvailable(const std::string& nickname) const;
 		void handleNickCommand(Client* client, const std::string& newNickname);
+
+		//PARSER
 		
 		// Exception
 		class ServerException: public std::exception

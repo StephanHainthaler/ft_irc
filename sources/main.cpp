@@ -15,7 +15,7 @@
 #include <cstdlib>
 
 #include "../headers/Server.hpp"
-/*#include "../headers/Parser.hpp" */
+#include "../headers/Parser.hpp"
 #include "../headers/Client.hpp"
 #include "../headers/Channel.hpp"
 #include "../headers/main.hpp"
@@ -58,7 +58,7 @@ int	main(int argc, char *argv[])
 	
 	std::string		password = argv[2];
 
-	//handleInput();
+	handleInput();
 	
 	try
 	{
