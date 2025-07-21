@@ -16,14 +16,27 @@
 # include <sys/socket.h> // for socket, bind, listen, accept
 # include <netinet/in.h> // for sockaddr_in
 # include <fcntl.h> // to set socket to non-blocking mode
+# include <poll.h>
+# include <errno.h> // - number of last error
 
 # include <unistd.h>
 # include <exception>
 # include <vector>
+#include <stdio.h>
 
 # include "main.hpp"
 # include "Client.hpp"
 # include "Channel.hpp"
+
+# define MAX_CLIENTS 10 // max #clients that can connect to the server at the same time
+# define MAX_MSG_LEN 1042
+
+// Server states
+# define RUNNING 1
+# define NOT_RUNNING 0
+# define ERROR -1
+
+void toLowercase(const std::string& str);
 
 // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in-cpp/
 class Server
@@ -39,17 +52,23 @@ class Server
 		int getState(void) const;
 
 		// Member functions - server actions
-		void sendMessageToClient(int client_fd, const char* msg);
-		/*
-		// Member functions - user triggered actions
-		void addClient(Client *client);
-		void removeClient(Client *client);
-		
-		void addChannel(Channel *channel);
-		void removeChannel(Channel *channel);*/
-		
+		void sendMessageToClient(int clientFD, const char* msg);
+		void handleClientConnections(void);
+		std::vector<std::string>  handleClientMessage(int i);
+		void handleEvents(void);
 		void run(void);
 
+		// Member functions - user triggered actions
+		/*
+		void addChannel(Channel *channel);
+		void removeChannel(Channel *channel);
+		*/
+
+		// Nickname availability checks
+		bool isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const;
+		bool isNicknameAvailable(const std::string& nickname) const;
+		void handleNickCommand(Client* client, const std::string& newNickname);
+		
 		// Exception
 		class ServerException: public std::exception
 		{
@@ -67,7 +86,7 @@ class Server
 		Server(const Server &other);
 		Server	&operator=(const Server &other);
 	
-		int							_socket_fd; // Server Socket FD - Listening socket, can be negative
+		int							_serverFd; // Server Socket FD - Listening socket, can be negative
 		const unsigned int 			_port; // Port number - "door to the server"
 		struct sockaddr_in 			_serverAddress; // for IPv4 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
 		// struct sockaddr_in6 		_serverAddress; // for IPv6 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
@@ -78,12 +97,14 @@ class Server
 		
 		const std::string			_password;
 		std::vector<Client *>		_clients;	// List of connected clients (ClientClass objs)
+		std::vector<pollfd>			_pollfds; // +1 for the server socket
 		//std::vector<Channel *>		_channels;	// List of channels (ChannelClass objs)
 		//std::vector<std::string>	_users; // auf 10 users limitieren
 
 		// clients must be unique within a channel
 
 		int							_state; // Server state - 0: not running, 1: running, -1: error (?)
+		int							_ircClientFd; // FD of the IRC client (Hexchat) that connects to the server
 };
 
 /* 
@@ -97,10 +118,11 @@ accept(sockfd, NULL, NULL)
 htons()
 fcntl(sockfd, F_SETFL, O_NONBLOCK)
 send(client_fd, buffer, len, 0)
+recv(client_fd, buffer, sizeof(buffer), 0)
+poll(fds, nfds, timeout)
 
 ***MIGHT BE USEFUL:
 setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes))
-recv(client_fd, buffer, sizeof(buffer), 0)
 lseek(fd, 0, SEEK_END)
 
 ***UNUSED FUNCTIONS:
@@ -116,5 +138,4 @@ inet_ntoa(addr.sin_addr)
 signal(SIGINT, handle_sigint)
 sigaction(SIGINT, &sa, NULL)
 fstat(fd, &info)
-poll(fds, nfds, timeout)
 */

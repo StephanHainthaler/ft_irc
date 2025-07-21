@@ -15,7 +15,7 @@
 #include <cstdlib>
 
 #include "../headers/Server.hpp"
-#include "../headers/Parser.hpp"
+/*#include "../headers/Parser.hpp" */
 #include "../headers/Client.hpp"
 #include "../headers/Channel.hpp"
 #include "../headers/main.hpp"
@@ -56,14 +56,13 @@ int	main(int argc, char *argv[])
 	if (isPositiveNumber(argv[1]) == false)
 		return (std::cerr << RED << "Error: port MUST be a positive number" << DEFAULT << std::endl, 1);
 	
-	unsigned int	port = atoi(argv[1]);
 	std::string		password = argv[2];
 
-	// handleInput();
+	//handleInput();
 	
 	try
 	{
-		Server	server(port, password);
+		Server	server(atoi(argv[1]), password);
 		server.run(); // start the server and listen for incoming connections
 	}
 	catch(const std::exception& e)
@@ -74,11 +73,11 @@ int	main(int argc, char *argv[])
 }
 
 // Client main
-
-// #include <iostream>
-// #include <unistd.h>
-// #include <cstdlib>
-// #include <cstring> // BUGFIX: allowed?
+/*
+#include <iostream>
+#include <unistd.h>
+#include <cstdlib>
+#include <cstring> // BUGFIX: allowed?
 
 // #include "../headers/Server.hpp"
 // #include "../headers/Parser.hpp"
@@ -106,5 +105,5 @@ int	main(int argc, char *argv[])
 // 	client.setUser(userName, 0, '*', realName);
 // 		std::cout << "User: " << client.getUsername() << "\n" << "Real name: " << client.getRealname() << std::endl;
 
-// 	return (0);
-// }
+	return (0);
+}*/
