@@ -24,8 +24,8 @@ Server::Server(const unsigned int &port, const std::string &password): _port(por
 	if (port <= 0 || port > 65535)
 		throw ServerException("Error. Invalid port number.");
 	// AF_INET specifies IPv4 protocol family, SOCK_STREAM specifies TCP protocol
-    _server_fd = socket(AF_INET, SOCK_STREAM, 0); // Create a TCP/IPv4 socket
-    if (_server_fd == -1) 
+    _serverFd = socket(AF_INET, SOCK_STREAM, 0); // Create a TCP/IPv4 socket
+    if (_serverFd == -1) 
 	{
 		throw ServerException("Error. Failed to create socket.");
 	}
@@ -34,7 +34,7 @@ Server::Server(const unsigned int &port, const std::string &password): _port(por
 	_serverAddress.sin_addr.s_addr = INADDR_ANY; // server should accept connections from any IPv4 address, used when we don't want to bind our socket to any particular IP, to mak eit listen to all available IPs
 	_serverAddress.sin_port = htons(port); // defines the port number the socket will use to communicate on server side (the value has to be in network byte order)
 
-	std::cout << GRAY << "Server created with socket fd: " << _server_fd << ", port: " << port << ", password: " << password << DEFAULT << std::endl;
+	std::cout << GRAY << "Server created with socket fd: " << _serverFd << ", port: " << port << ", password: " << password << DEFAULT << std::endl;
 	
 	// _clients and _channels remain empty at this point (?) - will get filled later
 
@@ -43,8 +43,8 @@ Server::Server(const unsigned int &port, const std::string &password): _port(por
 
 Server::~Server(void)
 {
-	if (_server_fd != -1)
-		close(_server_fd);
+	if (_serverFd != -1)
+		close(_serverFd);
 
 	// clear client map (WIP - needed?)
 	if (!_clients.empty())
@@ -66,8 +66,8 @@ Server::~Server(void)
 		_channels.clear();
 	}*/
 
-	if (_IRC_client_fd != -1)
-		close(_IRC_client_fd);
+	if (_ircClientFd != -1)
+		close(_ircClientFd);
 }
 
 // Getters
@@ -99,7 +99,7 @@ int Server::getState(void) const
 // Member functions - server actions
 void Server::sendMessageToIRCClient(const char* msg)
 {
-	if (_IRC_client_fd < 0)
+	if (_ircClientFd < 0)
 	{
 		std::cerr << RED << "Error. Invalid IRC client fd." << DEFAULT << std::endl;
 		return;
@@ -110,7 +110,7 @@ void Server::sendMessageToIRCClient(const char* msg)
 
 	while (total_sent < msg_len) 
 	{
-		long long sent = send(_IRC_client_fd, msg + total_sent, msg_len - total_sent, 0);
+		long long sent = send(_ircClientFd, msg + total_sent, msg_len - total_sent, 0);
 		if (sent == -1) 
 			break;
 		total_sent += sent;
@@ -123,7 +123,7 @@ void Server::handleClientConnections()
 	socklen_t clientAddressLen = sizeof(clientAddress);
 	
 	// Handle incoming connections
-	int client_fd = accept(_server_fd, (sockaddr *)&clientAddress, &clientAddressLen);
+	int client_fd = accept(_serverFd, (sockaddr *)&clientAddress, &clientAddressLen);
 	if (client_fd < 0) // if a new client connected
 		throw ServerException("Error. Failed to accept client connection.");
 	
@@ -147,38 +147,71 @@ void Server::handleClientConnections()
 	_clients.insert(std::make_pair(client_fd, newClient)); // add the new client to the map
 }
 
-std::string Server::handleClientMessage(int i)
+/* https://modern.ircdocs.horse/
+When reading messages from a stream, read the incoming data into a buffer. 
+Only parse and process a message once you encounter the \r\n at the end of it. 
+If you encounter an empty message, silently ignore it.
+*/
+std::vector<std::string> Server::handleClientMessage(int i)
 {
-	std::string	message = NULL;
-	
+ 	std::vector<std::string> 	completeMessages;
+	std::string					messageBuffer;
+ 	    
 	char 	buffer[MAX_MSG_LEN];
 	bzero(buffer, MAX_MSG_LEN);
 
-	
-	int bytesReceived = recv(_pollfds[i].fd, buffer, sizeof(buffer) - 1, 0);
-	if (bytesReceived > 0)
-	{
-		buffer[bytesReceived] = '\0';
-		message = buffer;
-		std::cout << "Received from client: " << message << std::endl;
-	}
-	else if (bytesReceived == 0)
-	{
-		std::cout << "Client disconnected: " << _pollfds[i].fd << std::endl;
-		// removeClient(_pollfds[i].fd); // WIP
+    int bytesReceived = recv(_pollfds[i].fd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT); // Flag for non-blocking
+    if (bytesReceived > 0)
+    {
+        buffer[bytesReceived] = '\0';
+        messageBuffer += std::string(buffer);
+        
+        // Prevent buffer from growing too large
+        if (messageBuffer.length() > 4096)
+        {
+            std::cerr << "Message buffer overflow - clearing" << std::endl;
+            messageBuffer.clear();
+            return completeMessages;
+        }
+        std::cout << "Received from client: " << messageBuffer << std::endl;
+
+        // Extract complete messages
+        std::string::size_type pos = 0;
+        while ((pos = messageBuffer.find("\r\n")) != std::string::npos)
+        {
+            std::string message = messageBuffer.substr(0, pos);
+            
+            // Skip empty messages
+            if (!message.empty())
+                completeMessages.push_back(message);
+            
+            messageBuffer.erase(0, pos + 2);
+        }
+    }
+    else if (bytesReceived == 0)
+    {
+        std::cout << "Client disconnected: " << _pollfds[i].fd << std::endl;
 		close(_pollfds[i].fd);
 		_pollfds.erase(_pollfds.begin() + i);
 	}
-	else
-		std::cerr << RED << "Error receiving data from client. " << DEFAULT << std::endl;
-	
-	return (message);
+    else if (bytesReceived == -1)
+    {
+        // Check if it's just "would block" (no data available)
+		/*
+		ist ein Fehlercode, der in der Programmierung verwendet wird und oft auf eine vorübergehende Ressourcenknappheit hinweist
+		*/
+        if (errno != EAGAIN && errno != EWOULDBLOCK)
+        {
+            std::cerr << "Error: Failed to receive message" << std::endl;
+        }
+    }	
+    return (completeMessages);
 }
 
 void Server::handleEvents(void)
 {
 	pollfd sfd;
-	sfd.fd = _server_fd; // server socket
+	sfd.fd = _serverFd; // server socket
 	sfd.events = POLLIN; // listen for incoming connections
 	// POLLOUT = ready to write, POLLERR = error on the fd, POLLHUP = client closed socket
 	sfd.revents = 0; // initially no events
@@ -225,7 +258,7 @@ void Server::handleEvents(void)
 			if (_pollfds[i].revents & POLLIN) // if there's data to read
 			{
 				// for the server socket, data to read can be a new client connection
-				if (_pollfds[i].fd == _server_fd) // if the server socket is
+				if (_pollfds[i].fd == _serverFd) // if the server socket is
 				{
 					handleClientConnections(); // accept new client connection
 					continue; // skip to next fd
@@ -245,17 +278,17 @@ void Server::run(void)
 	sockaddr is a generic structure that can be used for both IPv4 and IPv6 addresses
 	and it is what the bind function expects
 	*/
-	if (bind(_server_fd, (struct sockaddr *)&_serverAddress, sizeof(_serverAddress)) == -1)
+	if (bind(_serverFd, (struct sockaddr *)&_serverAddress, sizeof(_serverAddress)) == -1)
 	{
-		close(_server_fd);
+		close(_serverFd);
 		throw ServerException("Error. Failed to bind socket.");
 	}
 	
 	// Marks a bound socket as "listening socket"
 	// Server is on receiving end of data so needs to listen for incoming connections
-	if (listen(_server_fd, SOMAXCONN) == -1) // SOMAXCONN is a constant that defines the maximum number of pending connections in the queue, 128 in most systems
+	if (listen(_serverFd, SOMAXCONN) == -1) // SOMAXCONN is a constant that defines the maximum number of pending connections in the queue, 128 in most systems
 	{
-		close(_server_fd);
+		close(_serverFd);
 		throw ServerException("Error. Failed to listen on socket.");
 	}
 	std::cout << "Server started on port " << _port << std::endl;
@@ -263,22 +296,22 @@ void Server::run(void)
 
 	/*
 	accept is like a reception desk that waits for clients to come in
-	when they do, they get a new room (_IRC_client_fd) to communicate with the server
+	when they do, they get a new room (_ircClientFd) to communicate with the server
 	
 	accept blocks until a client connects, unless the server socket is set to non-blocking mode
 	for IRC client connection, I left it in blocking mode, so that the server waits for the IRC client (Hexchat) to connect before proceeding
 	*/
-	_IRC_client_fd = accept(_server_fd, NULL, NULL); // (IRC client = Hexchat)
-	if (_IRC_client_fd == -1) 
+	_ircClientFd = accept(_serverFd, NULL, NULL); // (IRC client = Hexchat)
+	if (_ircClientFd == -1) 
 	{
 		std::cerr << RED << "Error. Failed to accept connection." << DEFAULT << std::endl;
 		return;
 	}
 
 	// subject: "All I/O operations must be non-blocking"
-	if (fcntl(_server_fd, F_SETFL, SOCK_NONBLOCK) == -1) // allow server to handle multiple clients at once
+	if (fcntl(_serverFd, F_SETFL, SOCK_NONBLOCK) == -1) // allow server to handle multiple clients at once
 	{
-		close(_server_fd);
+		close(_serverFd);
 		throw ServerException("Error. Failed to set socket to non-blocking mode.");
 	}
 

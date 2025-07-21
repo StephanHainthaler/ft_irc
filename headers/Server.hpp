@@ -16,12 +16,13 @@
 # include <sys/socket.h> // for socket, bind, listen, accept
 # include <netinet/in.h> // for sockaddr_in
 # include <fcntl.h> // to set socket to non-blocking mode
+# include <poll.h>
+# include <errno.h> // - number of last error
 
 # include <unistd.h>
 # include <exception>
 # include <vector>
 # include <map>
-# include <poll.h>
 
 # include "main.hpp"
 # include "Client.hpp"
@@ -51,7 +52,7 @@ class Server
 		// Member functions - server actions
 		void sendMessageToIRCClient(const char* msg);
 		void handleClientConnections(void);
-		std::string handleClientMessage(int i);
+		std::vector<std::string>  handleClientMessage(int i);
 		void handleEvents(void);
 		void run(void);
 
@@ -84,7 +85,7 @@ class Server
 		Server(const Server &other);
 		Server	&operator=(const Server &other);
 	
-		int							_server_fd; // Server Socket FD - Listening socket, can be negative
+		int							_serverFd; // Server Socket FD - Listening socket, can be negative
 		const unsigned int 			_port; // Port number - "door to the server"
 		struct sockaddr_in 			_serverAddress; // for IPv4 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
 		// struct sockaddr_in6 		_serverAddress; // for IPv6 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
@@ -102,7 +103,7 @@ class Server
 		// clients must be unique within a channel
 
 		int							_state; // Server state - 0: not running, 1: running, -1: error (?)
-		int							_IRC_client_fd; // FD of the IRC client (Hexchat) that connects to the server
+		int							_ircClientFd; // FD of the IRC client (Hexchat) that connects to the server
 };
 
 /* 
