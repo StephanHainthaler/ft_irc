@@ -21,7 +21,7 @@ and the port number is specified by the user (as a command line argument)
 */
 Server::Server(const unsigned int &port, const std::string &password): _port(port), _password(password)
 {
-	if (atoi(port.c_str()) <= 0 || atoi(port.c_str()) > 65535)
+	if (port <= 0 || port > 65535)
 		throw ServerException("Error. Invalid port number.");
 	// AF_INET specifies IPv4 protocol family, SOCK_STREAM specifies TCP protocol
     _server_fd = socket(AF_INET, SOCK_STREAM, 0); // Create a TCP/IPv4 socket
@@ -46,20 +46,20 @@ Server::~Server(void)
 	if (_server_fd != -1)
 		close(_server_fd);
 
-	// clear client vector (WIP - needed?)
+	// clear client map (WIP - needed?)
 	if (!_clients.empty())
 	{
-		for (std::vector<Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+		for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 		{
-			delete *it;
+			delete it->second;
 		}
 		_clients.clear();
 	}
 	/*
-	// clear channel vector (WIP - needed?)
+	// clear channel map (WIP - needed?)
 	if (!_channels.empty())
 	{
-		for (std::vector<Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+		for (std::map<int, Client *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
 		{
 			delete *it;
 		}
@@ -127,7 +127,7 @@ void Server::handleClientConnections()
 	if (client_fd < 0) // if a new client connected
 		throw ServerException("Error. Failed to accept client connection.");
 	
-	/* pollfd
+	/* pollfd  (useful: https://www.ibm.com/docs/en/i/7.4.0?topic=ssw_ibm_i_74/apis/poll.htm)
 	is a structure used by poll() to monitor fds for readiness (for reading, writing, or errors)
 	It contains:
 	struct pollfd {
@@ -136,7 +136,7 @@ void Server::handleClientConnections()
 		int revents;	//what actually happened, which is set by poll()
 	};
 	*/
-	pollfd pfd = {0};
+	pollfd pfd = {};
 	pfd.fd = client_fd;
 	pfd.events = POLLIN;
 	pfd.revents = 0; // initially no events
@@ -147,9 +147,9 @@ void Server::handleClientConnections()
 	_clients.insert(std::make_pair(client_fd, newClient)); // add the new client to the map
 }
 
-std::string Server::handleClientlientMessage(int i)
+std::string Server::handleClientMessage(int i)
 {
-	std::string	message;
+	std::string	message = NULL;
 	
 	char 	buffer[MAX_MSG_LEN];
 	bzero(buffer, MAX_MSG_LEN);
@@ -159,18 +159,20 @@ std::string Server::handleClientlientMessage(int i)
 	if (bytesReceived > 0)
 	{
 		buffer[bytesReceived] = '\0';
-		std::cout << "Received from client: " << buffer << std::endl;
+		message = buffer;
+		std::cout << "Received from client: " << message << std::endl;
 	}
 	else if (bytesReceived == 0)
 	{
 		std::cout << "Client disconnected: " << _pollfds[i].fd << std::endl;
 		// removeClient(_pollfds[i].fd); // WIP
 		close(_pollfds[i].fd);
-		_pollfds.erase(i);
+		_pollfds.erase(_pollfds.begin() + i);
 	}
 	else
 		std::cerr << RED << "Error receiving data from client. " << DEFAULT << std::endl;
 	
+	return (message);
 }
 
 void Server::handleEvents(void)
@@ -184,7 +186,7 @@ void Server::handleEvents(void)
 	while (_state == RUNNING) // while server is running
 	{
 		// Handle client input with poll
-		int poll_count = poll(_pollfds, _pollfds.size(), -1);
+		int poll_count = poll(_pollfds.begin().base(), _pollfds.size(), -1);
 		if (poll_count < 0) // poll returns the number of fds, which are ready to read, because of POLLIN
 		{
 			std::cerr << RED << "Error checking sockets for readiness. " << DEFAULT << std::endl;
