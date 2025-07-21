@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/07/19 14:15:52 by codespace        ###   ########.fr       */
+/*   Updated: 2025/07/21 16:41:59 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,18 +28,11 @@ int Client::connectToServer(const std::string& serverIP, int serverPort)
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(serverPort);
     
-    // Convert IP address (with error checking)
-    int errorCheck = 0;
-	errorCheck = inet_pton(AF_INET, serverIP.c_str(), &serverAddr.sin_addr);
-    if (errorCheck == 0)
+    // Convert IP address
+    serverAddr.sin_addr.s_addr = inet_addr(serverIP.c_str());
+    if (serverAddr.sin_addr.s_addr == INADDR_NONE)
     {
         std::cerr << "Error: Invalid IP address format: " << serverIP << std::endl;
-        close(_socketFD);
-        return (-1);
-    }
-    else if (errorCheck == -1)
-    {
-        std::cerr << "Error: System error in inet_pton" << std::endl;
         close(_socketFD);
         return (-1);
     }
@@ -60,20 +53,97 @@ int Client::connectToServer(const std::string& serverIP, int serverPort)
     return (_socketFD);
 }
 
+int Client::sendMessage(const std::string& message)
+{
+    if (_socketFD == -1)
+        return (-1);
+    
+    std::string fullMessage = message + "\r\n"; 
+    int bytesSent = send(_socketFD, fullMessage.c_str(), fullMessage.length(), 0);
+    
+    if (bytesSent == -1)
+        std::cerr << "Error: Failed to send message" << std::endl;
+    
+    return (bytesSent);
+}
+
+std::vector<std::string> Client::receiveCompleteMessages()
+{
+    std::vector<std::string> completeMessages;
+    
+    if (_socketFD == -1)
+        return (completeMessages);
+    
+    char buffer[1024];
+    int bytesReceived = recv(_socketFD, buffer, sizeof(buffer) - 1, MSG_DONTWAIT); // Flag for non-blocking
+    
+    if (bytesReceived > 0)
+    {
+        buffer[bytesReceived] = '\0';
+        _messageBuffer += std::string(buffer);
+        
+        // Prevent buffer from growing too large
+        if (_messageBuffer.length() > 4096)
+        {
+            std::cerr << "Message buffer overflow - clearing" << std::endl;
+            _messageBuffer.clear();
+            return (completeMessages);
+        }
+        
+        // Extract complete messages
+        std::string::size_type pos = 0;
+        while ((pos = _messageBuffer.find("\r\n")) != std::string::npos)
+        {
+            std::string message = _messageBuffer.substr(0, pos);
+            
+            // Skip empty messages
+            if (!message.empty())
+                completeMessages.push_back(message);
+            
+            _messageBuffer.erase(0, pos + 2);
+        }
+    }
+    else if (bytesReceived == 0)
+    {
+        std::cout << "Server disconnected" << std::endl;
+        setState(DISCONNECTED);
+    }
+    else if (bytesReceived == -1)
+    {
+        // Check if it's just "would block" (no data available)
+        if (errno != EAGAIN && errno != EWOULDBLOCK)
+        {
+            std::cerr << "Error: Failed to receive message" << std::endl;
+        }
+    }
+    
+    return (completeMessages);
+}
+
+void Client::disconnect()
+{
+    if (_socketFD != -1)
+    {
+        close(_socketFD);
+        _socketFD = -1;
+    }
+    setState(DISCONNECTED);
+}
+
 
 // Will have to send the error messages from server, but I will keep it for now for reference
 
 int	Client::isNickValid(const std::string& nickname) const
 {
 	if (nickname.size() > 9 || nickname.size() == 0)
-			return (std::cout << "Error: Nickname must be at least 1 character and can only be max 9 characters long." << std::endl, ERR_ERRONEUSNICKNAME);
+			return (std::cerr << "Error: Nickname must be at least 1 character and can only be max 9 characters long." << std::endl, ERR_ERRONEUSNICKNAME);
 	if (nickname[0] == '$' || nickname[0] == ':' || nickname[0] == '#' || nickname[0] == '~' || nickname[0] == '&' || nickname[0] == '+')
-			return (std::cout << "Error: Nickname invalid." << std::endl, ERR_ERRONEUSNICKNAME);
+			return (std::cerr << "Error: Nickname invalid." << std::endl, ERR_ERRONEUSNICKNAME);
 
 	for (size_t i = 0; i < nickname.size(); i++)
 	{
 		if (nickname[i] == ' ' || nickname[i] == ',' || nickname[i] == '*' || nickname[i] == '?' || nickname[i] == '!' || nickname[i] == '@')
-			return (std::cout << "Error: Nickname invalid." << std::endl, ERR_ERRONEUSNICKNAME);
+			return (std::cerr << "Error: Nickname invalid." << std::endl, ERR_ERRONEUSNICKNAME);
 	}
 	return (0);
 }
@@ -140,7 +210,7 @@ std::string Client::truncName(const std::string& name)
 int		Client::isUserValid(std::string& userName)
 {
 	if (userName.size() == 0)
-		return (std::cout << /* <client> */ "<USER> :Not enough parameters" << std::endl, ERR_NEEDMOREPARAMS);
+		return (std::cerr << /* <client> */ "<USER> :Not enough parameters" << std::endl, ERR_NEEDMOREPARAMS);
 	if (userName.size() > USERLEN)
 		userName = truncName(userName);
 	return (0);
@@ -201,22 +271,14 @@ std::string Client::getRealname() const
 	return (_realName);
 }
 
-Client::Client() {}
+int Client::getSocketFD() const
+{
+    return _socketFD;
+}
+
+Client::Client() : _socketFD(-1), _port(0), _state(DISCONNECTED)
+{
+    _hostname = "localhost";
+}
 
 Client::~Client() {}
-
-Client::Client(const Client& other)
-{
-	_nickName = other._nickName;
-	_realName = other._realName;
-}
-
-Client& Client::operator=(const Client& copy)
-{
-	if (this != &copy)
-	{
-		_nickName = copy._nickName;
-		_realName = copy._realName;
-	}
-	return (*this);
-}
