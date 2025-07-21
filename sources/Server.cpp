@@ -125,8 +125,14 @@ void Server::handleClientConnections(void)
 	// Handle incoming connections
 	int clientFd = accept(_serverFd, (sockaddr *)&clientAddress, &clientAddressLen);
 	if (clientFd < 0) // if a new client connected
-		throw ServerException("Error. Failed to accept client connection.");
-	
+	{
+		std::cerr << RED << "Error. Failed to accept client connection." << DEFAULT << std::endl;
+		return ;
+	}
+	std::cout << "Client connected with fd: " << clientFd << std::endl;
+
+	sendMessageToClient(_ircClientFd, "Hello Stephan and Julian\r\n"); // welcome message
+
 	/* pollfd  (useful: https://www.ibm.com/docs/en/i/7.4.0?topic=ssw_ibm_i_74/apis/poll.htm)
 	is a structure used by poll() to monitor fds for readiness (for reading, writing, or errors)
 	It contains:
