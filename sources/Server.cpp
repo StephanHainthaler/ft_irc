@@ -328,7 +328,7 @@ Server::ServerException::~ServerException() throw()
 {
 }
 
-void toLowercase(const std::string& str)
+/* void toLowercase(const std::string& str)
 {
 	std::string result = str;
 	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
@@ -379,4 +379,4 @@ void Server::handleNickCommand(Client* client, const std::string& newNickname)
     
     // Nickname is valid and available
     client->setNick(newNickname);
-}
+} */
