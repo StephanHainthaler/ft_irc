@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/21 14:26:50 by codespace        ###   ########.fr       */
+/*   Updated: 2025/07/21 16:46:13 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 #include <cctype>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <errno.h>
 
 #define CHANLIMIT 10
 #define USERLEN 15
@@ -39,8 +40,8 @@
 class Client
 {
 	private:
-		int		_port;
 		int		_socketFD;
+		int		_port;
 		std::string	_IP;
 		std::string _userName;
 		std::string _nickname;
@@ -75,9 +76,10 @@ class Client
 		int			getSocketFD() const;
 
 		// Connection
-		int 		connectToServer(const std::string& serverIP, int serverPort);
-		int 		sendMessage(const std::string& message);
-		std::vector<std::string> receiveCompleteMessages();
+		int 						connectToServer(const std::string& serverIP, int serverPort);
+		int 						sendMessage(const std::string& message);
+		std::vector<std::string> 	receiveCompleteMessages();
+		void 						disconnect();
 		
 
 		//USER_function
