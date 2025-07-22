@@ -131,8 +131,6 @@ void Server::handleClientConnections(void)
 	}
 	std::cout << "Client connected with fd: " << clientFd << std::endl;
 
-	sendMessageToClient(_ircClientFd, "Hello Stephan and Julian\r\n"); // Welcome message
-
 	/* pollfd  (useful: https://www.ibm.com/docs/en/i/7.4.0?topic=ssw_ibm_i_74/apis/poll.htm)
 	is a structure used by poll() to monitor fds for readiness (for reading, writing, or errors)
 	It contains:
@@ -151,6 +149,20 @@ void Server::handleClientConnections(void)
 
 	Client *newClient = new Client(clientFd, clientAddress); // create a new Client object
 	_clients.push_back(newClient); // add the new client to the map
+
+	// useful: https://modern.ircdocs.horse/#rplwelcome-001 and dd.ircdocs.horse/refs/numerics/001
+	std::string welcomeMessage = ":localhost 001 "; // 001 is the RPL_WELCOME code
+	welcomeMessage += newClient->getNickname();
+	welcomeMessage += " :Welcome to the StePiaAn Network, ";
+	welcomeMessage += newClient->getNickname();
+	welcomeMessage += "!";
+	welcomeMessage += newClient->getUsername();
+	welcomeMessage += "@";
+	// if clientAddress.sin_addr.s_addr != 0, it means the client has a valid IP address
+	welcomeMessage += clientAddress.sin_addr.s_addr ? inet_ntoa(clientAddress.sin_addr) : "unknown";
+	welcomeMessage += "\r\n";
+	
+	sendMessageToClient(clientFd, welcomeMessage.c_str()); // Welcome message
 }
 
 /* https://modern.ircdocs.horse/
@@ -222,6 +234,8 @@ void Server::handleEvents(void)
 	// POLLOUT = ready to write, POLLERR = error on the fd, POLLHUP = client closed socket
 	sfd.revents = 0; // initially no events
 	
+	_pollfds.push_back(sfd); // add server socket to pollfds
+
 	while (_state == RUNNING) // while server is running
 	{
 		// Handle client input with poll
@@ -355,20 +369,6 @@ void Server::removeChannel(Channel *channel)
 	}
 }*/
 
-// Exception
-Server::ServerException::ServerException(const std::string &message): _message(message)
-{
-}
-
-const char* Server::ServerException::what() const throw()
-{
-	return _message.c_str();
-}
-
-Server::ServerException::~ServerException() throw() 
-{
-}
-
 void toLowercase(const std::string& str)
 {
 	std::string result = str;
@@ -431,4 +431,18 @@ void Server::handleNickCommand(Client* client, const std::string& newNickname)
     
     // Nickname is valid and available
     client->setNick(newNickname);
+}
+
+// Exception
+Server::ServerException::ServerException(const std::string &message): _message(message)
+{
+}
+
+const char* Server::ServerException::what() const throw()
+{
+	return _message.c_str();
+}
+
+Server::ServerException::~ServerException() throw() 
+{
 }
