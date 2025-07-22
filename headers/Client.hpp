@@ -6,7 +6,7 @@
 /*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/21 19:05:00 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/22 17:08:29 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,10 @@
 #define CHANLIMIT 10
 #define USERLEN 15
 
-// Errors
+//Numerics
+#define RPL_WELCOME 001
+
+// Numeric Errors
 #define ERR_NOSUCHNICK 401
 #define ERR_NOSUCHCHANNEL 403
 #define ERR_TOOMANYCHANNELS 405
@@ -75,12 +78,15 @@ class Client
 		std::string getRealname() const;
 		ClientState getState() const;
 		int			getSocketFD() const;
-
+		
 		// Connection
 		int 						connectToServer(const std::string& serverIP, int serverPort);
 		int 						sendMessage(const std::string& message);
 		std::vector<std::string> 	receiveCompleteMessages();
 		void 						disconnect();
+
+		// States
+		void	isFullyRegistered();
 		
 
 		//USER_function

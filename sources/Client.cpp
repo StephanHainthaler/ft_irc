@@ -6,14 +6,14 @@
 /*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/07/21 19:06:02 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/22 17:15:33 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../headers/Client.hpp"
 #include "../headers/main.hpp"
 
-int Client::connectToServer(const std::string& serverIP, int serverPort)
+/* int Client::connectToServer(const std::string& serverIP, int serverPort)
 {
     // Create socket
     _socketFD = socket(AF_INET, SOCK_STREAM, 0);
@@ -51,9 +51,9 @@ int Client::connectToServer(const std::string& serverIP, int serverPort)
     
     std::cout << "Connected to server " << serverIP << ":" << serverPort << std::endl;
     return (_socketFD);
-}
+} */
 
-int Client::sendMessage(const std::string& message)
+/* int Client::sendMessage(const std::string& message)
 {
     if (_socketFD == -1)
         return (-1);
@@ -120,7 +120,7 @@ std::vector<std::string> Client::receiveCompleteMessages()
     }
     
     return (completeMessages);
-}
+} */
 
 void Client::disconnect()
 {
@@ -241,6 +241,12 @@ void Client::setUser(std::string& userName, int zero, char asterisk, std::string
 		_realName = realName;
 	else
 		_realName = realName.substr(0, 50);
+}
+
+void	Client::isFullyRegistered()
+{
+	if (!(_userName.empty() && _nickname.empty() && _realName.empty()))
+		setState(REGISTERED);
 }
 
 /* Client::Client(int socketFD, const sockaddr_in& clientAddr) : 
