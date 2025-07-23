@@ -122,7 +122,11 @@ void Server::handleClientConnections(void)
 	sockaddr_in clientAddress = {}; // need to catch it with accept
 	socklen_t clientAddressLen = sizeof(clientAddress);
 	
-	// Handle incoming connections
+	/*
+	accept is like a reception desk that waits for clients to come in
+	when they do, they get a new room (_ircClientFd) to communicate with the server
+	accept blocks until a client connects, unless the server socket is set to non-blocking mode
+	*/
 	int clientFd = accept(_serverFd, (sockaddr *)&clientAddress, &clientAddressLen);
 	if (clientFd < 0) // if a new client connected
 	{
@@ -130,6 +134,13 @@ void Server::handleClientConnections(void)
 		return ;
 	}
 	std::cout << "Client connected with fd: " << clientFd << std::endl;
+
+	// subject: "All I/O operations must be non-blocking"
+	if (fcntl(clientFd, F_SETFL, SOCK_NONBLOCK) == -1) // allow server to handle multiple clients at once
+	{
+		close(clientFd);
+		throw ServerException("Error. Failed to set socket to non-blocking mode.");
+	}
 
 	/* pollfd  (useful: https://www.ibm.com/docs/en/i/7.4.0?topic=ssw_ibm_i_74/apis/poll.htm)
 	is a structure used by poll() to monitor fds for readiness (for reading, writing, or errors)
@@ -311,8 +322,14 @@ void Server::run(void)
 		close(_serverFd);
 		throw ServerException("Error. Failed to listen on socket.");
 	}
-	std::cout << "Server started on port " << _port << std::endl;
 	_state = RUNNING; // Server state - 1: running
+	
+	// subject: "All I/O operations must be non-blocking"
+	if (fcntl(_serverFd, F_SETFL, SOCK_NONBLOCK) == -1) // allow server to handle multiple clients at once
+	{
+		close(_serverFd);
+		throw ServerException("Error. Failed to set socket to non-blocking mode.");
+	}
 
 	/*
 	accept is like a reception desk that waits for clients to come in
@@ -321,20 +338,17 @@ void Server::run(void)
 	accept blocks until a client connects, unless the server socket is set to non-blocking mode
 	for IRC client connection, I left it in blocking mode, so that the server waits for the IRC client (Hexchat) to connect before proceeding
 	*/
-	_ircClientFd = accept(_serverFd, NULL, NULL); // (IRC client = Hexchat)
-	if (_ircClientFd == -1) 
-	{
-		std::cerr << RED << "Error. Failed to accept connection." << DEFAULT << std::endl;
-		return;
-	}
-
-	// subject: "All I/O operations must be non-blocking"
-	if (fcntl(_serverFd, F_SETFL, SOCK_NONBLOCK) == -1) // allow server to handle multiple clients at once
-	{
-		close(_serverFd);
-		throw ServerException("Error. Failed to set socket to non-blocking mode.");
-	}
-
+	//_ircClientFd = accept(_serverFd, NULL, NULL); // (IRC client = Hexchat)
+	//if (_ircClientFd == -1) 
+	//{
+	//	std::cerr << RED << "Error. Failed to accept connection." << DEFAULT << std::endl;
+	//	return;
+	//}
+	
+	// char buffer[MAX_MSG_LEN];
+	// recv(_ircClientFd, buffer, sizeof(buffer), 0); // receive data from the IRC client (Hexchat)
+	// std::cout << "IRC client: " << buffer << std::endl;
+	
 	// Now the server is ready to handle incoming connections and client input
 	handleEvents();
 }
