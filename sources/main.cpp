@@ -49,7 +49,7 @@ on 1st Terminal run: ./ircserv <port> <password>
 on 2nd Terminal run: 
 	flatpak run io.github.Hexchat
 */
-int	main(int argc, char *argv[])
+/* int	main(int argc, char *argv[])
 {
 	if (argc != 3)
 		return (std::cerr << RED << "Error: incorrect number of arguments" << DEFAULT << std::endl, 1);
@@ -71,11 +71,11 @@ int	main(int argc, char *argv[])
 		std::cerr << RED << e.what() << DEFAULT << std::endl;
 	}
 	return 0;
-}
+} */
 
 // Client main
 
-/* #include <iostream>
+#include <iostream>
 #include <unistd.h>
 #include <cstdlib>
 #include <cstring> // BUGFIX: allowed?
@@ -84,8 +84,9 @@ int	main(int argc, char *argv[])
 #include "../headers/Parser.hpp"
 #include "../headers/Client.hpp"
 
+//NAME CHECKS
 
-int main(void)
+/* int main(void)
 {
 	Client client;
 
@@ -108,3 +109,22 @@ int main(void)
 
 	return (0);
 } */
+
+//MODE CHECKS
+
+int main(void)
+{
+	Client client;
+	client.setMode('o', true);
+	client.setMode('w', true);
+
+	std::cout << "Current modes: " << client.getModes() << std::endl;
+
+	//client.setMode('o', false);
+	client.setMode('w', false);
+
+	if (client.hasMode('o'))
+		std::cout << "Client has mode" << std::endl;
+
+	std::cout << "Current modes: " << client.getModes() << std::endl;
+}

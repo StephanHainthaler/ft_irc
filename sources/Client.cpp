@@ -6,12 +6,281 @@
 /*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/07/23 14:33:16 by codespace        ###   ########.fr       */
+/*   Updated: 2025/07/23 15:51:00 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../headers/Client.hpp"
 #include "../headers/main.hpp"
+
+
+Client::Client() : _socketFD(-1), _port(0), _state(DISCONNECTED)
+{
+    _hostname = "localhost";
+}
+
+Client::~Client() {}
+
+void Client::disconnect()
+{
+    if (_socketFD != -1)
+    {
+        close(_socketFD);
+        _socketFD = -1;
+    }
+    setState(DISCONNECTED);
+}
+
+// NICK/USER/REALNAME CHECKS
+
+int	Client::isNickValid(const std::string& nickname) const
+{
+	if (nickname.size() > 9 || nickname.size() == 0)
+			return (std::cerr << "Error: Nickname must be at least 1 character and can only be max 9 characters long." << std::endl, ERR_ERRONEUSNICKNAME);
+	if (nickname[0] == '$' || nickname[0] == ':' || nickname[0] == '#' || nickname[0] == '~' || nickname[0] == '&' || nickname[0] == '+')
+			return (std::cerr << "Error: Nickname invalid." << std::endl, ERR_ERRONEUSNICKNAME);
+
+	for (size_t i = 0; i < nickname.size(); i++)
+	{
+		if (nickname[i] == ' ' || nickname[i] == ',' || nickname[i] == '*' || nickname[i] == '?' || nickname[i] == '!' || nickname[i] == '@')
+			return (std::cerr << "Error: Nickname invalid." << std::endl, ERR_ERRONEUSNICKNAME);
+	}
+	return (0);
+}
+
+
+std::string Client::truncName(const std::string& name)
+{
+	if (name.length() > USERLEN)
+		return name.substr(0, USERLEN);
+	else
+		return (name);
+}
+
+int		Client::isUserValid(std::string& userName)
+{
+	if (userName.size() == 0)
+		return (std::cerr << /* <client> */ "<USER> :Not enough parameters" << std::endl, ERR_NEEDMOREPARAMS);
+	if (userName.size() > USERLEN)
+		userName = truncName(userName);
+	return (0);
+}
+
+bool	Client::isRealNameValid(const std::string& realName) const
+{
+	if (realName.length() <= 50)
+		return (true);
+	return (false);
+}
+
+void	Client::setNick(const std::string& nickName)
+{
+	if (isNickValid(nickName) == 0)
+		_nickname = nickName;
+}
+
+void Client::setUser(std::string& userName, int zero, char asterisk, std::string& realName)
+{
+	(void) zero;
+	(void) asterisk;
+	if (isUserValid(userName) == 0)
+		_userName = userName;
+	if (isRealNameValid(realName) == 0)
+		_realName = realName;
+	else
+		_realName = realName.substr(0, 50);
+}
+
+void	Client::isFullyRegistered()
+{
+	 if (!_userName.empty() && !_nickname.empty() && !_realName.empty())
+		setState(REGISTERED);
+}
+
+std::string Client::getFullIdentifier() const
+{
+    return (_nickname + "!" + _userName + "@" + _hostname);
+}
+
+// CHANNELS
+
+void	Client::joinChannel(const std::string& channelName)
+{
+	if (std::find(_channels.begin(), _channels.end(), channelName) == _channels.end())
+	{
+		_channels.push_back(channelName);
+	}
+}
+
+void	Client::leaveChannel(const std::string& channelName)
+{
+    std::vector<std::string>::iterator it = std::find(_channels.begin(), _channels.end(), channelName);
+    if (it != _channels.end())
+    {
+        _channels.erase(it);
+    }
+}
+
+void Client::clearChannels()
+{
+    _channels.clear();
+}
+
+// MODES
+
+bool Client::isValidUserMode(char mode) const
+{
+    // Standard IRC user modes
+    const std::string validModes = "ioOwr";  // Add more as needed
+	if (validModes.find(mode) != std::string::npos)
+   		return (true);
+	return (false);
+}
+
+int Client::setMode(char mode, bool enable)
+{
+	if (!isValidUserMode(mode))
+	{
+		std::cerr << "Error: Invalid user mode '" << mode << "'" << std::endl;
+		return (ERR_UNKNOWNMODE) ;
+	}
+    if (enable)
+    {
+        if (_modes.find(mode) == std::string::npos)
+            _modes += mode;
+    }
+    else
+    {
+		// Disable/remove mode if false passed as boolean
+        std::string::size_type pos = _modes.find(mode);
+        if (pos != std::string::npos)
+            _modes.erase(pos, 1);
+    }
+	return (0);
+}
+
+bool Client::hasMode(char mode) const
+{
+	if (_modes.find(mode) != std::string::npos)
+   		return (true);
+	return (false);
+}
+
+std::string Client::getModes() const
+{
+	if (_modes.empty())
+		return ("");
+    return ("+" + _modes);
+}
+/* Client::Client(int socketFD, const sockaddr_in& clientAddr) : 
+	_socketFD(socketFD),
+	_state(CONNECTING),
+	_channels(CHANLIMIT)
+{
+} */
+void Client::setState(ClientState newState)
+{ 
+	_state = newState; 
+}
+ClientState Client::getState() const
+{ 
+	return (_state);
+}
+
+std::string Client::getNickname() const
+{
+	return (_nickname);
+}
+
+std::string Client::getUsername() const
+{
+	return (_userName);
+}
+
+std::string Client::getRealname() const
+{
+	return (_realName);
+}
+
+void Client::setSocketFD(int socketFD)
+{
+    _socketFD = socketFD;
+}
+
+int Client::getSocketFD() const
+{
+    return (_socketFD);
+}
+
+void Client::setIP(const std::string& ip)
+{
+    _IP = ip;
+}
+
+std::string Client::getIP() const
+{
+    return (_IP);
+}
+
+void Client::setHostname(const std::string& hostname)
+{
+    _hostname = hostname;
+}
+
+std::string Client::getHostname() const
+{
+    return (_hostname);
+}
+
+std::vector<std::string> Client::getChannels() const
+{
+    return (_channels);
+}
+
+
+/* bool Server::isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const
+{
+    std::string lowerNick = nickname;
+    toLowercase(lowerNick);
+    
+    for (std::vector<Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
+    {
+        const Client* client = *it;
+        if (client && client != excludeClient)
+        {
+            std::string clientNick = client->getNickname();
+            toLowercase(clientNick);
+            if (clientNick == lowerNick)
+                return (false);
+        }
+    }
+    return (true);
+}
+
+bool Server::isNicknameAvailable(const std::string& nickname) const
+{
+    return (isNicknameAvailable(nickname, NULL));
+}
+
+void Server::handleNickCommand(Client* client, const std::string& newNickname)
+{
+    // First check format using Client's validation
+    if (client->isNickFormatValid(newNickname) != 0)
+    {
+        // Send format error to client
+        return ;
+    }
+    
+    // Then check uniqueness using Server's validation
+    if (!isNicknameAvailable(newNickname, client))
+    {
+        // Send ERR_NICKNAMEINUSE (433) to client
+        return ;
+    }
+    
+    // Nickname is valid and available
+    client->setNick(newNickname);
+} */
 
 /* int Client::connectToServer(const std::string& serverIP, int serverPort)
 {
@@ -122,205 +391,10 @@ std::vector<std::string> Client::receiveCompleteMessages()
     return (completeMessages);
 } */
 
-Client::Client() : _socketFD(-1), _port(0), _state(DISCONNECTED)
-{
-    _hostname = "localhost";
-}
 
-Client::~Client() {}
-
-void Client::disconnect()
-{
-    if (_socketFD != -1)
-    {
-        close(_socketFD);
-        _socketFD = -1;
-    }
-    setState(DISCONNECTED);
-}
-
-
-// Will have to send the error messages from server, but I will keep it for now for reference
-
-int	Client::isNickValid(const std::string& nickname) const
-{
-	if (nickname.size() > 9 || nickname.size() == 0)
-			return (std::cerr << "Error: Nickname must be at least 1 character and can only be max 9 characters long." << std::endl, ERR_ERRONEUSNICKNAME);
-	if (nickname[0] == '$' || nickname[0] == ':' || nickname[0] == '#' || nickname[0] == '~' || nickname[0] == '&' || nickname[0] == '+')
-			return (std::cerr << "Error: Nickname invalid." << std::endl, ERR_ERRONEUSNICKNAME);
-
-	for (size_t i = 0; i < nickname.size(); i++)
-	{
-		if (nickname[i] == ' ' || nickname[i] == ',' || nickname[i] == '*' || nickname[i] == '?' || nickname[i] == '!' || nickname[i] == '@')
-			return (std::cerr << "Error: Nickname invalid." << std::endl, ERR_ERRONEUSNICKNAME);
-	}
-	return (0);
-}
-
-void	Client::joinChannel(const std::string& channelName)
-{
-	if (std::find(_channels.begin), _channels.end(), channelName) == _channels.end()
-	{
-		_channels.push_back(channelName)
-	}
-}
-
-std::string Client::toLowercase(const std::string& str)
+/* std::string Client::toLowercase(const std::string& str)
 {
 	std::string result = str;
 	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
 	return (result);
-}
-
-/* bool Server::isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const
-{
-    std::string lowerNick = nickname;
-    toLowercase(lowerNick);
-    
-    for (std::vector<Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
-    {
-        const Client* client = *it;
-        if (client && client != excludeClient)
-        {
-            std::string clientNick = client->getNickname();
-            toLowercase(clientNick);
-            if (clientNick == lowerNick)
-                return (false);
-        }
-    }
-    return (true);
-}
-
-bool Server::isNicknameAvailable(const std::string& nickname) const
-{
-    return (isNicknameAvailable(nickname, NULL));
-}
-
-void Server::handleNickCommand(Client* client, const std::string& newNickname)
-{
-    // First check format using Client's validation
-    if (client->isNickFormatValid(newNickname) != 0)
-    {
-        // Send format error to client
-        return ;
-    }
-    
-    // Then check uniqueness using Server's validation
-    if (!isNicknameAvailable(newNickname, client))
-    {
-        // Send ERR_NICKNAMEINUSE (433) to client
-        return ;
-    }
-    
-    // Nickname is valid and available
-    client->setNick(newNickname);
 } */
-
-std::string Client::truncName(const std::string& name)
-{
-	if (name.length() > USERLEN)
-		return name.substr(0, USERLEN);
-	else
-		return (name);
-}
-
-int		Client::isUserValid(std::string& userName)
-{
-	if (userName.size() == 0)
-		return (std::cerr << /* <client> */ "<USER> :Not enough parameters" << std::endl, ERR_NEEDMOREPARAMS);
-	if (userName.size() > USERLEN)
-		userName = truncName(userName);
-	return (0);
-}
-
-bool	Client::isRealNameValid(const std::string& realName) const
-{
-	if (realName.length() <= 50)
-		return (true);
-	return (false);
-}
-
-void	Client::setNick(const std::string& nickName)
-{
-	if (isNickValid(nickName) == 0)
-		_nickname = nickName;
-}
-
-void Client::setUser(std::string& userName, int zero, char asterisk, std::string& realName)
-{
-	(void) zero;
-	(void) asterisk;
-	if (isUserValid(userName) == 0)
-		_userName = userName;
-	if (isRealNameValid(realName) == 0)
-		_realName = realName;
-	else
-		_realName = realName.substr(0, 50);
-}
-
-void	Client::isFullyRegistered()
-{
-	if (!(_userName.empty() && _nickname.empty() && _realName.empty()))
-		setState(REGISTERED);
-}
-
-std::string Client::getFullIdentifier() const
-{
-    return (_nickname + "!" + _userName + "@" + _hostname);
-}
-
-/* Client::Client(int socketFD, const sockaddr_in& clientAddr) : 
-	_socketFD(socketFD),
-	_state(CONNECTING),
-	_channels(CHANLIMIT)
-{
-} */
-void Client::setState(ClientState newState)
-{ 
-	_state = newState; 
-}
-ClientState Client::getState() const
-{ 
-	return (_state);
-}
-
-std::string Client::getNickname() const
-{
-	return (_nickname);
-}
-
-std::string Client::getUsername() const
-{
-	return (_userName);
-}
-
-std::string Client::getRealname() const
-{
-	return (_realName);
-}
-
-int Client::getSocketFD() const
-{
-    return (_socketFD);
-}
-
-void Client::setIP(const std::string& ip)
-{
-    _IP = ip;
-}
-
-std::string Client::getIP() const
-{
-    return (_IP);
-}
-
-void Client::setHostname(const std::string& hostname)
-{
-    _hostname = hostname;
-}
-
-std::string Client::getHostname() const
-{
-    return (_hostname);
-}
-
