@@ -389,31 +389,31 @@ void toLowercase(const std::string& str)
 	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
 }
 
-// For nickname changes within the same Client -- this will allow lower/upper case changes, for example: pia to Pia
-bool Server::isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const
-{
-    std::string lowerNick = nickname;
-    toLowercase(lowerNick);
+// // For nickname changes within the same Client -- this will allow lower/upper case changes, for example: pia to Pia
+// bool Server::isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const
+// {
+//     std::string lowerNick = nickname;
+//     toLowercase(lowerNick);
     
-    for (std::vector<Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
-    {
-        const Client* client = *it;
-        if (client && client != excludeClient)
-        {
-            std::string clientNick = client->getNickname();
-            toLowercase(clientNick);
-            if (clientNick == lowerNick)
-                return (false);
-        }
-    }
-    return (true);
-}
+//     for (std::vector<Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
+//     {
+//         const Client* client = *it;
+//         if (client && client != excludeClient)
+//         {
+//             std::string clientNick = client->getNickname();
+//             toLowercase(clientNick);
+//             if (clientNick == lowerNick)
+//                 return (false);
+//         }
+//     }
+//     return (true);
+// }
 
-// For new nicknames
-bool Server::isNicknameAvailable(const std::string& nickname) const
-{
-    return (isNicknameAvailable(nickname, NULL));
-}
+// // For new nicknames
+// bool Server::isNicknameAvailable(const std::string& nickname) const
+// {
+//     return (isNicknameAvailable(nickname, NULL));
+// }
 
 void Server::handleNickCommand(Client* client, const std::string& newNickname)
 {

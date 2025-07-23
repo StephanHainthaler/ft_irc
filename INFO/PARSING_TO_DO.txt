@@ -1,0 +1,1 @@
+KICK <channel> ,,,,,,,,,,,, --> handles this as ,

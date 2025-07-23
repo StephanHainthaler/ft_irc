@@ -20,9 +20,10 @@
 #include <cstring> 
 
 void	handleInput(void);
-void    parseInputToVector(std::string &input, std::vector<std::string> *command);
+void    parseStringToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters);
 void	executeCommand(std::vector<std::string> command);
 void    printVector(std::vector<std::string> vector);
-
+size_t	kick(std::vector<std::string> command, size_t cmdNumber, std::string operatorName);
+size_t	invite(std::vector<std::string> command, size_t cmdNumber, std::string operatorName);
 
 #endif
