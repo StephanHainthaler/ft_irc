@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
+/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/07/22 17:15:33 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/23 14:07:06 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,6 +122,13 @@ std::vector<std::string> Client::receiveCompleteMessages()
     return (completeMessages);
 } */
 
+Client::Client() : _socketFD(-1), _port(0), _state(DISCONNECTED)
+{
+    _hostname = "localhost";
+}
+
+Client::~Client() {}
+
 void Client::disconnect()
 {
     if (_socketFD != -1)
@@ -148,6 +155,11 @@ int	Client::isNickValid(const std::string& nickname) const
 			return (std::cerr << "Error: Nickname invalid." << std::endl, ERR_ERRONEUSNICKNAME);
 	}
 	return (0);
+}
+
+void	Client::joinChannel(const std::string& channelName)
+{
+	
 }
 
 std::string Client::toLowercase(const std::string& str)
@@ -249,6 +261,11 @@ void	Client::isFullyRegistered()
 		setState(REGISTERED);
 }
 
+std::string Client::getFullIdentifier() const
+{
+    return (_nickname + "!" + _userName + "@" + _hostname);
+}
+
 /* Client::Client(int socketFD, const sockaddr_in& clientAddr) : 
 	_socketFD(socketFD),
 	_state(CONNECTING),
@@ -281,12 +298,26 @@ std::string Client::getRealname() const
 
 int Client::getSocketFD() const
 {
-    return _socketFD;
+    return (_socketFD);
 }
 
-Client::Client() : _socketFD(-1), _port(0), _state(DISCONNECTED)
+void Client::setIP(const std::string& ip)
 {
-    _hostname = "localhost";
+    _IP = ip;
 }
 
-Client::~Client() {}
+std::string Client::getIP() const
+{
+    return (_IP);
+}
+
+void Client::setHostname(const std::string& hostname)
+{
+    _hostname = hostname;
+}
+
+std::string Client::getHostname() const
+{
+    return (_hostname);
+}
+
