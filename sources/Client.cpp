@@ -6,7 +6,7 @@
 /*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/07/23 14:07:06 by codespace        ###   ########.fr       */
+/*   Updated: 2025/07/23 14:33:16 by codespace        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -159,7 +159,10 @@ int	Client::isNickValid(const std::string& nickname) const
 
 void	Client::joinChannel(const std::string& channelName)
 {
-	
+	if (std::find(_channels.begin), _channels.end(), channelName) == _channels.end()
+	{
+		_channels.push_back(channelName)
+	}
 }
 
 std::string Client::toLowercase(const std::string& str)
