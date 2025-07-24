@@ -22,6 +22,7 @@
 # include <unistd.h>
 # include <exception>
 # include <vector>
+# include <map>
 #include <stdio.h>
 
 # include "main.hpp"
@@ -55,6 +56,7 @@ class Server
 		void sendMessageToClient(int clientFD, const char* msg);
 		void handleClientConnections(void);
 		std::vector<std::string>  handleClientMessage(int i);
+		void handleClientDisconnections(int i);
 		void handleEvents(void);
 		void run(void);
 
@@ -96,7 +98,7 @@ class Server
 		*/
 		
 		const std::string			_password;
-		std::vector<Client *>		_clients;	// List of connected clients (ClientClass objs)
+		std::map<int, Client *>		_clients;	// List of connected clients (ClientClass objs)
 		std::vector<pollfd>			_pollfds; // +1 for the server socket
 		//std::vector<Channel *>		_channels;	// List of channels (ChannelClass objs)
 		//std::vector<std::string>	_users; // auf 10 users limitieren

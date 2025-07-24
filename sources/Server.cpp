@@ -49,9 +49,9 @@ Server::~Server(void)
 	// clear client map (WIP - needed?)
 	if (!_clients.empty())
 	{
-		for (std::vector<Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+		for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 		{
-			delete *it;
+			delete it->second; // delete each Client object
 		}
 		_clients.clear();
 	}
@@ -135,13 +135,6 @@ void Server::handleClientConnections(void)
 	}
 	std::cout << "Client connected with fd: " << clientFd << std::endl;
 
-	// subject: "All I/O operations must be non-blocking"
-	if (fcntl(clientFd, F_SETFL, SOCK_NONBLOCK) == -1) // allow server to handle multiple clients at once
-	{
-		close(clientFd);
-		throw ServerException("Error. Failed to set socket to non-blocking mode.");
-	}
-
 	/* pollfd  (useful: https://www.ibm.com/docs/en/i/7.4.0?topic=ssw_ibm_i_74/apis/poll.htm)
 	is a structure used by poll() to monitor fds for readiness (for reading, writing, or errors)
 	It contains:
@@ -159,7 +152,7 @@ void Server::handleClientConnections(void)
 	_pollfds.push_back(pfd);
 
 	Client *newClient = new Client(clientFd, clientAddress); // create a new Client object
-	_clients.push_back(newClient); // add the new client to the map
+	_clients.insert(std::make_pair(clientFd, newClient)); // add the new client to the map
 
 	// useful: https://modern.ircdocs.horse/#rplwelcome-001 and dd.ircdocs.horse/refs/numerics/001
 	std::string welcomeMessage = ":localhost 001 "; // 001 is the RPL_WELCOME code
@@ -237,6 +230,20 @@ std::vector<std::string> Server::handleClientMessage(int i)
     return (completeMessages);
 }
 
+void Server::handleClientDisconnections(int i)
+{
+	Client *client = _clients[_pollfds[i].fd];
+	if (client)
+	{
+		client->setState(DISCONNECTED);
+		client->disconnect();
+		close(_pollfds[i].fd); // close hotel room (socket)
+		_clients.erase(_pollfds[i].fd); // remove client from the map
+		_pollfds.erase(_pollfds.begin() + i);
+		std::cout << GRAY << "Client disconnected: " << _pollfds[i].fd << DEFAULT << std::endl;
+	}
+}
+
 void Server::handleEvents(void)
 {
 	pollfd sfd;
@@ -276,23 +283,20 @@ void Server::handleEvents(void)
 			Since revents is in binary, we can check for specific events using bitwise AND
 			if they have the 1 in common, it will have true as a return
 			*/
-			if (_pollfds[i].revents & POLLHUP) // if the client closed the connection
+			if ((_pollfds[i].revents & POLLHUP) == POLLHUP) // if the client closed the connection
 			{
-				std::cout << GRAY << "Client disconnected: " << _pollfds[i].fd << DEFAULT << std::endl;
-				close(_pollfds[i].fd); // close hotel room (socket)
-				_clients.erase(_clients.begin() + i);
-				_pollfds.erase(_pollfds.begin() + i);
-				continue;
+				handleClientDisconnections(_pollfds[i].fd); // handle client disconnection
+				break ;
 			}
 
 			// Case 3: there was an event with that fd
-			if (_pollfds[i].revents & POLLIN) // if there's data to read
+			if ((_pollfds[i].revents & POLLIN) == POLLIN) // if there's data to read
 			{
 				// for the server socket, data to read can be a new client connection
 				if (_pollfds[i].fd == _serverFd) // if the server socket is
 				{
 					handleClientConnections(); // accept new client connection
-					continue; // skip to next fd
+					break; // skip to next fd
 				}
 				
 				// for client sockets, data to read can be a message from another client
@@ -389,31 +393,31 @@ void toLowercase(const std::string& str)
 	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
 }
 
-// // For nickname changes within the same Client -- this will allow lower/upper case changes, for example: pia to Pia
-// bool Server::isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const
-// {
-//     std::string lowerNick = nickname;
-//     toLowercase(lowerNick);
+// For nickname changes within the same Client -- this will allow lower/upper case changes, for example: pia to Pia
+bool Server::isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const
+{
+    std::string lowerNick = nickname;
+    toLowercase(lowerNick);
     
-//     for (std::vector<Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
-//     {
-//         const Client* client = *it;
-//         if (client && client != excludeClient)
-//         {
-//             std::string clientNick = client->getNickname();
-//             toLowercase(clientNick);
-//             if (clientNick == lowerNick)
-//                 return (false);
-//         }
-//     }
-//     return (true);
-// }
+    for (std::map<int, Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
+    {
+        const Client* client = it->second;
+        if (client && client != excludeClient)
+        {
+            std::string clientNick = client->getNickname();
+            toLowercase(clientNick);
+            if (clientNick == lowerNick)
+                return (false);
+        }
+    }
+    return (true);
+}
 
-// // For new nicknames
-// bool Server::isNicknameAvailable(const std::string& nickname) const
-// {
-//     return (isNicknameAvailable(nickname, NULL));
-// }
+// For new nicknames
+bool Server::isNicknameAvailable(const std::string& nickname) const
+{
+    return (isNicknameAvailable(nickname, NULL));
+}
 
 void Server::handleNickCommand(Client* client, const std::string& newNickname)
 {
