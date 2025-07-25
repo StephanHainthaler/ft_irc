@@ -135,6 +135,10 @@ void Server::handleClientConnections(void)
 	}
 	std::cout << "Client connected with fd: " << clientFd << std::endl;
 
+	char buffer[MAX_MSG_LEN];
+	recv(_ircClientFd, buffer, sizeof(buffer), 0); // receive data from the IRC client (Hexchat)
+	std::cout << "IRC client: " << buffer << std::endl; // first one is IRC client
+
 	/* pollfd  (useful: https://www.ibm.com/docs/en/i/7.4.0?topic=ssw_ibm_i_74/apis/poll.htm)
 	is a structure used by poll() to monitor fds for readiness (for reading, writing, or errors)
 	It contains:
@@ -329,11 +333,11 @@ void Server::run(void)
 	_state = RUNNING; // Server state - 1: running
 	
 	// subject: "All I/O operations must be non-blocking"
-	if (fcntl(_serverFd, F_SETFL, SOCK_NONBLOCK) == -1) // allow server to handle multiple clients at once
+	/*if (fcntl(_serverFd, F_SETFL, SOCK_NONBLOCK) == -1) // allow server to handle multiple clients at once
 	{
 		close(_serverFd);
 		throw ServerException("Error. Failed to set socket to non-blocking mode.");
-	}
+	}*/ // BUGFIX: implement this
 
 	/*
 	accept is like a reception desk that waits for clients to come in
@@ -342,17 +346,39 @@ void Server::run(void)
 	accept blocks until a client connects, unless the server socket is set to non-blocking mode
 	for IRC client connection, I left it in blocking mode, so that the server waits for the IRC client (Hexchat) to connect before proceeding
 	*/
-	//_ircClientFd = accept(_serverFd, NULL, NULL); // (IRC client = Hexchat)
-	//if (_ircClientFd == -1) 
-	//{
-	//	std::cerr << RED << "Error. Failed to accept connection." << DEFAULT << std::endl;
-	//	return;
-	//}
-	
-	// char buffer[MAX_MSG_LEN];
-	// recv(_ircClientFd, buffer, sizeof(buffer), 0); // receive data from the IRC client (Hexchat)
-	// std::cout << "IRC client: " << buffer << std::endl;
-	
+	_ircClientFd = accept(_serverFd, NULL, NULL); // (IRC client = Hexchat)
+	if (_ircClientFd == -1) 
+	{
+		std::cerr << RED << "Error. Failed to accept connection." << DEFAULT << std::endl;
+		return;
+	}
+
+	sendMessageToClient(_ircClientFd, "Please enter the password to access the StePiaAn IRC server!\r\n"); // send welcome message to IRC client
+	std::vector<std::string> command;
+	while (1)
+	{
+		char buffer[MAX_MSG_LEN];
+		if (recv(_ircClientFd, buffer, sizeof(buffer), 0) <= 0) // receive data from the IRC client (Hexchat)
+			break;
+		std::string buf(buffer);
+		memset(buffer, 0, sizeof(buffer));
+		command.clear();
+		parseStringToVector(buf, &command, "\f\n\r\t\v ");
+		for (long unsigned int i = 0; i < command.size(); i++)
+			std::cout << command[i] << "|" ;
+		std::cout << std::endl;
+
+		if (strcmp((command[0]).c_str(), "pass") == 0 && strcmp((command[1]).c_str(), _password.c_str()) == 0)
+		{
+			sendMessageToClient(_ircClientFd, "Password accepted. Welcome to the StePiaAn IRC server!\r\n"); // send welcome message to IRC client
+			break; // password is correct, exit the loop
+		}
+		else
+		{
+			sendMessageToClient(_ircClientFd, "Incorrect password. Please try again.\r\n"); // send error message to IRC client
+			continue; // ask for password again
+		}
+	}
 	// Now the server is ready to handle incoming connections and client input
 	handleEvents();
 }

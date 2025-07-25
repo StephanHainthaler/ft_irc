@@ -23,11 +23,14 @@
 # include <exception>
 # include <vector>
 # include <map>
-#include <stdio.h>
+# include <stdio.h>
+# include <string>
+# include <cstring> // for strncpy, strcmp
 
 # include "main.hpp"
 # include "Client.hpp"
 # include "Channel.hpp"
+# include "Parser.hpp"
 
 # define MAX_CLIENTS 10 // max #clients that can connect to the server at the same time
 # define MAX_MSG_LEN 1042
