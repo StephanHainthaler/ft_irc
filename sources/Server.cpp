@@ -170,60 +170,17 @@ When reading messages from a stream, read the incoming data into a buffer.
 Only parse and process a message once you encounter the \r\n at the end of it. 
 If you encounter an empty message, silently ignore it.
 */
-std::vector<std::string> Server::handleClientMessage(int i)
+void	Server::handleClientMessage(int clientFd)
 {
- 	std::vector<std::string> 	completeMessages;
-	std::string					messageBuffer;
- 	    
 	char 	buffer[MAX_MSG_LEN];
-	bzero(buffer, MAX_MSG_LEN);
 
-    int bytesReceived = recv(_pollfds[i].fd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT); // Flag for non-blocking
+	bzero(buffer, MAX_MSG_LEN);
+    int bytesReceived = recv(clientFd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT); // Flag for non-blocking
     if (bytesReceived > 0)
     {
-        buffer[bytesReceived] = '\0';
-        messageBuffer += std::string(buffer);
-        
-        // Prevent buffer from growing too large
-        if (messageBuffer.length() > 4096)
-        {
-            std::cerr << "Message buffer overflow - clearing" << std::endl;
-            messageBuffer.clear();
-            return completeMessages;
-        }
-        std::cout << "Received from client: " << messageBuffer << std::endl;
-
-        // Extract complete messages
-        std::string::size_type pos = 0;
-        while ((pos = messageBuffer.find("\r\n")) != std::string::npos)
-        {
-            std::string message = messageBuffer.substr(0, pos);
-            
-            // Skip empty messages
-            if (!message.empty())
-                completeMessages.push_back(message);
-            
-            messageBuffer.erase(0, pos + 2);
-        }
-    }
-    else if (bytesReceived == 0)
-    {
-        std::cout << "Client disconnected: " << _pollfds[i].fd << std::endl;
-		close(_pollfds[i].fd);
-		_pollfds.erase(_pollfds.begin() + i);
+		std::map<int, Client *>::iterator it = _clients.find(clientFd);
+		handleInput(*it->second, buffer);
 	}
-    else if (bytesReceived == -1)
-    {
-        // Check if it's just "would block" (no data available)
-		/*
-		ist ein Fehlercode, der in der Programmierung verwendet wird und oft auf eine vorübergehende Ressourcenknappheit hinweist
-		*/
-        if (errno != EAGAIN && errno != EWOULDBLOCK)
-        {
-            std::cerr << "Error: Failed to receive message" << std::endl;
-        }
-    }	
-    return (completeMessages);
 }
 
 void Server::handleClientDisconnections(int i)
@@ -297,7 +254,7 @@ void Server::handleEvents(void)
 				}
 				
 				// for client sockets, data to read can be a message from another client
-				handleClientMessage(i);
+				handleClientMessage(_pollfds[i].fd);
 			}
 		}
 	}
@@ -350,30 +307,7 @@ void Server::run(void)
 
 	sendMessageToClient(_ircClientFd, "Please enter the password to access the StePiaAn IRC server!\r\n"); // send welcome message to IRC client
 	std::vector<std::string> command;
-	while (1)
-	{
-		char buffer[MAX_MSG_LEN];
-		if (recv(_ircClientFd, buffer, sizeof(buffer), 0) <= 0) // receive data from the IRC client (Hexchat)
-			break;
-		std::string buf(buffer);
-		memset(buffer, 0, sizeof(buffer));
-		command.clear();
-		parseStringToVector(buf, &command, "\f\n\r\t\v ");
-		for (long unsigned int i = 0; i < command.size(); i++)
-			std::cout << command[i] << "|" ;
-		std::cout << std::endl;
 
-		if (command[0].compare("PASS") == 0 && command[1].compare(_password) == 0)
-		{
-			sendMessageToClient(_ircClientFd, "Password accepted. Welcome to the StePiaAn IRC server!\r\n"); // send welcome message to IRC client
-			break; // password is correct, exit the loop
-		}
-		else
-		{
-			sendMessageToClient(_ircClientFd, "Incorrect password. Please try again.\r\n"); // send error message to IRC client
-			continue; // ask for password again
-		}
-	}
 	// Now the server is ready to handle incoming connections and client input
 	handleEvents();
 }

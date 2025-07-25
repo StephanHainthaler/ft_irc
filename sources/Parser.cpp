@@ -12,20 +12,13 @@
 
 #include "../headers/Server.hpp"
 
-void	Server::handleInput(void)
+void	Server::handleInput(Client client, std::string input)
 {
-	std::string					input;
 	std::vector<std::string>	command;
 
-	while (std::cin)
-	{
-		std::cout << "TYPE the COMMAND" << std::endl;
-		getline(std::cin, input);
-		parseStringToVector(input, &command, " \f\n\r\t\v");
-		// printVector(&command);
-		executeCommand(command);
-		command.clear();
-	}
+	parseStringToVector(input, &command, " \f\n\r\t\v");
+	// printVector(&command);
+	executeCommand(client, command);
 }
 
 void    Server::parseStringToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters)
@@ -40,7 +33,7 @@ void    Server::parseStringToVector(std::string &input, std::vector<std::string>
 		
 }
 
-void	Server::executeCommand(std::vector<std::string> command)
+void	Server::executeCommand(Client client, std::vector<std::string> command)
 {
 	std::string	operatorName = "";
 	size_t 		i = 0;
@@ -52,10 +45,12 @@ void	Server::executeCommand(std::vector<std::string> command)
 		i = 1;
 	}
 
+	//CHECK for AUTHENTICATIOn when using ALL but PASS
+
 	if (command.size() == 0)
 		return ;
-	else if (command[i].compare("AUTHENTICATE") == 0)
-		std::cout << "AUTHENTICATE" << std::endl;
+	else if (command[i].compare("PASS") == 0)
+		pass(command, i + 1, client.getSocketFD());
 	else if (command[i].compare("NICK") == 0)
 		std::cout << "NICK" << std::endl;
 	else if (command[i].compare("USER") == 0)
@@ -87,6 +82,20 @@ void Server::printVector(std::vector<std::string> vector)
 	{			
 		std::cout << vector[i] << std::endl;
 	}
+}
+
+
+int		Server::pass(std::vector<std::string> command, size_t cmdNumber, int clientFd)
+{
+	if (command[cmdNumber].compare(_password) == 0)
+	{
+		sendMessageToClient(clientFd, "Password accepted. Welcome to the StePiaAn IRC server!\r\n"); // send welcome message to IRC client
+	}
+	else
+	{
+		sendMessageToClient(clientFd, "Incorrect password. Please try again.\r\n"); // send error message to IRC client
+	}
+	return (0);
 }
 
 int	Server::kick(std::vector<std::string> command, size_t cmdNumber, std::string operatorName) //[:operatorName] KICK <channel> <user> [:<comment>]

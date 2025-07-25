@@ -61,7 +61,6 @@ int	main(int argc, char *argv[])
 	{
 		Server	server(atoi(argv[1]), password);
 
-		// server.handleInput();
 		server.run(); // start the server and listen for incoming connections
 	}
 	catch(const std::exception& e)
