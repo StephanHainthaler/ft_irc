@@ -49,9 +49,9 @@ Server::~Server(void)
 	// clear client map (WIP - needed?)
 	if (!_clients.empty())
 	{
-		for (std::vector<Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+		for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 		{
-			delete *it;
+			delete it->second; // delete each Client object
 		}
 		_clients.clear();
 	}
@@ -119,14 +119,23 @@ void Server::sendMessageToClient(int clientFD, const char* msg)
 
 void Server::handleClientConnections(void)
 {
-	sockaddr_in clientAddress = {}; // need to catch it with accept
-	socklen_t clientAddressLen = sizeof(clientAddress);
-	
-	// Handle incoming connections
-	int clientFd = accept(_serverFd, (sockaddr *)&clientAddress, &clientAddressLen);
+	/*
+	accept is like a reception desk that waits for clients to come in
+	when they do, they get a new room (_ircClientFd) to communicate with the server
+	accept blocks until a client connects, unless the server socket is set to non-blocking mode
+	*/
+	int clientFd = accept(_serverFd, NULL, NULL);
 	if (clientFd < 0) // if a new client connected
-		throw ServerException("Error. Failed to accept client connection.");
-	
+	{
+		std::cerr << RED << "Error. Failed to accept client connection." << DEFAULT << std::endl;
+		return ;
+	}
+	std::cout << "Client connected with fd: " << clientFd << std::endl;
+
+	char buffer[MAX_MSG_LEN];
+	recv(_ircClientFd, buffer, sizeof(buffer), 0); // receive data from the IRC client (Hexchat)
+	std::cout << "IRC client: " << buffer << std::endl; // first one is IRC client
+
 	/* pollfd  (useful: https://www.ibm.com/docs/en/i/7.4.0?topic=ssw_ibm_i_74/apis/poll.htm)
 	is a structure used by poll() to monitor fds for readiness (for reading, writing, or errors)
 	It contains:
@@ -143,8 +152,17 @@ void Server::handleClientConnections(void)
 
 	_pollfds.push_back(pfd);
 
-	Client *newClient = new Client(clientFd, clientAddress); // create a new Client object
-	_clients.push_back(newClient); // add the new client to the map
+	Client *newClient = new Client(clientFd, _port); // create a new Client object
+	_clients.insert(std::make_pair(clientFd, newClient)); // add the new client to the map
+
+	// useful: https://modern.ircdocs.horse/#rplwelcome-001 and dd.ircdocs.horse/refs/numerics/001
+	std::string welcomeMessage = ":localhost 001 "; // 001 is the RPL_WELCOME code
+	welcomeMessage += newClient->getNickname();
+	welcomeMessage += " :Welcome to the StePiaAn Network, ";
+	welcomeMessage += newClient->getFullIdentifier();
+	welcomeMessage += "\r\n";
+
+	sendMessageToClient(clientFd, welcomeMessage.c_str()); // Welcome message
 }
 
 /* https://modern.ircdocs.horse/
@@ -208,6 +226,20 @@ std::vector<std::string> Server::handleClientMessage(int i)
     return (completeMessages);
 }
 
+void Server::handleClientDisconnections(int i)
+{
+	Client *client = _clients[_pollfds[i].fd];
+	if (client)
+	{
+		client->setState(DISCONNECTED);
+		client->disconnect();
+		close(_pollfds[i].fd); // close hotel room (socket)
+		_clients.erase(_pollfds[i].fd); // remove client from the map
+		_pollfds.erase(_pollfds.begin() + i);
+		std::cout << GRAY << "Client disconnected: " << _pollfds[i].fd << DEFAULT << std::endl;
+	}
+}
+
 void Server::handleEvents(void)
 {
 	pollfd sfd;
@@ -217,6 +249,8 @@ void Server::handleEvents(void)
 	sfd.revents = 0; // initially no events
 	(pollfd)sfd;
 	
+	_pollfds.push_back(sfd); // add server socket to pollfds
+
 	while (_state == RUNNING) // while server is running
 	{
 		// Handle client input with poll
@@ -246,23 +280,20 @@ void Server::handleEvents(void)
 			Since revents is in binary, we can check for specific events using bitwise AND
 			if they have the 1 in common, it will have true as a return
 			*/
-			if (_pollfds[i].revents & POLLHUP) // if the client closed the connection
+			if ((_pollfds[i].revents & POLLHUP) == POLLHUP) // if the client closed the connection
 			{
-				std::cout << GRAY << "Client disconnected: " << _pollfds[i].fd << DEFAULT << std::endl;
-				close(_pollfds[i].fd); // close hotel room (socket)
-				_clients.erase(_clients.begin() + i);
-				_pollfds.erase(_pollfds.begin() + i);
-				continue;
+				handleClientDisconnections(_pollfds[i].fd); // handle client disconnection
+				break ;
 			}
 
 			// Case 3: there was an event with that fd
-			if (_pollfds[i].revents & POLLIN) // if there's data to read
+			if ((_pollfds[i].revents & POLLIN) == POLLIN) // if there's data to read
 			{
 				// for the server socket, data to read can be a new client connection
 				if (_pollfds[i].fd == _serverFd) // if the server socket is
 				{
 					handleClientConnections(); // accept new client connection
-					continue; // skip to next fd
+					break; // skip to next fd
 				}
 				
 				// for client sockets, data to read can be a message from another client
@@ -292,8 +323,14 @@ void Server::run(void)
 		close(_serverFd);
 		throw ServerException("Error. Failed to listen on socket.");
 	}
-	std::cout << "Server started on port " << _port << std::endl;
 	_state = RUNNING; // Server state - 1: running
+	
+	// subject: "All I/O operations must be non-blocking"
+	/*if (fcntl(_serverFd, F_SETFL, SOCK_NONBLOCK) == -1) // allow server to handle multiple clients at once
+	{
+		close(_serverFd);
+		throw ServerException("Error. Failed to set socket to non-blocking mode.");
+	}*/ // BUGFIX: implement this
 
 	/*
 	accept is like a reception desk that waits for clients to come in
@@ -309,13 +346,34 @@ void Server::run(void)
 		return;
 	}
 
-	// subject: "All I/O operations must be non-blocking"
-	if (fcntl(_serverFd, F_SETFL, SOCK_NONBLOCK) == -1) // allow server to handle multiple clients at once
-	{
-		close(_serverFd);
-		throw ServerException("Error. Failed to set socket to non-blocking mode.");
-	}
+	_clients.insert(std::make_pair(_ircClientFd, new Client(_ircClientFd, _port))); // add the new client to the map
 
+	sendMessageToClient(_ircClientFd, "Please enter the password to access the StePiaAn IRC server!\r\n"); // send welcome message to IRC client
+	std::vector<std::string> command;
+	while (1)
+	{
+		char buffer[MAX_MSG_LEN];
+		if (recv(_ircClientFd, buffer, sizeof(buffer), 0) <= 0) // receive data from the IRC client (Hexchat)
+			break;
+		std::string buf(buffer);
+		memset(buffer, 0, sizeof(buffer));
+		command.clear();
+		parseStringToVector(buf, &command, "\f\n\r\t\v ");
+		for (long unsigned int i = 0; i < command.size(); i++)
+			std::cout << command[i] << "|" ;
+		std::cout << std::endl;
+
+		if (command[0].compare("PASS") == 0 && command[1].compare(_password) == 0)
+		{
+			sendMessageToClient(_ircClientFd, "Password accepted. Welcome to the StePiaAn IRC server!\r\n"); // send welcome message to IRC client
+			break; // password is correct, exit the loop
+		}
+		else
+		{
+			sendMessageToClient(_ircClientFd, "Incorrect password. Please try again.\r\n"); // send error message to IRC client
+			continue; // ask for password again
+		}
+	}
 	// Now the server is ready to handle incoming connections and client input
 	handleEvents();
 }
@@ -350,6 +408,70 @@ void Server::removeChannel(Channel *channel)
 	}
 }*/
 
+void toLowercase(const std::string& str)
+{
+	std::string result = str;
+	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+}
+
+// For nickname changes within the same Client -- this will allow lower/upper case changes, for example: pia to Pia
+bool Server::isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const
+{
+    std::string lowerNick = nickname;
+    toLowercase(lowerNick);
+    
+    for (std::map<int, Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
+    {
+        const Client* client = it->second;
+        if (client && client != excludeClient)
+        {
+            std::string clientNick = client->getNickname();
+            toLowercase(clientNick);
+            if (clientNick == lowerNick)
+                return (false);
+        }
+    }
+    return (true);
+}
+
+// For new nicknames
+bool Server::isNicknameAvailable(const std::string& nickname) const
+{
+    return (isNicknameAvailable(nickname, NULL));
+}
+
+void Server::handleNickCommand(Client* client, const std::string& newNickname)
+{
+	int clientFd = client->getSocketFD();
+    
+	// First check format using Client's validation
+    if (client->isNickValid(newNickname) != 0)
+    {
+		// ERR_ERRONEUSNICKNAME (432) message, see https://modern.ircdocs.horse/#errnicknameinuse-433
+		// std::string msg = client;
+		std::string msg = newNickname;
+		msg += " :Erroneus nickname";
+
+		sendMessageToClient(clientFd, msg.c_str());
+        return ;
+    }
+    
+    // Then check uniqueness using Server's validation
+    if (!isNicknameAvailable(newNickname, client))
+    {
+        // ERR_NICKNAMEINUSE (433) message, see https://modern.ircdocs.horse/#errnicknameinuse-433
+		// std::string msg = client;
+		std::string msg = newNickname;
+		msg += " :Nickname is already in use";
+
+		sendMessageToClient(clientFd, msg.c_str());
+        return ;
+    }
+    
+    // Nickname is valid and available
+    client->setNick(newNickname);
+}
+
 // Exception
 Server::ServerException::ServerException(const std::string &message): _message(message)
 {
@@ -362,63 +484,4 @@ const char* Server::ServerException::what() const throw()
 
 Server::ServerException::~ServerException() throw() 
 {
-}
-
-void toLowercase(const std::string& str)
-{
-	std::string result = str;
-	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
-}
-
-// // For nickname changes within the same Client -- this will allow lower/upper case changes, for example: pia to Pia
-// bool Server::isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const
-// {
-//     std::string lowerNick = nickname;
-//     toLowercase(lowerNick);
-    
-//     for (std::vector<Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
-//     {
-//         const Client* client = *it;
-//         if (client && client != excludeClient)
-//         {
-//             std::string clientNick = client->getNickname();
-//             toLowercase(clientNick);
-//             if (clientNick == lowerNick)
-//                 return (false);
-//         }
-//     }
-//     return (true);
-// }
-
-// // For new nicknames
-// bool Server::isNicknameAvailable(const std::string& nickname) const
-// {
-//     return (isNicknameAvailable(nickname, NULL));
-// }
-
-void Server::handleNickCommand(Client* client, const std::string& newNickname)
-{
-    // First check format using Client's validation
-    if (client->isNickValid(newNickname) != 0)
-    {
-        // Send format error to client
-		int clientFd = client->getSocketFD();
-		
-		// std::string msg = client; // https://modern.ircdocs.horse/#errnicknameinuse-433
-		std::string msg = newNickname;
-		msg += " :Nickname is already in use";
-
-		sendMessageToClient(clientFd, msg.c_str());
-        return ;
-    }
-    
-//     // Then check uniqueness using Server's validation
-//     if (!isNicknameAvailable(newNickname, client))
-//     {
-//         // Send ERR_NICKNAMEINUSE (433) to client
-//         return ;
-//     }
-    
-    // Nickname is valid and available
-    client->setNick(newNickname);
 }

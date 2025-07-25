@@ -6,119 +6,26 @@
 /*   By: pgober <pgober@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/07/21 17:13:15 by pgober           ###   ########.fr       */
+/*   Updated: 2025/07/25 15:01:19 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../headers/Client.hpp"
 #include "../headers/main.hpp"
 
-int Client::connectToServer(const std::string& serverIP, int serverPort)
+
+Client::Client() : _socketFD(-1), _port(0), _state(CONNECTING)
 {
-    // Create socket
-    _socketFD = socket(AF_INET, SOCK_STREAM, 0);
-    if (_socketFD == -1)
-    {
-        std::cerr << "Error: Failed to create socket" << std::endl;
-        return (-1);
-    }
-    
-    // Set up server address
-    struct sockaddr_in serverAddr;
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(serverPort);
-    
-    // Convert IP address
-    serverAddr.sin_addr.s_addr = inet_addr(serverIP.c_str());
-    if (serverAddr.sin_addr.s_addr == INADDR_NONE)
-    {
-        std::cerr << "Error: Invalid IP address format: " << serverIP << std::endl;
-        close(_socketFD);
-        return (-1);
-    }
-    
-    // Connect to server
-    if (connect(_socketFD, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
-    {
-        std::cerr << "Error: Failed to connect to server " << serverIP << ":" << serverPort << std::endl;
-        close(_socketFD);
-        return (-1);
-    }
-    
-    _IP = serverIP;
-    _port = serverPort;
-    setState(CONNECTING);
-    
-    std::cout << "Connected to server " << serverIP << ":" << serverPort << std::endl;
-    return (_socketFD);
+    _hostname = "localhost";
 }
 
-int Client::sendMessage(const std::string& message)
+Client::Client(int socketFD, int port)
 {
-    if (_socketFD == -1)
-        return (-1);
-    
-    std::string fullMessage = message + "\r\n"; 
-    int bytesSent = send(_socketFD, fullMessage.c_str(), fullMessage.length(), 0);
-    
-    if (bytesSent == -1)
-        std::cerr << "Error: Failed to send message" << std::endl;
-    
-    return (bytesSent);
+	_socketFD = socketFD; 
+	_port = port;
 }
 
-std::vector<std::string> Client::receiveCompleteMessages()
-{
-    std::vector<std::string> completeMessages;
-    
-    if (_socketFD == -1)
-        return (completeMessages);
-    
-    char buffer[1024];
-    int bytesReceived = recv(_socketFD, buffer, sizeof(buffer) - 1, MSG_DONTWAIT); // Flag for non-blocking
-    
-    if (bytesReceived > 0)
-    {
-        buffer[bytesReceived] = '\0';
-        _messageBuffer += std::string(buffer);
-        
-        // Prevent buffer from growing too large
-        if (_messageBuffer.length() > 4096)
-        {
-            std::cerr << "Message buffer overflow - clearing" << std::endl;
-            _messageBuffer.clear();
-            return (completeMessages);
-        }
-        
-        // Extract complete messages
-        std::string::size_type pos = 0;
-        while ((pos = _messageBuffer.find("\r\n")) != std::string::npos)
-        {
-            std::string message = _messageBuffer.substr(0, pos);
-            
-            // Skip empty messages
-            if (!message.empty())
-                completeMessages.push_back(message);
-            
-            _messageBuffer.erase(0, pos + 2);
-        }
-    }
-    else if (bytesReceived == 0)
-    {
-        std::cout << "Server disconnected" << std::endl;
-        setState(DISCONNECTED);
-    }
-    else if (bytesReceived == -1)
-    {
-        // Check if it's just "would block" (no data available)
-        if (errno != EAGAIN && errno != EWOULDBLOCK)
-        {
-            std::cerr << "Error: Failed to receive message" << std::endl;
-        }
-    }
-    
-    return (completeMessages);
-}
+Client::~Client() {}
 
 void Client::disconnect()
 {
@@ -130,8 +37,7 @@ void Client::disconnect()
     setState(DISCONNECTED);
 }
 
-
-// Will have to send the error messages from server, but I will keep it for now for reference
+// NICK/USER/REALNAME CHECKS
 
 int	Client::isNickValid(const std::string& nickname) const
 {
@@ -148,12 +54,195 @@ int	Client::isNickValid(const std::string& nickname) const
 	return (0);
 }
 
-std::string Client::toLowercase(const std::string& str)
+
+std::string Client::truncName(const std::string& name)
 {
-	std::string result = str;
-	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
-	return (result);
+	if (name.length() > USERLEN)
+		return name.substr(0, USERLEN);
+	else
+		return (name);
 }
+
+int		Client::isUserValid(std::string& userName)
+{
+	if (userName.size() == 0)
+		return (std::cerr << /* <client> */ "<USER> :Not enough parameters" << std::endl, ERR_NEEDMOREPARAMS);
+	if (userName.size() > USERLEN)
+		userName = truncName(userName);
+	return (0);
+}
+
+bool	Client::isRealNameValid(const std::string& realName) const
+{
+	if (realName.length() <= 50)
+		return (true);
+	return (false);
+}
+
+void	Client::setNick(const std::string& nickName)
+{
+	if (isNickValid(nickName) == 0)
+		_nickname = nickName;
+}
+
+void Client::setUser(std::string& userName, int zero, char asterisk, std::string& realName)
+{
+	(void) zero;
+	(void) asterisk;
+	if (isUserValid(userName) == 0)
+		_userName = userName;
+	if (isRealNameValid(realName) == 0)
+		_realName = realName;
+	else
+		_realName = realName.substr(0, 50);
+}
+
+void	Client::isFullyRegistered()
+{
+	 if (!_userName.empty() && !_nickname.empty() && !_realName.empty())
+		setState(REGISTERED);
+}
+
+std::string Client::getFullIdentifier() const
+{
+    return (_nickname + "!" + _userName + "@" + _hostname);
+}
+
+// CHANNELS
+
+void	Client::joinChannel(const std::string& channelName)
+{
+	if (std::find(_channels.begin(), _channels.end(), channelName) == _channels.end())
+	{
+		_channels.push_back(channelName);
+	}
+}
+
+void	Client::leaveChannel(const std::string& channelName)
+{
+    std::vector<std::string>::iterator it = std::find(_channels.begin(), _channels.end(), channelName);
+    if (it != _channels.end())
+    {
+        _channels.erase(it);
+    }
+}
+
+void Client::clearChannels()
+{
+    _channels.clear();
+}
+
+// MODES
+
+bool Client::isValidUserMode(char mode) const
+{
+    // Standard IRC user modes
+    const std::string validModes = "ioOwr";  // Add more as needed
+	if (validModes.find(mode) != std::string::npos)
+   		return (true);
+	return (false);
+}
+
+int Client::setMode(char mode, bool enable)
+{
+	if (!isValidUserMode(mode))
+	{
+		std::cerr << "Error: Invalid user mode '" << mode << "'" << std::endl;
+		return (ERR_UNKNOWNMODE) ;
+	}
+    if (enable)
+    {
+        if (_modes.find(mode) == std::string::npos)
+            _modes += mode;
+    }
+    else
+    {
+		// Disable/remove mode if "false" passed as boolean
+        std::string::size_type pos = _modes.find(mode);
+        if (pos != std::string::npos)
+            _modes.erase(pos, 1);
+    }
+	return (0);
+}
+
+bool Client::hasMode(char mode) const
+{
+	if (_modes.find(mode) != std::string::npos)
+   		return (true);
+	return (false);
+}
+
+std::string Client::getModes() const
+{
+	if (_modes.empty())
+		return ("");
+    return ("+" + _modes);
+}
+/* Client::Client(int socketFD, const sockaddr_in& clientAddr) : 
+	_socketFD(socketFD),
+	_state(CONNECTING),
+	_channels(CHANLIMIT)
+{
+} */
+void Client::setState(ClientState newState)
+{ 
+	_state = newState; 
+}
+ClientState Client::getState() const
+{ 
+	return (_state);
+}
+
+std::string Client::getNickname() const
+{
+	return (_nickname);
+}
+
+std::string Client::getUsername() const
+{
+	return (_userName);
+}
+
+std::string Client::getRealname() const
+{
+	return (_realName);
+}
+
+void Client::setSocketFD(int socketFD)
+{
+    _socketFD = socketFD;
+}
+
+int Client::getSocketFD() const
+{
+    return (_socketFD);
+}
+
+void Client::setIP(const std::string& ip)
+{
+    _IP = ip;
+}
+
+std::string Client::getIP() const
+{
+    return (_IP);
+}
+
+void Client::setHostname(const std::string& hostname)
+{
+    _hostname = hostname;
+}
+
+std::string Client::getHostname() const
+{
+    return (_hostname);
+}
+
+std::vector<std::string> Client::getChannels() const
+{
+    return (_channels);
+}
+
 
 /* bool Server::isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const
 {
@@ -199,87 +288,119 @@ void Server::handleNickCommand(Client* client, const std::string& newNickname)
     client->setNick(newNickname);
 } */
 
-std::string Client::truncName(const std::string& name)
+/* int Client::connectToServer(const std::string& serverIP, int serverPort)
 {
-	if (name.length() > USERLEN)
-		return name.substr(0, USERLEN);
-	else
-		return (name);
+    // Create socket
+    _socketFD = socket(AF_INET, SOCK_STREAM, 0);
+    if (_socketFD == -1)
+    {
+        std::cerr << "Error: Failed to create socket" << std::endl;
+        return (-1);
+    }
+    
+    // Set up server address
+    struct sockaddr_in serverAddr;
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(serverPort);
+    
+    // Convert IP address
+    serverAddr.sin_addr.s_addr = inet_addr(serverIP.c_str());
+    if (serverAddr.sin_addr.s_addr == INADDR_NONE)
+    {
+        std::cerr << "Error: Invalid IP address format: " << serverIP << std::endl;
+        close(_socketFD);
+        return (-1);
+    }
+    
+    // Connect to server
+    if (connect(_socketFD, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
+    {
+        std::cerr << "Error: Failed to connect to server " << serverIP << ":" << serverPort << std::endl;
+        close(_socketFD);
+        return (-1);
+    }
+    
+    _IP = serverIP;
+    _port = serverPort;
+    setState(CONNECTING);
+    
+    std::cout << "Connected to server " << serverIP << ":" << serverPort << std::endl;
+    return (_socketFD);
+} */
+
+/* int Client::sendMessage(const std::string& message)
+{
+    if (_socketFD == -1)
+        return (-1);
+    
+    std::string fullMessage = message + "\r\n"; 
+    int bytesSent = send(_socketFD, fullMessage.c_str(), fullMessage.length(), 0);
+    
+	if (bytesSent > 512)
+		return (std::cerr <<  "<client> :Input line was too long" << std::endl, ERR_INPUTTOOLONG);
+    if (bytesSent == -1)
+        std::cerr << "Error: Failed to send message" << std::endl;
+    
+    return (bytesSent);
 }
 
-int		Client::isUserValid(std::string& userName)
+std::vector<std::string> Client::receiveCompleteMessages()
 {
-	if (userName.size() == 0)
-		return (std::cerr << /* <client> */ "<USER> :Not enough parameters" << std::endl, ERR_NEEDMOREPARAMS);
-	if (userName.size() > USERLEN)
-		userName = truncName(userName);
-	return (0);
-}
+    std::vector<std::string> completeMessages;
+    
+    if (_socketFD == -1)
+        return (completeMessages);
+    
+    char buffer[1024];
+    int bytesReceived = recv(_socketFD, buffer, sizeof(buffer) - 1, MSG_DONTWAIT); // Flag for non-blocking
+    
+    if (bytesReceived > 0)
+    {
+        buffer[bytesReceived] = '\0';
+        _messageBuffer += std::string(buffer);
+        
+        // Prevent buffer from growing too large
+        if (_messageBuffer.length() > 4096)
+        {
+            std::cerr <<  "<client> :Input line was too long" << std::endl;
+            _messageBuffer.clear();
+            return (completeMessages);
+        }
+        
+        // Extract complete messages
+        std::string::size_type pos = 0;
+        while ((pos = _messageBuffer.find("\r\n")) != std::string::npos)
+        {
+            std::string message = _messageBuffer.substr(0, pos);
+            
+            // Skip empty messages
+            if (!message.empty())
+                completeMessages.push_back(message);
+            
+            _messageBuffer.erase(0, pos + 2);
+        }
+    }
+    else if (bytesReceived == 0)
+    {
+        std::cout << "Server disconnected" << std::endl;
+        setState(DISCONNECTED);
+    }
+    else if (bytesReceived == -1)
+    {
+        // Check if it's just "would block" (no data available)
+        if (errno != EAGAIN && errno != EWOULDBLOCK)
+        {
+            std::cerr << "Error: Failed to receive message" << std::endl;
+        }
+    }
+    
+    return (completeMessages);
+} */
 
-bool	Client::isRealNameValid(const std::string& realName) const
+
+/* std::string Client::toLowercase(const std::string& str)
 {
-	if (realName.length() <= 50)
-		return (true);
-	return (false);
-}
-
-void	Client::setNick(const std::string& nickName)
-{
-	if (isNickValid(nickName) == 0)
-		_nickname = nickName;
-}
-
-void Client::setUser(std::string& userName, int zero, char asterisk, std::string& realName)
-{
-	(void) zero;
-	(void) asterisk;
-	if (isUserValid(userName) == 0)
-		_userName = userName;
-	if (isRealNameValid(realName) == 0)
-		_realName = realName;
-	else
-		_realName = realName.substr(0, 50);
-}
-
-Client::Client(int socketFD, const sockaddr_in& clientAddr) : 
-	_socketFD(socketFD),
-	_state(CONNECTING),
-	_channels(CHANLIMIT)
-{
-    (void)clientAddr;
-}
-void Client::setState(ClientState newState)
-{ 
-	_state = newState; 
-}
-ClientState Client::getState() const
-{ 
-	return (_state);
-}
-
-std::string Client::getNickname() const
-{
-	return (_nickname);
-}
-
-std::string Client::getUsername() const
-{
-	return (_userName);
-}
-
-std::string Client::getRealname() const
-{
-	return (_realName);
-}
-
-int Client::getSocketFD() const
-{
-    return _socketFD;
-}
-
-Client::Client() : _socketFD(-1), _port(0), _state(DISCONNECTED)
-{
-    _hostname = "localhost";
-}
-
-Client::~Client() {}
+	std::string result = str;
+	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+	return (result);
+} */

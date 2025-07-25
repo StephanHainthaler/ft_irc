@@ -22,11 +22,15 @@
 # include <unistd.h>
 # include <exception>
 # include <vector>
-#include <stdio.h>
+# include <map>
+# include <stdio.h>
+# include <string>
+# include <cstring> // for strncpy, strcmp
 
 # include "main.hpp"
 # include "Client.hpp"
 # include "Channel.hpp"
+# include "Parser.hpp"
 
 # define MAX_CLIENTS 10 // max #clients that can connect to the server at the same time
 # define MAX_MSG_LEN 1042
@@ -55,6 +59,7 @@ class Server
 		void sendMessageToClient(int clientFD, const char* msg);
 		void handleClientConnections(void);
 		std::vector<std::string>  handleClientMessage(int i);
+		void handleClientDisconnections(int i);
 		void handleEvents(void);
 		void run(void);
 
@@ -105,7 +110,7 @@ class Server
 		*/
 		
 		const std::string			_password;
-		std::vector<Client *>		_clients;	// List of connected clients (ClientClass objs)
+		std::map<int, Client *>		_clients;	// List of connected clients (ClientClass objs)
 		std::vector<pollfd>			_pollfds; // +1 for the server socket
 		//std::vector<Channel *>		_channels;	// List of channels (ChannelClass objs)
 		//std::vector<std::string>	_users; // auf 10 users limitieren
