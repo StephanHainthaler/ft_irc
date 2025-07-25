@@ -362,7 +362,7 @@ void Server::run(void)
 			std::cout << command[i] << "|" ;
 		std::cout << std::endl;
 
-		if (strcmp((command[0]).c_str(), "pass") == 0 && strcmp((command[1]).c_str(), _password.c_str()) == 0)
+		if (command[0].compare("PASS") == 0 && command[1].compare(_password) == 0)
 		{
 			sendMessageToClient(_ircClientFd, "Password accepted. Welcome to the StePiaAn IRC server!\r\n"); // send welcome message to IRC client
 			break; // password is correct, exit the loop

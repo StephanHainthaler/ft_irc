@@ -86,7 +86,7 @@ int	main(int argc, char *argv[])
 
 //NAME CHECKS
 
-/* int main(void)
+int main(void)
 {
 	Client client;
 
