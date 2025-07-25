@@ -112,15 +112,13 @@ class Server
 		const std::string			_password;
 		std::map<int, Client *>		_clients;	// List of connected clients (ClientClass objs)
 		std::vector<pollfd>			_pollfds; // +1 for the server socket
-		//std::vector<Channel *>		_channels;	// List of channels (ChannelClass objs)
+		std::vector<Channel *>		_channels;	// List of channels (ChannelClass objs)
 		//std::vector<std::string>	_users; // auf 10 users limitieren
 
 		// clients must be unique within a channel
 
 		int							_state; // Server state - 0: not running, 1: running, -1: error (?)
 		int							_ircClientFd; // FD of the IRC client (Hexchat) that connects to the server
-
-		std::vector<Channel *>		_channels; //ADDED BY STEPHAN FOR COMPILING
 };
 
 /* 
