@@ -6,7 +6,7 @@
 /*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/25 14:52:48 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/25 15:01:32 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,7 +115,7 @@ class Client
 		//NICK_function
 		//JOIN_function
 		
-		Client(int socketFD, int port, ClientState state);
+		Client(int socketFD, int port);
 		Client();
 		~Client();
 		

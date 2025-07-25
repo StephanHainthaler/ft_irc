@@ -6,7 +6,7 @@
 /*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/07/25 14:53:21 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/25 15:01:19 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,13 +14,15 @@
 #include "../headers/main.hpp"
 
 
-Client::Client() : _socketFD(-1), _port(0), _state(DISCONNECTED)
+Client::Client() : _socketFD(-1), _port(0), _state(CONNECTING)
 {
     _hostname = "localhost";
 }
 
-Client::Client(int socketFD, int port, ClientState state)
+Client::Client(int socketFD, int port)
 {
+	_socketFD = socketFD; 
+	_port = port;
 }
 
 Client::~Client() {}
