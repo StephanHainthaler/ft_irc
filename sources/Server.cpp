@@ -215,6 +215,7 @@ void Server::handleEvents(void)
 	sfd.events = POLLIN; // listen for incoming connections
 	// POLLOUT = ready to write, POLLERR = error on the fd, POLLHUP = client closed socket
 	sfd.revents = 0; // initially no events
+	(pollfd)sfd;
 	
 	while (_state == RUNNING) // while server is running
 	{

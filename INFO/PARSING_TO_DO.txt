@@ -1,1 +1,5 @@
 KICK <channel> ,,,,,,,,,,,, --> handles this as ,
+
+IMPLEMENT a sendToClient function with the CODE
+
+INCLUDE THE INSTANCE OF THE CLIENT WHO SENT THE COMMAND

@@ -69,7 +69,14 @@ class Server
 		bool isNicknameAvailable(const std::string& nickname) const;
 		void handleNickCommand(Client* client, const std::string& newNickname);
 
-		//PARSER
+		// PARSER
+		void	handleInput(void);
+		void    parseStringToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters);
+		void	executeCommand(std::vector<std::string> command);
+		void    printVector(std::vector<std::string> vector);
+		int		kick(std::vector<std::string> command, size_t cmdNumber, std::string operatorName);
+		int		invite(std::vector<std::string> command, size_t cmdNumber, std::string operatorName);
+		int		topic(std::vector<std::string> command, size_t cmdNumber);
 		
 		// Exception
 		class ServerException: public std::exception
@@ -107,6 +114,8 @@ class Server
 
 		int							_state; // Server state - 0: not running, 1: running, -1: error (?)
 		int							_ircClientFd; // FD of the IRC client (Hexchat) that connects to the server
+
+		std::vector<Channel *>		_channels; //ADDED BY STEPHAN FOR COMPILING
 };
 
 /* 

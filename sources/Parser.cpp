@@ -10,9 +10,9 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../headers/Parser.hpp"
+#include "../headers/Server.hpp"
 
-void	handleInput(void)
+void	Server::handleInput(void)
 {
 	std::string					input;
 	std::vector<std::string>	command;
@@ -28,7 +28,7 @@ void	handleInput(void)
 	}
 }
 
-void    parseStringToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters)
+void    Server::parseStringToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters)
 {
 	for (char* token = std::strtok((char *)input.c_str(), delimiters); token; token = std::strtok(NULL, delimiters))
 	{
@@ -40,7 +40,7 @@ void    parseStringToVector(std::string &input, std::vector<std::string> *vector
 		
 }
 
-void	executeCommand(std::vector<std::string> command)
+void	Server::executeCommand(std::vector<std::string> command)
 {
 	std::string	operatorName = "";
 	size_t 		i = 0;
@@ -69,14 +69,14 @@ void	executeCommand(std::vector<std::string> command)
 	else if (command[i].compare("INVITE") == 0)
 		invite(command, i + 1, operatorName);
 	else if (command[i].compare("TOPIC") == 0)
-		std::cout << "TOPIC" << std::endl;
+		topic(command, i + 1);
 	else if (command[i].compare("MODE") == 0)
 		std::cout << "MODE" << std::endl; // -i -t -k -o -l
 	else
 		std::cerr << "Command NOT found" << std::endl;
 }
 
-void printVector(std::vector<std::string> vector)
+void Server::printVector(std::vector<std::string> vector)
 {
 	if (vector.size() == 0)
 	{
@@ -89,10 +89,11 @@ void printVector(std::vector<std::string> vector)
 	}
 }
 
-size_t	kick(std::vector<std::string> command, size_t cmdNumber, std::string operatorName) //:operatorName <channel> <user> [:<comment>]
+int	Server::kick(std::vector<std::string> command, size_t cmdNumber, std::string operatorName) //[:operatorName] KICK <channel> <user> [:<comment>]
 {
 	std::vector<std::string>	users;
 	std::string					channel, comment = "for NO Reason";
+	Channel						*toKickFrom;
 
 	//CHECK AUTHORITY
 	//	"<channel> :You're not channel operator" --> ERR_CHANOPRIVSNEEDED
@@ -100,8 +101,18 @@ size_t	kick(std::vector<std::string> command, size_t cmdNumber, std::string oper
 	if (command.size() < 3)
 		return (std::cerr << "KICK: MISSING PARAMETERS" << std::endl, 461); //ERR_NEEDMOREPARAMS == 461
 	
-	//CHECK IF CHANNEL EXISTS IF NOT SKIP OR END COMD --> ERR_NOSUCHCHANNEL
+	//CHECK IF CHANNEL EXISTS IF NOT SKIP OR END COMD
 	channel = command[cmdNumber++];
+	for (size_t it = 0; it < _channels.size(); it++)
+	{
+		if (_channels[it]->getName().compare(channel) == 0)
+		{
+			toKickFrom = _channels[it];
+			break ;
+		}
+		if (it == _channels.size() - 1)
+			return (std::cerr << "<client> <channel> :No such channel" << std::endl, 402); //ERR_NOSUCHCHANNEL == 402
+	}
 
 	//Parsing the command argument into user name(s) stored in a vector
 	if (command[cmdNumber].find(","))
@@ -123,7 +134,17 @@ size_t	kick(std::vector<std::string> command, size_t cmdNumber, std::string oper
 	//Looping through the channels and users to be KICKED
 	for (size_t i = 0; i < users.size(); i++)
 	{
-		//CHECK IF USER EXISTS IF NOT SKIP OR END COMD --> ERR_NOTONCHANNEL
+		//CHECK IF USER EXISTS IF NOT SKIP
+		std::vector<std::string> nameList = toKickFrom->getChannelUsers();
+		for (size_t it = 0; it < nameList.size(); it++)
+		{
+			if (nameList[it].compare(users[i]) == 0)
+				break ;
+			if (it == nameList.size() - 1)
+				return (std::cerr << "<client> <nick> <channel> :They aren't on that channel" << std::endl, 441); //ERR_USERNOTINCHANNEL (441)
+		}
+
+
 		if (operatorName.size() != 0)
 			std::cout << "KICKED the user '" << users[i] << "' out of channel '" << channel << "' by operator " << operatorName << " because of " << comment << "!" << std::endl;
 		else
@@ -136,9 +157,15 @@ size_t	kick(std::vector<std::string> command, size_t cmdNumber, std::string oper
 
 }
 
-size_t	invite(std::vector<std::string> command, size_t cmdNumber, std::string operatorName) //:operatorName <nickname> <channel>
+int	Server::invite(std::vector<std::string> command, size_t cmdNumber, std::string operatorName) //[:operatorName] INVITE <nickname> <channel>
 {
 	std::string	nickname, channel;
+
+	//CHECK CLIENT AUTHORITY
+	//	"<channel> :You're not channel operator" --> ERR_CHANOPRIVSNEEDED (482)
+
+	//CHECK CLIENT AVAILABILITY
+	//	" "<client> <channel> :You're not on that channel"" --> ERR_NOTONCHANNEL (442)
 
 	if (command.size() < 3)
 		return (std::cerr << "INVITE: MISSING PARAMETERS" << std::endl, 461); // ERR_NEEDMOREPARAMS
@@ -151,10 +178,6 @@ size_t	invite(std::vector<std::string> command, size_t cmdNumber, std::string op
 	if (cmdNumber < command.size())
 		return (std::cerr << "TOO MANY PARAMETERS" << std::endl, 1);
 
-	//CHECK IF USER IS ON THAT CHANNEL == // ERR_NOTONCHANNEL (442)
-
-	//CHECK AUTHORITY
-	//	"<channel> :You're not channel operator" // ERR_CHANOPRIVSNEEDED (482)
 
 	//CHECK CHANNEL MODE (INVITE ONLY)	// ERR_CHANOPRIVSNEEDED (482)
 
@@ -171,3 +194,52 @@ size_t	invite(std::vector<std::string> command, size_t cmdNumber, std::string op
 
 	return (0);
 }
+
+int		Server::topic(std::vector<std::string> command, size_t cmdNumber) // TOPIC <channel> [<topic>]
+{
+	std::string	channel, topic;
+	Channel		*toTakeTopicFrom;
+
+	//CHECK CLIENT AUTHORITY
+	//	"<channel> :You're not channel operator" --> ERR_CHANOPRIVSNEEDED (482)
+
+	//CHECK CLIENT AVAILABILITY
+	//	" "<client> <channel> :You're not on that channel"" --> ERR_NOTONCHANNEL (442)
+
+	if (command.size() < 2)
+		return (std::cerr << "TOPIC: MISSING PARAMETERS" << std::endl, 461); //ERR_NEEDMOREPARAMS == 461
+	
+	//CHECK IF CHANNEL EXISTS IF NOT SKIP OR END COMD
+	channel = command[cmdNumber++];
+	for (size_t it = 0; it < _channels.size(); it++)
+	{
+		if (_channels[it]->getName().compare(channel) == 0)
+		{
+			toTakeTopicFrom = _channels[it];
+			break ;
+		}
+		if (it == _channels.size() - 1)
+			return (std::cerr << "<client> <channel> :No such channel" << std::endl, 403); //ERR_NOSUCHCHANNEL == 403
+	}
+
+	//CHECK Status of topic
+	if (command.size() == 2)
+		std::cout << "Current topic is: '" << topic << "'!" << std::endl; // --> RPL_TOPIC (332) && RPL_TOPICWHOTIME (333)
+	else if (command.size() == 3)
+	{
+		if (command[2][0] == ':' && command[2].size() == 1)
+		{
+			toTakeTopicFrom->setTopic(""); // --> RPL_NOTOPIC (331)
+		}
+		else
+		{
+			toTakeTopicFrom->setTopic(command[2].substr(1, command[2].length() -1));
+			//SEND TOPIC COMMAND TO EVErY CLIENT iN THE CHANNEL // --> RPL_TOPIC (332) && RPL_TOPICWHOTIME (333)
+		}
+	}
+	else
+		return (std::cerr << "TOO MANY PARAMETERS" << std::endl, -1);
+	return (0);
+}
+
+// int		Server::mode( size_t cmdNumber)

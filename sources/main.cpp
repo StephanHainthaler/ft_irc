@@ -15,11 +15,9 @@
 #include <cstdlib>
 
 #include "../headers/Server.hpp"
-#include "../headers/Parser.hpp"
 #include "../headers/Client.hpp"
 #include "../headers/Channel.hpp"
 #include "../headers/main.hpp"
-
 
 bool	isPositiveNumber(char *string)
 {
@@ -57,12 +55,12 @@ int	main(int argc, char *argv[])
 		return (std::cerr << RED << "Error: port MUST be a positive number" << DEFAULT << std::endl, 1);
 	
 	std::string		password = argv[2];
-
-	handleInput();
 	
 	try
 	{
 		Server	server(atoi(argv[1]), password);
+
+		// server.handleInput();
 		server.run(); // start the server and listen for incoming connections
 	}
 	catch(const std::exception& e)
