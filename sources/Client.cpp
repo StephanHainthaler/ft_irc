@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/07/23 15:51:00 by codespace        ###   ########.fr       */
+/*   Updated: 2025/07/24 14:17:16 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,7 +151,7 @@ int Client::setMode(char mode, bool enable)
     }
     else
     {
-		// Disable/remove mode if false passed as boolean
+		// Disable/remove mode if "false" passed as boolean
         std::string::size_type pos = _modes.find(mode);
         if (pos != std::string::npos)
             _modes.erase(pos, 1);

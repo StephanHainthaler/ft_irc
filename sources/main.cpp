@@ -49,7 +49,7 @@ on 1st Terminal run: ./ircserv <port> <password>
 on 2nd Terminal run: 
 	flatpak run io.github.Hexchat
 */
-/* int	main(int argc, char *argv[])
+int	main(int argc, char *argv[])
 {
 	if (argc != 3)
 		return (std::cerr << RED << "Error: incorrect number of arguments" << DEFAULT << std::endl, 1);
@@ -71,7 +71,7 @@ on 2nd Terminal run:
 		std::cerr << RED << e.what() << DEFAULT << std::endl;
 	}
 	return 0;
-} */
+}
 
 // Client main
 
@@ -112,7 +112,7 @@ on 2nd Terminal run:
 
 //MODE CHECKS
 
-int main(void)
+/* int main(void)
 {
 	Client client;
 	client.setMode('o', true);
@@ -127,4 +127,4 @@ int main(void)
 		std::cout << "Client has mode" << std::endl;
 
 	std::cout << "Current modes: " << client.getModes() << std::endl;
-}
+} */
