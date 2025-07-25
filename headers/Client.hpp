@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/23 15:45:44 by codespace        ###   ########.fr       */
+/*   Updated: 2025/07/25 14:52:48 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,7 +115,7 @@ class Client
 		//NICK_function
 		//JOIN_function
 		
-		Client(int socketFD, const sockaddr_in& clientAddr);
+		Client(int socketFD, int port, ClientState state);
 		Client();
 		~Client();
 		
