@@ -119,15 +119,12 @@ void Server::sendMessageToClient(int clientFD, const char* msg)
 
 void Server::handleClientConnections(void)
 {
-	sockaddr_in clientAddress = {}; // need to catch it with accept
-	socklen_t clientAddressLen = sizeof(clientAddress);
-	
 	/*
 	accept is like a reception desk that waits for clients to come in
 	when they do, they get a new room (_ircClientFd) to communicate with the server
 	accept blocks until a client connects, unless the server socket is set to non-blocking mode
 	*/
-	int clientFd = accept(_serverFd, (sockaddr *)&clientAddress, &clientAddressLen);
+	int clientFd = accept(_serverFd, NULL, NULL);
 	if (clientFd < 0) // if a new client connected
 	{
 		std::cerr << RED << "Error. Failed to accept client connection." << DEFAULT << std::endl;
@@ -155,21 +152,16 @@ void Server::handleClientConnections(void)
 
 	_pollfds.push_back(pfd);
 
-	Client *newClient = new Client(clientFd, clientAddress); // create a new Client object
+	Client *newClient = new Client(clientFd); // create a new Client object
 	_clients.insert(std::make_pair(clientFd, newClient)); // add the new client to the map
 
 	// useful: https://modern.ircdocs.horse/#rplwelcome-001 and dd.ircdocs.horse/refs/numerics/001
 	std::string welcomeMessage = ":localhost 001 "; // 001 is the RPL_WELCOME code
 	welcomeMessage += newClient->getNickname();
 	welcomeMessage += " :Welcome to the StePiaAn Network, ";
-	welcomeMessage += newClient->getNickname();
-	welcomeMessage += "!";
-	welcomeMessage += newClient->getUsername();
-	welcomeMessage += "@";
-	// if clientAddress.sin_addr.s_addr != 0, it means the client has a valid IP address
-	welcomeMessage += clientAddress.sin_addr.s_addr ? inet_ntoa(clientAddress.sin_addr) : "unknown";
+	welcomeMessage += newClient->getFullIdentifier();
 	welcomeMessage += "\r\n";
-	
+
 	sendMessageToClient(clientFd, welcomeMessage.c_str()); // Welcome message
 }
 
@@ -352,6 +344,8 @@ void Server::run(void)
 		std::cerr << RED << "Error. Failed to accept connection." << DEFAULT << std::endl;
 		return;
 	}
+
+	_clients.insert(std::make_pair(_ircClientFd, new Client(_ircClientFd))); // add the new client to the map
 
 	sendMessageToClient(_ircClientFd, "Please enter the password to access the StePiaAn IRC server!\r\n"); // send welcome message to IRC client
 	std::vector<std::string> command;
