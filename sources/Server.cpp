@@ -133,7 +133,7 @@ void Server::handleClientConnections(void)
 	std::cout << "Client connected with fd: " << clientFd << std::endl;
 
 	char buffer[MAX_MSG_LEN];
-	recv(_ircClientFd, buffer, sizeof(buffer), 0); // receive data from the IRC client (Hexchat)
+	recv(_ircClientFd, buffer, sizeof(buffer), MSG_DONTWAIT); // receive data from the IRC client (Hexchat)
 	std::cout << "IRC client: " << buffer << std::endl; // first one is IRC client
 
 	/* pollfd  (useful: https://www.ibm.com/docs/en/i/7.4.0?topic=ssw_ibm_i_74/apis/poll.htm)
