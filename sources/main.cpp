@@ -84,8 +84,9 @@ int	main(int argc, char *argv[])
 #include "../headers/Parser.hpp"
 #include "../headers/Client.hpp"
 
+//NAME CHECKS
 
-int main(void)
+/* int main(void)
 {
 	Client client;
 
