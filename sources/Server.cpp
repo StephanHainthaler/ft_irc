@@ -152,7 +152,7 @@ void Server::handleClientConnections(void)
 
 	_pollfds.push_back(pfd);
 
-	Client *newClient = new Client(clientFd); // create a new Client object
+	Client *newClient = new Client(clientFd, _port); // create a new Client object
 	_clients.insert(std::make_pair(clientFd, newClient)); // add the new client to the map
 
 	// useful: https://modern.ircdocs.horse/#rplwelcome-001 and dd.ircdocs.horse/refs/numerics/001
@@ -345,7 +345,7 @@ void Server::run(void)
 		return;
 	}
 
-	_clients.insert(std::make_pair(_ircClientFd, new Client(_ircClientFd))); // add the new client to the map
+	_clients.insert(std::make_pair(_ircClientFd, new Client(_ircClientFd, _port))); // add the new client to the map
 
 	sendMessageToClient(_ircClientFd, "Please enter the password to access the StePiaAn IRC server!\r\n"); // send welcome message to IRC client
 	std::vector<std::string> command;
