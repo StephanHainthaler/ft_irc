@@ -50,7 +50,7 @@ void	Server::executeCommand(Client client, std::vector<std::string> command)
 	if (command.size() == 0)
 		return ;
 	else if (command[i].compare("PASS") == 0)
-		pass(command, i + 1, client.getSocketFD());
+		pass(client, command, i + 1);
 	else if (command[i].compare("NICK") == 0)
 		std::cout << "NICK" << std::endl;
 	else if (command[i].compare("USER") == 0)
@@ -85,15 +85,20 @@ void Server::printVector(std::vector<std::string> vector)
 }
 
 
-int		Server::pass(std::vector<std::string> command, size_t cmdNumber, int clientFd)
+int		Server::pass(Client client, std::vector<std::string> command, size_t cmdNumber)
 {
 	if (command[cmdNumber].compare(_password) == 0)
 	{
-		sendMessageToClient(clientFd, "Password accepted. Welcome to the StePiaAn IRC server!\r\n"); // send welcome message to IRC client
+		std::string welcomeMessage = ":localhost 001 "; // 001 is the RPL_WELCOME code
+		welcomeMessage += client.getNickname();
+		welcomeMessage += " :Welcome to the StePiaAn Network, ";
+		welcomeMessage += client.getFullIdentifier();
+		welcomeMessage += "\r\n";
+		sendMessageToClient(client.getSocketFD(), welcomeMessage.c_str()); // Welcome message
 	}
 	else
 	{
-		sendMessageToClient(clientFd, "Incorrect password. Please try again.\r\n"); // send error message to IRC client
+		sendMessageToClient(client.getSocketFD(), "Incorrect password. Please try again.\r\n"); // send error message to IRC client
 	}
 	return (0);
 }

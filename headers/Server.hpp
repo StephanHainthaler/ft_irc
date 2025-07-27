@@ -78,7 +78,7 @@ class Server
 		void    parseStringToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters);
 		void	executeCommand(Client client, std::vector<std::string> command);
 		void    printVector(std::vector<std::string> vector);
-		int		pass(std::vector<std::string> command, size_t cmdNumber, int clientFd);
+		int		pass(Client client, std::vector<std::string> command, size_t cmdNumber);
 		int		kick(std::vector<std::string> command, size_t cmdNumber, std::string operatorName);
 		int		invite(std::vector<std::string> command, size_t cmdNumber, std::string operatorName);
 		int		topic(std::vector<std::string> command, size_t cmdNumber);
