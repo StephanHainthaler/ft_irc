@@ -89,7 +89,14 @@ int		Server::pass(std::vector<std::string> command, size_t cmdNumber, int client
 {
 	if (command[cmdNumber].compare(_password) == 0)
 	{
-		sendMessageToClient(clientFd, "Password accepted. Welcome to the StePiaAn IRC server!\r\n"); // send welcome message to IRC client
+		std::map<int, Client *>::iterator it = _clients.find(clientFd);
+		// useful: https://modern.ircdocs.horse/#rplwelcome-001 and dd.ircdocs.horse/refs/numerics/001
+		std::string welcomeMessage = ":localhost 001 "; // 001 is the RPL_WELCOME code
+		welcomeMessage += (*it->second).getNickname();
+		welcomeMessage += " :Welcome to the StePiaAn Network, ";
+		welcomeMessage += (*it->second).getFullIdentifier();
+		welcomeMessage += "\r\n";
+		sendMessageToClient(clientFd, welcomeMessage.c_str()); // send welcome message to IRC client
 	}
 	else
 	{

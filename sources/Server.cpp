@@ -130,11 +130,7 @@ void Server::handleClientConnections(void)
 		std::cerr << RED << "Error. Failed to accept client connection." << DEFAULT << std::endl;
 		return ;
 	}
-	std::cout << "Client connected with fd: " << clientFd << std::endl;
-
-	char buffer[MAX_MSG_LEN];
-	recv(_ircClientFd, buffer, sizeof(buffer), MSG_DONTWAIT); // receive data from the IRC client (Hexchat)
-	std::cout << "IRC client: " << buffer << std::endl; // first one is IRC client
+	std::cout << GRAY << "Client connected with fd: " << clientFd << DEFAULT << std::endl;
 
 	/* pollfd  (useful: https://www.ibm.com/docs/en/i/7.4.0?topic=ssw_ibm_i_74/apis/poll.htm)
 	is a structure used by poll() to monitor fds for readiness (for reading, writing, or errors)
@@ -155,14 +151,7 @@ void Server::handleClientConnections(void)
 	Client *newClient = new Client(clientFd, _port); // create a new Client object
 	_clients.insert(std::make_pair(clientFd, newClient)); // add the new client to the map
 
-	// useful: https://modern.ircdocs.horse/#rplwelcome-001 and dd.ircdocs.horse/refs/numerics/001
-	std::string welcomeMessage = ":localhost 001 "; // 001 is the RPL_WELCOME code
-	welcomeMessage += newClient->getNickname();
-	welcomeMessage += " :Welcome to the StePiaAn Network, ";
-	welcomeMessage += newClient->getFullIdentifier();
-	welcomeMessage += "\r\n";
-
-	sendMessageToClient(clientFd, welcomeMessage.c_str()); // Welcome message
+	sendMessageToClient(clientFd, "Please enter the password to access the StePiaAn IRC server!\r\n"); // send welcome message to IRC client
 }
 
 /* https://modern.ircdocs.horse/
@@ -178,6 +167,7 @@ void	Server::handleClientMessage(int clientFd)
     int bytesReceived = recv(clientFd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT); // Flag for non-blocking
     if (bytesReceived > 0)
     {
+		std::cout << "Client: " << buffer << std::endl; // first one is IRC client
 		std::map<int, Client *>::iterator it = _clients.find(clientFd);
 		handleInput(*it->second, buffer);
 	}
@@ -208,6 +198,8 @@ void Server::handleEvents(void)
 	
 	_pollfds.push_back(sfd); // add server socket to pollfds
 
+	std::cout << GRAY << "Server is now running and waiting for events..." << DEFAULT << std::endl;
+
 	while (_state == RUNNING) // while server is running
 	{
 		// Handle client input with poll
@@ -222,12 +214,14 @@ void Server::handleEvents(void)
 			std::cout << "No events occurred." << std::endl;
 			continue; // retry polling
 		}
-		
+
 		// else: if one or more sockets / fds are ready for reading
 
 		// Check for events on each client socket
-		for (size_t i = 1; i <= MAX_CLIENTS; ++i)
+		for (int i = 0; i <= poll_count; ++i)
 		{
+			std::cout << "Checking pollfd[" << i << "] with fd: " << _pollfds[i].fd << " revents: " << _pollfds[i].revents << std::endl;
+
 			// Case 1: there was no event with that fd
 			if (_pollfds[i].revents == 0)
 				continue; // skip to next fd
@@ -288,25 +282,6 @@ void Server::run(void)
 		close(_serverFd);
 		throw ServerException("Error. Failed to set socket to non-blocking mode.");
 	}*/ // BUGFIX: implement this
-
-	/*
-	accept is like a reception desk that waits for clients to come in
-	when they do, they get a new room (_ircClientFd) to communicate with the server
-	
-	accept blocks until a client connects, unless the server socket is set to non-blocking mode
-	for IRC client connection, I left it in blocking mode, so that the server waits for the IRC client (Hexchat) to connect before proceeding
-	*/
-	_ircClientFd = accept(_serverFd, NULL, NULL); // (IRC client = Hexchat)
-	if (_ircClientFd == -1) 
-	{
-		std::cerr << RED << "Error. Failed to accept connection." << DEFAULT << std::endl;
-		return;
-	}
-
-	_clients.insert(std::make_pair(_ircClientFd, new Client(_ircClientFd, _port))); // add the new client to the map
-
-	sendMessageToClient(_ircClientFd, "Please enter the password to access the StePiaAn IRC server!\r\n"); // send welcome message to IRC client
-	std::vector<std::string> command;
 
 	// Now the server is ready to handle incoming connections and client input
 	handleEvents();
