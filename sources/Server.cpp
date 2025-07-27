@@ -156,13 +156,6 @@ void Server::handleClientConnections(void)
 	_clients.insert(std::make_pair(clientFd, newClient)); // add the new client to the map
 
 	// useful: https://modern.ircdocs.horse/#rplwelcome-001 and dd.ircdocs.horse/refs/numerics/001
-	std::string welcomeMessage = ":localhost 001 "; // 001 is the RPL_WELCOME code
-	welcomeMessage += newClient->getNickname();
-	welcomeMessage += " :Welcome to the StePiaAn Network, ";
-	welcomeMessage += newClient->getFullIdentifier();
-	welcomeMessage += "\r\n";
-
-	sendMessageToClient(clientFd, welcomeMessage.c_str()); // Welcome message
 }
 
 /* https://modern.ircdocs.horse/
