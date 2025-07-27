@@ -97,6 +97,15 @@ int Server::getState(void) const
 }
 
 // Member functions - server actions
+/*
+std::map<int, Client *>::iterator it = _clients.find(clientFd);
+// useful: https://modern.ircdocs.horse/#rplwelcome-001 and dd.ircdocs.horse/refs/numerics/001
+std::string welcomeMessage = ":localhost 001 "; // 001 is the RPL_WELCOME code
+welcomeMessage += (*it->second).getNickname();
+welcomeMessage += " :Welcome to the StePiaAn Network, ";
+welcomeMessage += (*it->second).getFullIdentifier();
+welcomeMessage += "\r\n";
+*/
 void Server::sendMessageToClient(int clientFD, const char* msg)
 {
 	if (clientFD < 0)
