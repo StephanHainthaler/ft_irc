@@ -55,10 +55,8 @@ class Server
 		int getState(void) const;
 
 		// Member functions - server actions
-		void sendMessageToClient(int clientFD, const char* msg);
 		void handleClientConnections(void); // like addClient
 		void sendMessageToClient(int clientFD, std::string message);
-		void handleClientConnections(void);
 		void handleClientMessage(int clientFd);
 		void handleClientDisconnections(int i);  // like removeClient
 		void handleEvents(void);
