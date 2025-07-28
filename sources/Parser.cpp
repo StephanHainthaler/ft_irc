@@ -67,7 +67,7 @@ void	Server::executeCommand(Client client, std::vector<std::string> command)
 	else if (command[i].compare("PRIVMSG") == 0)
 		std::cout << "PRIVMSG" << std::endl; // (is the same for recieving?)
 	else if (command[i].compare("KICK") == 0)
-		kick(client, command, i + 1, operatorName);
+		kick(client, command, i + 1);
 	else if (command[i].compare("INVITE") == 0)
 		invite(client, command, i + 1);
 	else if (command[i].compare("TOPIC") == 0)
@@ -94,24 +94,23 @@ void Server::printVector(std::vector<std::string> vector)
 
 int		Server::pass(Client client, std::vector<std::string> command, size_t cmdNumber)
 {
+	if (command.size() < 2)
+		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NEEDMOREPARAMS, client, "PASS")), 1);
+	if (client.getState() >= AUTHENTICATED)
+		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_ALREADYREGISTERED, client)), 1);
 	if (command[cmdNumber].compare(_password) == 0)
 	{
-		std::string welcomeMessage = ":localhost 001 "; // 001 is the RPL_WELCOME code
-		welcomeMessage += client.getNickname();
-		welcomeMessage += " :Welcome to the StePiaAn Network, ";
-		welcomeMessage += client.getFullIdentifier();
-		welcomeMessage += "\r\n";
-		sendMessageToClient(client.getSocketFD(), welcomeMessage.c_str()); // Welcome message
+		//MOVE THIS AFTER REGISTERED
+		sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_WELCOME, client));
 		
-		// IF NICK AND USER EXISTS SET TO REGISTERED?
 		client.setState(AUTHENTICATED);
 	}
 	else
-		sendMessageToClient(client.getSocketFD(), "Incorrect password. Please try again.\r\n"); // send error message to IRC client
+		sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_PASSWDMISMATCH, client));
 	return (0);
 }
 
-int	Server::kick(Client client, std::vector<std::string> command, size_t cmdNumber, std::string operatorName) //[:operatorName] KICK <channel> <user> [:<comment>]
+int	Server::kick(Client client, std::vector<std::string> command, size_t cmdNumber) //[:operatorName] KICK <channel> <user> [:<comment>]
 {
 	std::vector<std::string>	users;
 	std::string					channelName, comment = "for NO Reason";
@@ -163,11 +162,9 @@ int	Server::kick(Client client, std::vector<std::string> command, size_t cmdNumb
 			
 
 		//TO DO::::
-		if (operatorName.size() != 0)
-			std::cout << "KICKED the user '" << users[i] << "' out of channel '" << channelName << "' by operator " << operatorName << " because of " << comment << "!" << std::endl;
-		else
-			std::cout << "KICKED the user " << users[i] << " out of channel '" << channelName << "' because of " << comment << "!" << std::endl;
-	}              
+		//remove from list
+		
+	}
 	return (0);
 }
 
@@ -178,10 +175,7 @@ int	Server::invite(Client client, std::vector<std::string> command, size_t cmdNu
 	Client		*invited = NULL;
 
 	//CHECK CLIENT AUTHORITY
-	//	"<channel> :You're not channel operator" --> ERR_CHANOPRIVSNEEDED (482)
-
-	
-	
+	//	"<channel> :You're not channel operator" --> ERR_CHANOPRIVSNEEDED (482)	
 
 	//CHECK NUMBER OF NECESSARY PARAMETERS
 	if (command.size() < 3)
@@ -195,9 +189,9 @@ int	Server::invite(Client client, std::vector<std::string> command, size_t cmdNu
 		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NOSUCHCHANNEL, client, channelName)), 1);
 
 	//CHECK IF CLIENT IS PART OF THAT CHANNEL
-	// invited = toInviteTo->getUser(nickname);
-	// if (invited != NULL)
-	// 	return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_USERONCHANNEL, client, nickname, channelName)), 1);
+	invited = toInviteTo->getUser(nickname);
+	if (invited != NULL)
+		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_USERONCHANNEL, client, nickname, channelName)), 1);
 
 	if (cmdNumber < command.size())
 		return (std::cerr << "TOO MANY PARAMETERS" << std::endl, 1);
@@ -213,7 +207,7 @@ int	Server::invite(Client client, std::vector<std::string> command, size_t cmdNu
 	sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_INVITING, client, nickname, channelName));
 	sendMessageToClient(invited->getSocketFD(), createReplyToClient(RPL_TOPIC, *invited, channelName, toInviteTo->getTopic()));
 
-
+	//toInviteTo->addUser();
 
 	// if (operatorName.size() != 0)
 	// 	std::cout << operatorName << " invited the user " << nickname << " has been invited to Channel '" << channelName << "'." << std::endl;
@@ -271,6 +265,38 @@ int		Server::topic(std::vector<std::string> command, size_t cmdNumber) // TOPIC 
 }
 
 // int		Server::mode( size_t cmdNumber)
+
+
+std::string Server::createReplyToClient(int messageCode, Client client)
+{
+	std::string	returnMessage = "";
+
+	if (messageCode == RPL_WELCOME)
+	{
+		returnMessage += client.getUsername();
+		returnMessage += " :Welcome to the <networkname> Network, "; 
+		returnMessage += client.getNickname();
+		returnMessage += "[";
+		returnMessage += client.getUsername();
+		returnMessage += "@";
+		returnMessage += client.getHostname();
+		returnMessage += "]";
+		returnMessage += "\r\n";
+	}
+	else if (messageCode == ERR_ALREADYREGISTERED)
+	{
+		returnMessage += client.getUsername();
+		returnMessage += " :You may not reregister"; 
+		returnMessage += "\r\n";
+	}
+	else if (messageCode == ERR_PASSWDMISMATCH)
+	{
+		returnMessage += client.getUsername();
+		returnMessage += " :Password incorrect"; 
+		returnMessage += "\r\n";
+	}
+	return (returnMessage);
+}
 
 
 std::string Server::createReplyToClient(int messageCode, Client client, std::string argument)

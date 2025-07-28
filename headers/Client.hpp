@@ -6,7 +6,7 @@
 /*   By: shaintha <shaintha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/28 12:34:27 by shaintha         ###   ########.fr       */
+/*   Updated: 2025/07/28 14:13:43 by shaintha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,9 @@
 #define ERR_NOTONCHANNEL 442
 #define ERR_USERONCHANNEL 443
 #define ERR_BADCHANMASK 476
+
+#define ERR_ALREADYREGISTERED 462
+#define ERR_PASSWDMISMATCH 464
 
 
 
