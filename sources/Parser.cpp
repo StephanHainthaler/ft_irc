@@ -61,7 +61,10 @@ void	Server::executeCommand(Client client, std::vector<std::string> command)
 	else if (command[i].compare("NICK") == 0)
 		client.nick(command[i + 1]);
 	else if (command[i].compare("USER") == 0 && client.getState() < REGISTERED)
+	{
 		client.setUser(command[i + 1], 0, '*', command[i + 2]);
+		client.isFullyRegistered();
+	}
 	else if (command[i].compare("JOIN") == 0)
 		std::cout << "JOIN" << std::endl;
 	else if (command[i].compare("PRIVMSG") == 0)
