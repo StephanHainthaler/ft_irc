@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: pgober <pgober@student.42.fr>              +#+  +:+       +#+        */
+/*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/07/25 15:01:19 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/28 15:37:20 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,10 +63,22 @@ std::string Client::truncName(const std::string& name)
 		return (name);
 }
 
+void	Client::setNick(const std::string& nickName)
+{
+	if (isNickValid(nickName) == 0)
+		_nickname = nickName;
+}
+
+void	Client::nick(const std::string& nickName)
+{
+	if (isNickValid(nickName) == 0)
+		setNick(nickName);
+}
+
 int		Client::isUserValid(std::string& userName)
 {
 	if (userName.size() == 0)
-		return (std::cerr << /* <client> */ "<USER> :Not enough parameters" << std::endl, ERR_NEEDMOREPARAMS);
+		return (/* std::cerr << <client> "<USER> :Not enough parameters" << std::endl, */ ERR_NEEDMOREPARAMS);
 	if (userName.size() > USERLEN)
 		userName = truncName(userName);
 	return (0);
@@ -77,12 +89,6 @@ bool	Client::isRealNameValid(const std::string& realName) const
 	if (realName.length() <= 50)
 		return (true);
 	return (false);
-}
-
-void	Client::setNick(const std::string& nickName)
-{
-	if (isNickValid(nickName) == 0)
-		_nickname = nickName;
 }
 
 void Client::setUser(std::string& userName, int zero, char asterisk, std::string& realName)

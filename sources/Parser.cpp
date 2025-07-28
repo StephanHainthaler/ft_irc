@@ -46,11 +46,11 @@ void	Server::executeCommand(Client client, std::vector<std::string> command)
 	}
 
 	//CHECK for AUTHENTICATIOn when using ALL but PASS
-	if (client.getState() < AUTHENTICATED && !(command[i].compare("PASS") == 0))
+	/* if (client.getState() < AUTHENTICATED && !(command[i].compare("PASS") == 0))
 	{
 		sendMessageToClient(client.getSocketFD(), "Authentication required! Please enter the server password with command /PASS.\n");
 		return ;
-	}
+	} */
 
 	
 
@@ -59,9 +59,9 @@ void	Server::executeCommand(Client client, std::vector<std::string> command)
 	if (command[i].compare("PASS") == 0)
 		pass(client, command, i + 1);
 	else if (command[i].compare("NICK") == 0)
-		std::cout << "NICK" << std::endl;
-	else if (command[i].compare("USER") == 0)
-		std::cout << "USER" << std::endl;
+		client.nick(command[i + 1]);
+	else if (command[i].compare("USER") == 0 && client.getState() < REGISTERED)
+		client.setUser(command[i + 1], 0, '*', command[i + 2]);
 	else if (command[i].compare("JOIN") == 0)
 		std::cout << "JOIN" << std::endl;
 	else if (command[i].compare("PRIVMSG") == 0)
