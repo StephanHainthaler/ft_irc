@@ -67,7 +67,7 @@ void	Server::executeCommand(Client client, std::vector<std::string> command)
 	else if (command[i].compare("INVITE") == 0)
 		invite(client, command, i + 1);
 	else if (command[i].compare("TOPIC") == 0)
-		topic(command, i + 1);
+		topic(client, command, i + 1);
 	else if (command[i].compare("MODE") == 0)
 		std::cout << "MODE" << std::endl; // -i -t -k -o -l
 	else
@@ -176,6 +176,8 @@ int	Server::invite(Client client, std::vector<std::string> command, size_t cmdNu
 	//CHECK CLIENT AUTHORITY
 	//	"<channel> :You're not channel operator" --> ERR_CHANOPRIVSNEEDED (482)	
 
+	
+
 	//CHECK NUMBER OF NECESSARY PARAMETERS
 	if (command.size() < 3)
 		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NEEDMOREPARAMS, client, "INVITE")), 1);
@@ -187,16 +189,22 @@ int	Server::invite(Client client, std::vector<std::string> command, size_t cmdNu
 	if (toInviteTo == NULL)
 		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NOSUCHCHANNEL, client, channelName)), 1);
 
+	//CHECK IF COMMAND ISSUER PART OF THAT CHANNEL
+	if (toInviteTo->getUser(client.getNickname()) == NULL);
+		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NOTONCHANNEL, client, channelName)), 1);
+
 	//CHECK IF CLIENT IS PART OF THAT CHANNEL
-	invited = toInviteTo->getUser(nickname);
-	if (invited != NULL)
+	if (toInviteTo->getUser(nickname) != NULL)
 		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_USERONCHANNEL, client, nickname, channelName)), 1);
 
 	if (cmdNumber < command.size())
 		return (std::cerr << "TOO MANY PARAMETERS" << std::endl, 1);
 
-
 	//CHECK CHANNEL MODE (INVITE ONLY)	// ERR_CHANOPRIVSNEEDED (482)
+
+	invited = getClient(nickname);
+	if (invited == NULL)
+		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NOSUCHNICK, client, nickname)), 1);
 
 
 	// RPL_INVITING (341)
@@ -218,9 +226,9 @@ int	Server::invite(Client client, std::vector<std::string> command, size_t cmdNu
 	return (0);
 }
 
-int		Server::topic(std::vector<std::string> command, size_t cmdNumber) // TOPIC <channel> [<topic>]
+int		Server::topic(Client client, std::vector<std::string> command, size_t cmdNumber) // TOPIC <channel> [<topic>]
 {
-	std::string	channel, topic;
+	std::string	channelName, topic;
 	Channel		*toTakeTopicFrom;
 
 	//CHECK CLIENT AUTHORITY
@@ -229,35 +237,37 @@ int		Server::topic(std::vector<std::string> command, size_t cmdNumber) // TOPIC 
 	//CHECK CLIENT AVAILABILITY
 	//	" "<client> <channel> :You're not on that channel"" --> ERR_NOTONCHANNEL (442)
 
+	//CHECK NUMBER OF NECESSARY PARAMETERS
 	if (command.size() < 2)
-		return (std::cerr << "TOPIC: MISSING PARAMETERS" << std::endl, 461); //ERR_NEEDMOREPARAMS == 461
+		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NEEDMOREPARAMS, client, "INVITE")), 1);
 	
-	//CHECK IF CHANNEL EXISTS IF NOT SKIP OR END COMD
-	channel = command[cmdNumber++];
-	for (size_t it = 0; it < _channels.size(); it++)
-	{
-		if (_channels[it]->getName().compare(channel) == 0)
-		{
-			toTakeTopicFrom = _channels[it];
-			break ;
-		}
-		if (it == _channels.size() - 1)
-			return (std::cerr << "<client> <channel> :No such channel" << std::endl, 403); //ERR_NOSUCHCHANNEL == 403
-	}
+	//CHECK IF CHANNEL EXISTS
+	channelName = command[cmdNumber++];
+	toTakeTopicFrom = getChannel(channelName);
+	if (toTakeTopicFrom == NULL)
+		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NOSUCHCHANNEL, client, channelName)), 1);
 
-	//CHECK Status of topic
+	//CHECK THE TOPIC
 	if (command.size() == 2)
-		std::cout << "Current topic is: '" << topic << "'!" << std::endl; // --> RPL_TOPIC (332) && RPL_TOPICWHOTIME (333)
+	{
+		if (toTakeTopicFrom->getTopic().empty() == true)
+			sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_NOTOPIC, client, channelName));
+		else
+			sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_TOPIC, client, channelName, toTakeTopicFrom->getTopic()));
+	}
 	else if (command.size() == 3)
 	{
-		if (command[2][0] == ':' && command[2].size() == 1)
+		if (command[cmdNumber][0] == ':' && command[cmdNumber].size() == 1)
 		{
-			toTakeTopicFrom->setTopic(""); // --> RPL_NOTOPIC (331)
+			toTakeTopicFrom->setTopic("");
+			for (size_t i = 0; i < toTakeTopicFrom->getChannelUsers().size(); i++)
+				sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_NOTOPIC, client, channelName));
 		}
 		else
 		{
-			toTakeTopicFrom->setTopic(command[2].substr(1, command[2].length() -1));
-			//SEND TOPIC COMMAND TO EVErY CLIENT iN THE CHANNEL // --> RPL_TOPIC (332) && RPL_TOPICWHOTIME (333)
+			toTakeTopicFrom->setTopic(command[cmdNumber].substr(1, command[cmdNumber].length() -1));
+			for (size_t i = 0; i < toTakeTopicFrom->getChannelUsers().size(); i++)
+				sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_TOPIC, client, channelName, toTakeTopicFrom->getTopic()));
 		}
 	}
 	else
@@ -304,7 +314,21 @@ std::string Server::createReplyToClient(int messageCode, Client client, std::str
 {
 	std::string	returnMessage = "";
 
-	if (messageCode == ERR_NOSUCHCHANNEL)
+	if (messageCode == RPL_NOTOPIC)
+	{
+		returnMessage += client.getUsername();
+		returnMessage += " ";
+		returnMessage += argument;
+		returnMessage += " :No topic is set\r\n";
+	}
+	else if (messageCode == ERR_NOSUCHNICK)
+	{
+		returnMessage += client.getUsername();
+		returnMessage += " ";
+		returnMessage += argument;
+		returnMessage += " :No such nick/channel\r\n";
+	}
+	else if (messageCode == ERR_NOSUCHCHANNEL)
 	{
 		returnMessage += client.getUsername();
 		returnMessage += " ";

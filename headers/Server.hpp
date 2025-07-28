@@ -78,9 +78,9 @@ class Server
 		void					executeCommand(Client client, std::vector<std::string> command);
 		void					printVector(std::vector<std::string> vector);
 		int						pass(Client client, std::vector<std::string> command, size_t cmdNumber);
-		int						kick(Client client, std::vector<std::string> command, size_t cmdNumber, std::string operatorName);
+		int						kick(Client client, std::vector<std::string> command, size_t cmdNumber);
 		int						invite(Client client, std::vector<std::string> command, size_t cmdNumber);
-		int						topic(std::vector<std::string> command, size_t cmdNumber);
+		int						topic(Client client, std::vector<std::string> command, size_t cmdNumber);
 		std::string 			createReplyToClient(int messageCode, Client client);
 		std::string				createReplyToClient(int messageCode, Client client, std::string argument);
 		std::string				createReplyToClient(int messageCode, Client client, std::string arg1, std::string arg2);
