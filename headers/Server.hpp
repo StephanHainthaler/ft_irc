@@ -49,40 +49,41 @@ class Server
 		~Server(void);
 
 		// Getters
-		std::string getPassword(void) const;
-		Channel *getChannel(const std::string &channel_name) const;
-		sockaddr_in getServerAddress(void) const; // bc client will need it to connect to server
-		int getState(void) const;
+		std::string 			getPassword(void) const;
+		Channel 				*getChannel(const std::string &channel_name) const;
+		sockaddr_in 			getServerAddress(void) const; // bc client will need it to connect to server
+		int 					getState(void) const;
+		Client 					*getClient(std::string nickname) const;
 
 		// Member functions - server actions
-		void handleClientConnections(void); // like addClient
-		void sendMessageToClient(int clientFD, std::string message);
-		void handleClientMessage(int clientFd);
-		void handleClientDisconnections(int i);  // like removeClient
-		void handleEvents(void);
-		void run(void);
+		void 					handleClientConnections(void); // like addClient
+		void 					sendMessageToClient(int clientFD, std::string message);
+		void 					handleClientMessage(int clientFd);
+		void 					handleClientDisconnections(int i);  // like removeClient
+		void 					handleEvents(void);
+		void 					run(void);
 
 		// Member functions - user triggered actions
-		void addChannel(Channel *channel);
-		void removeChannel(Channel *channel);
+		void 					addChannel(Channel *channel);
+		void 					removeChannel(Channel *channel);
 
 		// Nickname availability checks
-		bool isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const;
-		bool isNicknameAvailable(const std::string& nickname) const;
-		void handleNickCommand(Client* client, const std::string& newNickname);
+		bool 					isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const;
+		bool 					isNicknameAvailable(const std::string& nickname) const;
+		void 					handleNickCommand(Client* client, const std::string& newNickname);
 
 		// PARSER
-		void		handleInput(Client client, std::string input);
-		void    	parseStringToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters);
-		void		executeCommand(Client client, std::vector<std::string> command);
-		void    	printVector(std::vector<std::string> vector);
-		int			pass(Client client, std::vector<std::string> command, size_t cmdNumber);
-		int			kick(Client client, std::vector<std::string> command, size_t cmdNumber, std::string operatorName);
-		int			invite(Client client, std::vector<std::string> command, size_t cmdNumber);
-		int			topic(std::vector<std::string> command, size_t cmdNumber);
-		std::string	createReplyToClient(int messageCode, Client client, std::string argument);
-		std::string createReplyToClient(int messageCode, Client client, std::string arg1, std::string arg2);
-		
+		void					handleInput(Client client, std::string input);
+		void					parseStringToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters);
+		void					executeCommand(Client client, std::vector<std::string> command);
+		void					printVector(std::vector<std::string> vector);
+		int						pass(Client client, std::vector<std::string> command, size_t cmdNumber);
+		int						kick(Client client, std::vector<std::string> command, size_t cmdNumber, std::string operatorName);
+		int						invite(Client client, std::vector<std::string> command, size_t cmdNumber);
+		int						topic(std::vector<std::string> command, size_t cmdNumber);
+		std::string				createReplyToClient(int messageCode, Client client, std::string argument);
+		std::string				createReplyToClient(int messageCode, Client client, std::string arg1, std::string arg2);
+
 		// Exception
 		class ServerException: public std::exception
 		{
@@ -98,26 +99,26 @@ class Server
 	private:
 		Server(void);
 		Server(const Server &other);
-		Server	&operator=(const Server &other);
+		Server					&operator=(const Server &other);
 	
-		int							_serverFd; // Server Socket FD - Listening socket, can be negative
-		const unsigned int 			_port; // Port number - "door to the server"
-		struct sockaddr_in 			_serverAddress; // for IPv4 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
-		// struct sockaddr_in6 		_serverAddress; // for IPv6 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
+		int						_serverFd; // Server Socket FD - Listening socket, can be negative
+		const unsigned int 		_port; // Port number - "door to the server"
+		struct sockaddr_in 		_serverAddress; // for IPv4 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
+		// struct sockaddr_in6 	_serverAddress; // for IPv6 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
 		/*
 		server creates sockaddr_in "serverAddress" to specify its own IP address and port to bind to
 		client takes this sockaddr_in "serverAddress" to specify the server's IP address and port to connect to
 		*/
 		
-		const std::string			_password;
-		std::map<int, Client *>		_clients;	// List of connected clients (ClientClass objs)
-		std::vector<pollfd>			_pollfds; // +1 for the server socket
-		std::vector<Channel *>		_channels;	// List of channels (ChannelClass objs)
+		const std::string		_password;
+		std::map<int, Client *>	_clients;	// List of connected clients (ClientClass objs)
+		std::vector<pollfd>		_pollfds; // +1 for the server socket
+		std::vector<Channel *>	_channels;	// List of channels (ChannelClass objs)
 		//std::vector<std::string>	_users; // auf 10 users limitieren
 
 		// clients must be unique within a channel
 
-		int							_state; // Server state - 0: not running, 1: running, -1: error (?)_
+		int						_state; // Server state - 0: not running, 1: running, -1: error (?)_
 };
 
 /* 
