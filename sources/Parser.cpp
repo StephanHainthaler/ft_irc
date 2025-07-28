@@ -52,10 +52,6 @@ void	Server::executeCommand(Client client, std::vector<std::string> command)
 		return ;
 	}
 
-	
-
-	// if (command.size() == 0)
-	// 	return ;
 	if (command[i].compare("PASS") == 0)
 		pass(client, command, i + 1);
 	else if (command[i].compare("NICK") == 0)
@@ -96,8 +92,11 @@ int		Server::pass(Client client, std::vector<std::string> command, size_t cmdNum
 {
 	if (command.size() < 2)
 		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NEEDMOREPARAMS, client, "PASS")), 1);
+	std::cout << client.getState() << std::endl;
+	//DOES NOT CHANGE
 	if (client.getState() >= AUTHENTICATED)
 		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_ALREADYREGISTERED, client)), 1);
+		
 	if (command[cmdNumber].compare(_password) == 0)
 	{
 		//MOVE THIS AFTER REGISTERED
@@ -205,8 +204,10 @@ int	Server::invite(Client client, std::vector<std::string> command, size_t cmdNu
 	// and an INVITE message, with the issuer as <source>?????????, to the target user. Other channel members SHOULD NOT be notified.
 
 	sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_INVITING, client, nickname, channelName));
+	//invited needs to get reassigend by pais function Server::getUser(nickname);
 	sendMessageToClient(invited->getSocketFD(), createReplyToClient(RPL_TOPIC, *invited, channelName, toInviteTo->getTopic()));
 
+	//WAIT FOR JOIN FUNCTION
 	//toInviteTo->addUser();
 
 	// if (operatorName.size() != 0)
@@ -330,6 +331,13 @@ std::string Server::createReplyToClient(int messageCode, Client client, std::str
 		returnMessage += " ";
 		returnMessage += argument;
 		returnMessage += " :Bad Channel Mask\r\n";
+	}
+	else if (messageCode == ERR_CHANOPRIVSNEEDED)
+	{
+		returnMessage += client.getUsername();
+		returnMessage += " ";
+		returnMessage += argument;
+		returnMessage += " :You're not channel operator\r\n";
 	}
 	return (returnMessage);
 }
