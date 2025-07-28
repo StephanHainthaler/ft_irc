@@ -69,7 +69,7 @@ void	Server::executeCommand(Client client, std::vector<std::string> command)
 	else if (command[i].compare("KICK") == 0)
 		kick(client, command, i + 1, operatorName);
 	else if (command[i].compare("INVITE") == 0)
-		invite(client, command, i + 1, operatorName);
+		invite(client, command, i + 1);
 	else if (command[i].compare("TOPIC") == 0)
 		topic(command, i + 1);
 	else if (command[i].compare("MODE") == 0)
@@ -114,30 +114,24 @@ int		Server::pass(Client client, std::vector<std::string> command, size_t cmdNum
 int	Server::kick(Client client, std::vector<std::string> command, size_t cmdNumber, std::string operatorName) //[:operatorName] KICK <channel> <user> [:<comment>]
 {
 	std::vector<std::string>	users;
-	std::string					channel, comment = "for NO Reason";
+	std::string					channelName, comment = "for NO Reason";
 	Channel						*toKickFrom;
 
 	//CHECK AUTHORITY
 	//	"<channel> :You're not channel operator" --> ERR_CHANOPRIVSNEEDED
 
+	//CHECK NUMBER OF NECESSARY PARAMETERS
 	if (command.size() < 3)
 		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NEEDMOREPARAMS, client, "KICK")), 1);
-	
-	channel = command[cmdNumber++];
 
 	//CHECK THE NAME FORMAT FOR CHANNELS
-	if (channel[0] != '#')
-		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_USERNOTINCHANNEL, client, channel)), 1);
-	for (size_t it = 0; it < _channels.size(); it++)
-	{
-		if (_channels[it]->getName().compare(channel) == 0)
-		{
-			toKickFrom = _channels[it];
-			break ;
-		}
-		if (it == _channels.size() - 1)
-			return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NOSUCHCHANNEL, client, channel)), 1);
-	}
+	channelName = command[cmdNumber++];
+	if (channelName[0] != '#')
+		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_BADCHANMASK, client, channelName)), 1);
+	//CHECK IF CHANNEL EXISTS
+	toKickFrom = getChannel(channelName);
+	if (toKickFrom == NULL)
+		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NOSUCHCHANNEL, client, channelName)), 1);
 
 	//Parsing the command argument into user name(s) stored in a vector
 	if (command[cmdNumber].find(","))
@@ -165,37 +159,45 @@ int	Server::kick(Client client, std::vector<std::string> command, size_t cmdNumb
 			if (nameList[it].compare(users[i]) == 0)
 				break ;
 			if (it == nameList.size() - 1)
-				return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_USERNOTINCHANNEL, client, users[i], channel)), 1);
+				return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_USERNOTINCHANNEL, client, users[i], channelName)), 1);
 		}
 
 		//TO DO::::
 		if (operatorName.size() != 0)
-			std::cout << "KICKED the user '" << users[i] << "' out of channel '" << channel << "' by operator " << operatorName << " because of " << comment << "!" << std::endl;
+			std::cout << "KICKED the user '" << users[i] << "' out of channel '" << channelName << "' by operator " << operatorName << " because of " << comment << "!" << std::endl;
 		else
-			std::cout << "KICKED the user " << users[i] << " out of channel '" << channel << "' because of " << comment << "!" << std::endl;
+			std::cout << "KICKED the user " << users[i] << " out of channel '" << channelName << "' because of " << comment << "!" << std::endl;
 	}              
 	return (0);
 }
 
-int	Server::invite(Client client, std::vector<std::string> command, size_t cmdNumber, std::string operatorName) //[:operatorName] INVITE <nickname> <channel>
+int	Server::invite(Client client, std::vector<std::string> command, size_t cmdNumber) //[:operatorName] INVITE <nickname> <channel>
 {
-	std::string	nickname, channel;
+	std::string	nickname, channelName;
+	Channel		*toInviteTo;
+	Client		*invited = NULL;
 
 	//CHECK CLIENT AUTHORITY
 	//	"<channel> :You're not channel operator" --> ERR_CHANOPRIVSNEEDED (482)
 
-	//CHECK CLIENT AVAILABILITY
-	//	" "<client> <channel> :You're not on that channel"" --> ERR_NOTONCHANNEL (442)
-	//for ()
+	
+	
 
-
+	//CHECK NUMBER OF NECESSARY PARAMETERS
 	if (command.size() < 3)
-		return (std::cerr << "INVITE: MISSING PARAMETERS" << std::endl, 461); // ERR_NEEDMOREPARAMS
+		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NEEDMOREPARAMS, client, "INVITE")), 1);
 
 	nickname = command[cmdNumber++];
+	//CHECK IF CHANNEL EXISTS
+	channelName = command[cmdNumber++];
+	toInviteTo = getChannel(channelName);
+	if (toInviteTo == NULL)
+		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NOSUCHCHANNEL, client, channelName)), 1);
 
-	//CHECK IF CHANNEL EXISTS == // ERR_NOSUCHCHANNEL (403)
-	channel = command[cmdNumber++];
+	//CHECK IF CLIENT IS PART OF THAT CHANNEL
+	// invited = toInviteTo->getUser(nickname);
+	// if (invited != NULL)
+	// 	return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_USERONCHANNEL, client, nickname, channelName)), 1);
 
 	if (cmdNumber < command.size())
 		return (std::cerr << "TOO MANY PARAMETERS" << std::endl, 1);
@@ -203,16 +205,20 @@ int	Server::invite(Client client, std::vector<std::string> command, size_t cmdNu
 
 	//CHECK CHANNEL MODE (INVITE ONLY)	// ERR_CHANOPRIVSNEEDED (482)
 
-	//CHECK IF USER IS ALREADY ON THAT CHANNEL // ERR_USERONCHANNEL (443)
 
 	// RPL_INVITING (341)
 	// When the invite is successful, the server MUST send a RPL_INVITING numeric to the command issuer,
-	// and an INVITE message, with the issuer as <source>, to the target user. Other channel members SHOULD NOT be notified.
+	// and an INVITE message, with the issuer as <source>?????????, to the target user. Other channel members SHOULD NOT be notified.
 
-	if (operatorName.size() != 0)
-		std::cout << operatorName << " invited the user " << nickname << " has been invited to Channel '" << channel << "'." << std::endl;
-	else
-		std::cout << "The user " << nickname << " has been invited to Channel '" << channel << "'." << std::endl;
+	sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_INVITING, client, nickname, channelName));
+	sendMessageToClient(invited->getSocketFD(), createReplyToClient(RPL_TOPIC, *invited, channelName, toInviteTo->getTopic()));
+
+
+
+	// if (operatorName.size() != 0)
+	// 	std::cout << operatorName << " invited the user " << nickname << " has been invited to Channel '" << channelName << "'." << std::endl;
+	// else
+	// 	std::cout << "The user " << nickname << " has been invited to Channel '" << channelName << "'." << std::endl;
 
 	return (0);
 }
@@ -267,7 +273,7 @@ int		Server::topic(std::vector<std::string> command, size_t cmdNumber) // TOPIC 
 // int		Server::mode( size_t cmdNumber)
 
 
-const char *createReplyToClient(int messageCode, Client client, std::string argument)
+std::string Server::createReplyToClient(int messageCode, Client client, std::string argument)
 {
 	std::string	returnMessage = "";
 
@@ -276,38 +282,72 @@ const char *createReplyToClient(int messageCode, Client client, std::string argu
 		returnMessage += client.getUsername();
 		returnMessage += " ";
 		returnMessage += argument;
-		returnMessage += " :No such channel\n";
+		returnMessage += " :No such channel\r\n";
 	}
 	else if (messageCode == ERR_NEEDMOREPARAMS)
 	{
 		returnMessage += client.getUsername();
 		returnMessage += " ";
 		returnMessage += argument;
-		returnMessage += " :Not enough parameters\n";
+		returnMessage += " :Not enough parameters\r\n";
 	}
-	else if (messageCode == ERR_USERNOTINCHANNEL)
+	else if (messageCode == ERR_NOTONCHANNEL)
 	{
 		returnMessage += client.getUsername();
 		returnMessage += " ";
 		returnMessage += argument;
-		returnMessage += " :Bad Channel Mask\n";
+		returnMessage += " :You're not on that channel\r\n";
 	}
-	return (returnMessage.c_str());
+	else if (messageCode == ERR_BADCHANMASK)
+	{
+		returnMessage += client.getUsername();
+		returnMessage += " ";
+		returnMessage += argument;
+		returnMessage += " :Bad Channel Mask\r\n";
+	}
+	return (returnMessage);
 }
 
-const char *createReplyToClient(int messageCode, Client client, std::string arg1, std::string arg2)
+std::string Server::createReplyToClient(int messageCode, Client client, std::string arg1, std::string arg2)
 {
 	std::string	returnMessage = "";
 
-	if (messageCode == ERR_USERNOTINCHANNEL)
+	if (messageCode == RPL_TOPIC)
+	{
+		returnMessage += client.getUsername();
+		returnMessage += " ";
+		returnMessage += arg1;
+		returnMessage += " :";
+		returnMessage += arg2;
+		returnMessage += "\r\n";
+	}
+	else if (messageCode == RPL_INVITING)
 	{
 		returnMessage += client.getUsername();
 		returnMessage += " ";
 		returnMessage += arg1;
 		returnMessage += " ";
 		returnMessage += arg2;
-		returnMessage += " :They aren't on that channel\n";
+		returnMessage += "\r\n";
 	}
-	return (returnMessage.c_str());
+	else if (messageCode == ERR_USERNOTINCHANNEL)
+	{
+		returnMessage += client.getUsername();
+		returnMessage += " ";
+		returnMessage += arg1;
+		returnMessage += " ";
+		returnMessage += arg2;
+		returnMessage += " :They aren't on that channel\r\n";
+	}
+	else if (messageCode == ERR_USERONCHANNEL)
+	{
+		returnMessage += client.getUsername();
+		returnMessage += " ";
+		returnMessage += arg1;
+		returnMessage += " ";
+		returnMessage += arg2;
+		returnMessage += " :is already on channel\r\n";
+	}
+	return (returnMessage);
 }
 

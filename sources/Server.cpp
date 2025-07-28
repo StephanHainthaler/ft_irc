@@ -97,7 +97,7 @@ int Server::getState(void) const
 }
 
 // Member functions - server actions
-void Server::sendMessageToClient(int clientFD, const char* msg)
+void Server::sendMessageToClient(int clientFD, std::string message)
 {
 	if (clientFD < 0)
 	{
@@ -106,11 +106,11 @@ void Server::sendMessageToClient(int clientFD, const char* msg)
 	}
 	
 	long long totalSent = 0;
-	long long msgLength = strlen(msg);
+	long long msgLength = message.length();
 
 	while (totalSent < msgLength) 
 	{
-		long long sent = send(clientFD, msg + totalSent, msgLength - totalSent, 0);
+		long long sent = send(clientFD, message.c_str() + totalSent, msgLength - totalSent, 0);
 		if (sent == -1) 
 			break;
 		totalSent += sent;

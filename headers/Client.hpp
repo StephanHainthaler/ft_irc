@@ -6,7 +6,7 @@
 /*   By: shaintha <shaintha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/28 11:05:23 by shaintha         ###   ########.fr       */
+/*   Updated: 2025/07/28 12:34:27 by shaintha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,8 +44,13 @@
 #define ERR_UNKNOWNMODE 472
 
 //ADDED BY STEPHAN
+#define RPL_TOPIC 332
+#define RPL_INVITING 341
 #define ERR_USERNOTINCHANNEL 441
+#define ERR_NOTONCHANNEL 442
+#define ERR_USERONCHANNEL 443
 #define ERR_BADCHANMASK 476
+
 
 
 class Client
