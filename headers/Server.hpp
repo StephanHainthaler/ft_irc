@@ -55,7 +55,7 @@ class Server
 		int getState(void) const;
 
 		// Member functions - server actions
-		void sendMessageToClient(int clientFD, const char* msg);
+		void sendMessageToClient(int clientFD, std::string message);
 		void handleClientConnections(void);
 		void handleClientMessage(int clientFd);
 		void handleClientDisconnections(int i);
@@ -73,14 +73,16 @@ class Server
 		void handleNickCommand(Client* client, const std::string& newNickname);
 
 		// PARSER
-		void	handleInput(Client client, std::string input);
-		void    parseStringToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters);
-		void	executeCommand(Client client, std::vector<std::string> command);
-		void    printVector(std::vector<std::string> vector);
-		int		pass(Client client, std::vector<std::string> command, size_t cmdNumber);
-		int		kick(std::vector<std::string> command, size_t cmdNumber, std::string operatorName);
-		int		invite(std::vector<std::string> command, size_t cmdNumber, std::string operatorName);
-		int		topic(std::vector<std::string> command, size_t cmdNumber);
+		void		handleInput(Client client, std::string input);
+		void    	parseStringToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters);
+		void		executeCommand(Client client, std::vector<std::string> command);
+		void    	printVector(std::vector<std::string> vector);
+		int			pass(Client client, std::vector<std::string> command, size_t cmdNumber);
+		int			kick(Client client, std::vector<std::string> command, size_t cmdNumber, std::string operatorName);
+		int			invite(Client client, std::vector<std::string> command, size_t cmdNumber);
+		int			topic(std::vector<std::string> command, size_t cmdNumber);
+		std::string	createReplyToClient(int messageCode, Client client, std::string argument);
+		std::string createReplyToClient(int messageCode, Client client, std::string arg1, std::string arg2);
 		
 		// Exception
 		class ServerException: public std::exception
