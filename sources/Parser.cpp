@@ -45,6 +45,12 @@ void	Server::executeCommand(Client client, std::vector<std::string> command)
 		i = 1;
 	}
 
+	if (command[i].compare("PASS") != 0 && client.getState() < AUTHENTICATED)
+	{
+		sendMessageToClient(client.getSocketFD(), "Authentication required! Please enter the server password with command /PASS.");
+		return ;
+	}
+
 	//CHECK for AUTHENTICATIOn when using ALL but PASS
 
 	if (command.size() == 0)
