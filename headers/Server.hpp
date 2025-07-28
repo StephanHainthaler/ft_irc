@@ -50,7 +50,7 @@ class Server
 
 		// Getters
 		std::string getPassword(void) const;
-		// Channel *getChannel(const std::string &channel_name) const;
+		Channel *getChannel(const std::string &channel_name) const;
 		sockaddr_in getServerAddress(void) const; // bc client will need it to connect to server
 		int getState(void) const;
 
