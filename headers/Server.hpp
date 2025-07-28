@@ -63,10 +63,9 @@ class Server
 		void run(void);
 
 		// Member functions - user triggered actions
-		/*
 		void addChannel(Channel *channel);
 		void removeChannel(Channel *channel);
-		*/
+
 
 		// Nickname availability checks
 		bool isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const;

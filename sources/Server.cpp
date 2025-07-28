@@ -288,7 +288,6 @@ void Server::run(void)
 }
 
 // Member functions - user triggered actions
-/*
 void Server::addChannel(Channel *channel)
 {
 	if (channel == NULL)
@@ -315,7 +314,7 @@ void Server::removeChannel(Channel *channel)
 			break;
 		}
 	}
-}*/
+}
 
 void toLowercase(const std::string& str)
 {
