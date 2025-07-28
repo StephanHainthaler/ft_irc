@@ -116,6 +116,7 @@ int	Server::kick(Client client, std::vector<std::string> command, size_t cmdNumb
 	std::vector<std::string>	users;
 	std::string					channelName, comment = "for NO Reason";
 	Channel						*toKickFrom;
+	Client						*kicked;
 
 	//CHECK AUTHORITY
 	//	"<channel> :You're not channel operator" --> ERR_CHANOPRIVSNEEDED
@@ -152,15 +153,14 @@ int	Server::kick(Client client, std::vector<std::string> command, size_t cmdNumb
 	//Looping through the channels and users to be KICKED
 	for (size_t i = 0; i < users.size(); i++)
 	{
-		//CHECK IF USER EXISTS IF NOT SKIP
-		std::vector<std::string> nameList = toKickFrom->getChannelUsers();
-		for (size_t it = 0; it < nameList.size(); it++)
+		//CHECK IF USER IST ON THAT CHANNEL
+		kicked = toKickFrom->getUser(users[i]);
+		if (kicked == NULL)
 		{
-			if (nameList[it].compare(users[i]) == 0)
-				break ;
-			if (it == nameList.size() - 1)
-				return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_USERNOTINCHANNEL, client, users[i], channelName)), 1);
+			sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_USERNOTINCHANNEL, client, users[i], channelName));
+			continue ;
 		}
+			
 
 		//TO DO::::
 		if (operatorName.size() != 0)
