@@ -12,6 +12,17 @@
 
 #include "../headers/Channel.hpp"
 
+Channel::Channel(const std::string &name, const std::string &topic, const std::string &state, const std::string &mode)
+	: _name(name), _topic(topic), _state(state), _mode(mode)
+{
+}
+
+Channel::~Channel(void)
+{
+	_channelUsers.clear();
+	_operators.clear();
+}
+
 std::string Channel::getName(void) const
 {
 	return _name;
@@ -60,4 +71,36 @@ Client *Channel::getUser(const std::string &nickname) const
 			return *it;
 	}
 	return NULL;
+}
+
+void Channel::addUser(Client *client)
+{
+	if (client && std::find(_channelUsers.begin(), _channelUsers.end(), client) == _channelUsers.end())
+		_channelUsers.push_back(client);
+}
+
+void Channel::removeUser(Client *client)
+{
+	if (client)
+	{
+		std::vector<Client *>::iterator it = std::find(_channelUsers.begin(), _channelUsers.end(), client);
+		if (it != _channelUsers.end())
+			_channelUsers.erase(it);
+	}
+}
+
+void Channel::addOperator(Client *client)
+{
+	if (client && std::find(_operators.begin(), _operators.end(), client) == _operators.end())
+		_operators.push_back(client);
+}
+
+void Channel::removeOperator(Client *client)
+{
+	if (client)
+	{
+		std::vector<Client *>::iterator it = std::find(_operators.begin(), _operators.end(), client);
+		if (it != _operators.end())
+			_operators.erase(it);
+	}
 }

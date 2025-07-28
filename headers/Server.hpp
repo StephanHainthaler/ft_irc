@@ -56,16 +56,15 @@ class Server
 
 		// Member functions - server actions
 		void sendMessageToClient(int clientFD, const char* msg);
-		void handleClientConnections(void);
+		void handleClientConnections(void); // like addClient
 		void handleClientMessage(int clientFd);
-		void handleClientDisconnections(int i);
+		void handleClientDisconnections(int i);  // like removeClient
 		void handleEvents(void);
 		void run(void);
 
 		// Member functions - user triggered actions
 		void addChannel(Channel *channel);
 		void removeChannel(Channel *channel);
-
 
 		// Nickname availability checks
 		bool isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const;
@@ -116,8 +115,7 @@ class Server
 
 		// clients must be unique within a channel
 
-		int							_state; // Server state - 0: not running, 1: running, -1: error (?)
-		int							_ircClientFd; // FD of the IRC client (Hexchat) that connects to the server
+		int							_state; // Server state - 0: not running, 1: running, -1: error (?)_
 };
 
 /* 
