@@ -12,8 +12,8 @@
 
 #include "../headers/Channel.hpp"
 
-Channel::Channel(const std::string &name, const std::string &topic, const std::string &state, const std::string &mode)
-	: _name(name), _topic(topic), _state(state), _mode(mode)
+Channel::Channel(const std::string &name, const std::string &topic, const std::string &modes)
+	: _name(name), _topic(topic), _modes(modes)
 {
 }
 
@@ -38,19 +38,37 @@ void	Channel::setTopic(std::string topic)
 	_topic = topic;
 }
 
-std::string Channel::getState(void) const
+std::string Channel::getModes(void) const
 {
-	return _state;
+	return _modes;
 }
 
-void Channel::setState(std::string state)
+bool Channel::isValidChannelMode(char mode) const
 {
-	_state = state;
+	return (mode == 'i' || mode == 't' || mode == 'k' || mode == 'o' || mode == 'l');
 }
 
-std::string Channel::getMode(void) const
+int Channel::setMode(char mode, bool enable)
 {
-	return _mode;
+	if (isValidChannelMode(mode))
+	{
+		if (enable && _modes.find(mode) == std::string::npos)
+			_modes += mode;
+		else
+		{ // Disable/remove mode if "false" passed as boolean
+			std::string::size_type pos = _modes.find(mode);
+			if (pos != std::string::npos)
+				_modes.erase(pos, 1);
+		}
+		return (0);
+	}
+	else
+		return (ERR_UNKNOWNMODE) ;
+}
+
+bool Channel::hasMode(char mode) const
+{
+	return (_modes.find(mode) != std::string::npos);
 }
 
 std::vector<Client *> Channel::getChannelUsers(void) const
