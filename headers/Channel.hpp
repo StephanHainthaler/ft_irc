@@ -10,8 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef CHANNEL_HPP
-# define CHANNEL_HPP
+#pragma once
 
 # include <iostream>
 # include <vector>
@@ -32,6 +31,9 @@
             · o: Give/take channel operator privilege
             · l: Set/remove the user limit to channel
 */
+
+class Client;
+class Server;
 class Channel
 {
 	public:
@@ -66,4 +68,3 @@ class Channel
 		std::vector<Client *>		_operators; // (ClientClass objs with operator status)
 };
 
-#endif

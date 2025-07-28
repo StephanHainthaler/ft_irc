@@ -31,6 +31,7 @@
 # include "Client.hpp"
 # include "Channel.hpp"
 # include "Parser.hpp"
+#include "signal.h"
 
 # define MAX_MSG_LEN 1042
 
@@ -40,6 +41,9 @@
 # define ERROR -1
 
 void toLowercase(const std::string& str);
+
+class Client;
+class Channel;
 
 // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in-cpp/
 class Server

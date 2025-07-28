@@ -6,13 +6,14 @@
 /*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/28 15:37:37 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/28 17:20:00 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
-//#include "Server.hpp"
+
 #include "main.hpp"
+#include "Server.hpp"
 #include <cstddef>
 #include <iostream>
 #include <string>
@@ -55,7 +56,8 @@
 #define ERR_PASSWDMISMATCH 464
 
 
-
+class Server;
+class Channel;
 class Client
 {
 	private:
@@ -77,7 +79,7 @@ class Client
 	public:
 
 		// Commands
-		void	nick(const std::string& nickName);
+		void	nick(const std::string& nickName/* , Server server */);
 		void	setUser(std::string& userName, int zero, char asterisk, std::string& realName);
 		
 		// Format checks
