@@ -45,17 +45,18 @@ void	Server::executeCommand(Client client, std::vector<std::string> command)
 		i = 1;
 	}
 
-	if (command[i].compare("PASS") != 0 && client.getState() < AUTHENTICATED)
+	//CHECK for AUTHENTICATIOn when using ALL but PASS
+	if (client.getState() < AUTHENTICATED && !(command[i].compare("PASS") == 0))
 	{
-		sendMessageToClient(client.getSocketFD(), "Authentication required! Please enter the server password with command /PASS.");
+		sendMessageToClient(client.getSocketFD(), "Authentication required! Please enter the server password with command /PASS.\n");
 		return ;
 	}
 
-	//CHECK for AUTHENTICATIOn when using ALL but PASS
+	
 
-	if (command.size() == 0)
-		return ;
-	else if (command[i].compare("PASS") == 0)
+	// if (command.size() == 0)
+	// 	return ;
+	if (command[i].compare("PASS") == 0)
 		pass(client, command, i + 1);
 	else if (command[i].compare("NICK") == 0)
 		std::cout << "NICK" << std::endl;
@@ -66,9 +67,9 @@ void	Server::executeCommand(Client client, std::vector<std::string> command)
 	else if (command[i].compare("PRIVMSG") == 0)
 		std::cout << "PRIVMSG" << std::endl; // (is the same for recieving?)
 	else if (command[i].compare("KICK") == 0)
-		kick(command, i + 1, operatorName);
+		kick(client, command, i + 1, operatorName);
 	else if (command[i].compare("INVITE") == 0)
-		invite(command, i + 1, operatorName);
+		invite(client, command, i + 1, operatorName);
 	else if (command[i].compare("TOPIC") == 0)
 		topic(command, i + 1);
 	else if (command[i].compare("MODE") == 0)
@@ -101,15 +102,16 @@ int		Server::pass(Client client, std::vector<std::string> command, size_t cmdNum
 		welcomeMessage += client.getFullIdentifier();
 		welcomeMessage += "\r\n";
 		sendMessageToClient(client.getSocketFD(), welcomeMessage.c_str()); // Welcome message
+		
+		// IF NICK AND USER EXISTS SET TO REGISTERED?
+		client.setState(AUTHENTICATED);
 	}
 	else
-	{
 		sendMessageToClient(client.getSocketFD(), "Incorrect password. Please try again.\r\n"); // send error message to IRC client
-	}
 	return (0);
 }
 
-int	Server::kick(std::vector<std::string> command, size_t cmdNumber, std::string operatorName) //[:operatorName] KICK <channel> <user> [:<comment>]
+int	Server::kick(Client client, std::vector<std::string> command, size_t cmdNumber, std::string operatorName) //[:operatorName] KICK <channel> <user> [:<comment>]
 {
 	std::vector<std::string>	users;
 	std::string					channel, comment = "for NO Reason";
@@ -119,10 +121,13 @@ int	Server::kick(std::vector<std::string> command, size_t cmdNumber, std::string
 	//	"<channel> :You're not channel operator" --> ERR_CHANOPRIVSNEEDED
 
 	if (command.size() < 3)
-		return (std::cerr << "KICK: MISSING PARAMETERS" << std::endl, 461); //ERR_NEEDMOREPARAMS == 461
+		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NEEDMOREPARAMS, client, "KICK")), 1);
 	
-	//CHECK IF CHANNEL EXISTS IF NOT SKIP OR END COMD
 	channel = command[cmdNumber++];
+
+	//CHECK THE NAME FORMAT FOR CHANNELS
+	if (channel[0] != '#')
+		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_USERNOTINCHANNEL, client, channel)), 1);
 	for (size_t it = 0; it < _channels.size(); it++)
 	{
 		if (_channels[it]->getName().compare(channel) == 0)
@@ -131,7 +136,7 @@ int	Server::kick(std::vector<std::string> command, size_t cmdNumber, std::string
 			break ;
 		}
 		if (it == _channels.size() - 1)
-			return (std::cerr << "<client> <channel> :No such channel" << std::endl, 402); //ERR_NOSUCHCHANNEL == 402
+			return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NOSUCHCHANNEL, client, channel)), 1);
 	}
 
 	//Parsing the command argument into user name(s) stored in a vector
@@ -147,7 +152,6 @@ int	Server::kick(std::vector<std::string> command, size_t cmdNumber, std::string
 			comment = command[cmdNumber];
 		cmdNumber++;
 	}
-
 	if (cmdNumber < command.size())
 		return (std::cerr << "TOO MANY PARAMETERS" << std::endl, 1);
 	
@@ -161,23 +165,19 @@ int	Server::kick(std::vector<std::string> command, size_t cmdNumber, std::string
 			if (nameList[it].compare(users[i]) == 0)
 				break ;
 			if (it == nameList.size() - 1)
-				return (std::cerr << "<client> <nick> <channel> :They aren't on that channel" << std::endl, 441); //ERR_USERNOTINCHANNEL (441)
+				return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_USERNOTINCHANNEL, client, users[i], channel)), 1);
 		}
 
-
+		//TO DO::::
 		if (operatorName.size() != 0)
 			std::cout << "KICKED the user '" << users[i] << "' out of channel '" << channel << "' by operator " << operatorName << " because of " << comment << "!" << std::endl;
 		else
 			std::cout << "KICKED the user " << users[i] << " out of channel '" << channel << "' because of " << comment << "!" << std::endl;
-	}
-
-    //	ERR_BADCHANMASK                 
-
+	}              
 	return (0);
-
 }
 
-int	Server::invite(std::vector<std::string> command, size_t cmdNumber, std::string operatorName) //[:operatorName] INVITE <nickname> <channel>
+int	Server::invite(Client client, std::vector<std::string> command, size_t cmdNumber, std::string operatorName) //[:operatorName] INVITE <nickname> <channel>
 {
 	std::string	nickname, channel;
 
@@ -186,6 +186,8 @@ int	Server::invite(std::vector<std::string> command, size_t cmdNumber, std::stri
 
 	//CHECK CLIENT AVAILABILITY
 	//	" "<client> <channel> :You're not on that channel"" --> ERR_NOTONCHANNEL (442)
+	//for ()
+
 
 	if (command.size() < 3)
 		return (std::cerr << "INVITE: MISSING PARAMETERS" << std::endl, 461); // ERR_NEEDMOREPARAMS
@@ -263,3 +265,49 @@ int		Server::topic(std::vector<std::string> command, size_t cmdNumber) // TOPIC 
 }
 
 // int		Server::mode( size_t cmdNumber)
+
+
+const char *createReplyToClient(int messageCode, Client client, std::string argument)
+{
+	std::string	returnMessage = "";
+
+	if (messageCode == ERR_NOSUCHCHANNEL)
+	{
+		returnMessage += client.getUsername();
+		returnMessage += " ";
+		returnMessage += argument;
+		returnMessage += " :No such channel\n";
+	}
+	else if (messageCode == ERR_NEEDMOREPARAMS)
+	{
+		returnMessage += client.getUsername();
+		returnMessage += " ";
+		returnMessage += argument;
+		returnMessage += " :Not enough parameters\n";
+	}
+	else if (messageCode == ERR_USERNOTINCHANNEL)
+	{
+		returnMessage += client.getUsername();
+		returnMessage += " ";
+		returnMessage += argument;
+		returnMessage += " :Bad Channel Mask\n";
+	}
+	return (returnMessage.c_str());
+}
+
+const char *createReplyToClient(int messageCode, Client client, std::string arg1, std::string arg2)
+{
+	std::string	returnMessage = "";
+
+	if (messageCode == ERR_USERNOTINCHANNEL)
+	{
+		returnMessage += client.getUsername();
+		returnMessage += " ";
+		returnMessage += arg1;
+		returnMessage += " ";
+		returnMessage += arg2;
+		returnMessage += " :They aren't on that channel\n";
+	}
+	return (returnMessage.c_str());
+}
+

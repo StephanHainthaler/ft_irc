@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
+/*   By: shaintha <shaintha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/25 15:01:32 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/28 11:05:23 by shaintha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,11 @@
 #define ERR_NEEDMOREPARAMS 461
 #define ERR_ALREADYREGISTERED 462
 #define ERR_UNKNOWNMODE 472
+
+//ADDED BY STEPHAN
+#define ERR_USERNOTINCHANNEL 441
+#define ERR_BADCHANMASK 476
+
 
 class Client
 {
@@ -80,7 +85,7 @@ class Client
 		// Channels
 		void	joinChannel(const std::string& channelName);
 		void	leaveChannel(const std::string& channelName);
-		void clearChannels();
+		void 	clearChannels();
 		
 		// Modes
 		bool	isValidUserMode(char mode) const;
