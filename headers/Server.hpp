@@ -32,7 +32,6 @@
 # include "Channel.hpp"
 # include "Parser.hpp"
 
-# define MAX_CLIENTS 10 // max #clients that can connect to the server at the same time
 # define MAX_MSG_LEN 1042
 
 // Server states
