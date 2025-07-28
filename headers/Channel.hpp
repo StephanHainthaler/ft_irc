@@ -16,7 +16,7 @@
 # include <iostream>
 # include <vector>
 
-# include <Client.hpp>
+# include "Client.hpp"
 
 /*
 3. ChannelClass
@@ -35,6 +35,7 @@
 class Channel
 {
 	public:
+		Channel(const std::string &name, const std::string &topic, const std::string &state, const std::string &mode);
 		~Channel(void);
 
 		std::string					getName(void) const;
@@ -46,6 +47,11 @@ class Channel
 		std::vector<Client *>		getChannelUsers(void) const;
 		std::vector<Client *>		getOperators(void) const;
 		Client						*getUser(const std::string &nickname) const;
+
+		void						addUser(Client *client);
+		void						removeUser(Client *client);
+		void						addOperator(Client *client);
+		void						removeOperator(Client *client);
 
 	private:
 		Channel(void);

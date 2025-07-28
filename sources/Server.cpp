@@ -46,28 +46,18 @@ Server::~Server(void)
 	if (_serverFd != -1)
 		close(_serverFd);
 
-	// clear client map (WIP - needed?)
 	if (!_clients.empty())
-	{
-		for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
-		{
-			delete it->second; // delete each Client object
-		}
 		_clients.clear();
-	}
-	/*
-	// clear channel map (WIP - needed?)
-	if (!_channels.empty())
-	{
-		for (std::vector<Client *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
-		{
-			delete *it;
-		}
-		_channels.clear();
-	}*/
 
-	if (_ircClientFd != -1)
-		close(_ircClientFd);
+	if (!_channels.empty())
+		_channels.clear();
+
+	// close all in pollfds
+	for (std::vector<pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it)
+	{
+		if (it->fd != -1)
+			close(it->fd);
+	} 
 }
 
 // Getters
@@ -121,7 +111,7 @@ void Server::handleClientConnections(void)
 {
 	/*
 	accept is like a reception desk that waits for clients to come in
-	when they do, they get a new room (_ircClientFd) to communicate with the server
+	when they do, they get a new room (_clientFd) to communicate with the server
 	accept blocks until a client connects, unless the server socket is set to non-blocking mode
 	*/
 	int clientFd = accept(_serverFd, NULL, NULL);
