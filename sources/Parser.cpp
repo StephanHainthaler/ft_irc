@@ -46,11 +46,11 @@ void	Server::executeCommand(Client client, std::vector<std::string> command)
 	}
 
 	//CHECK for AUTHENTICATIOn when using ALL but PASS
-	if (client.getState() < AUTHENTICATED && !(command[i].compare("PASS") == 0))
-	{
-		sendMessageToClient(client.getSocketFD(), "Authentication required! Please enter the server password with command /PASS.\n");
-		return ;
-	}
+	// if (client.getState() < AUTHENTICATED && !(command[i].compare("PASS") == 0))
+	// {
+	// 	sendMessageToClient(client.getSocketFD(), "Authentication required! Please enter the server password with command /PASS.\n");
+	// 	return ;
+	// }
 
 	if (command[i].compare("PASS") == 0)
 		pass(client, command, i + 1);
@@ -59,7 +59,7 @@ void	Server::executeCommand(Client client, std::vector<std::string> command)
 	else if (command[i].compare("USER") == 0)
 		std::cout << "USER" << std::endl;
 	else if (command[i].compare("JOIN") == 0)
-		std::cout << "JOIN" << std::endl;
+		join(client, command, i + 1);
 	else if (command[i].compare("PRIVMSG") == 0)
 		std::cout << "PRIVMSG" << std::endl; // (is the same for recieving?)
 	else if (command[i].compare("KICK") == 0)
@@ -88,6 +88,69 @@ void Server::printVector(std::vector<std::string> vector)
 }
 
 
+int	Server::join(Client client, std::vector<std::string> command, size_t cmdNumber) //JOIN <channel>{,<channel>} [<key>{,<key>}]
+{
+	std::vector<std::string>	channelNames, keyNames;
+	Channel						*toJoinTo;
+
+	if (command.size() < 2)
+		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NEEDMOREPARAMS, client, "JOIN")), 1);
+	
+	//Parsing the command argument into channel name(s) stored in a vector
+	if (command[cmdNumber].find(","))
+		parseStringToVector(command[cmdNumber++], &channelNames, ",");
+	else
+		channelNames.push_back(command[cmdNumber++]);
+
+	//Parsing the command argument into user name(s) stored in a vector
+	if (cmdNumber < command.size())
+	{
+		if (command[cmdNumber].find(","))
+			parseStringToVector(command[cmdNumber++], &keyNames, ",");
+		else
+			keyNames.push_back(command[cmdNumber++]);
+	}
+
+	if (cmdNumber < command.size()) 
+		return (std::cerr << "TOO MANY PARAMETERS" << std::endl, 1);
+
+	for (size_t i = 0; i < channelNames.size(), i++)
+	{
+		toJoinTo = getChannel(channelNames[i]);
+		// if (toJoinTo == NULL)
+		// {
+		// 	sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NOSUCHCHANNEL, client, channelName));
+		// 	continue ;
+		// }
+		if (toJoinTo == NULL)
+		{
+			Channel newChannel = new Channel(channelNames[i], "", "", "");
+			addChannel(newChannel);
+			newChannel.addUser(client);
+			//Give operATOR permissions
+		}
+		else
+		{
+			if (toJoinTo.hasMode('k') == true)
+			{
+				if (i != keyNames.size() || keyNames[i].compare(toJoinTo->getKey) == 0)
+			}
+		}
+
+	}
+
+	
+
+	std::cout << "TEST" << std::endl;
+	printVector(channelNames);
+	printVector(keyNames);
+
+	return (0);
+
+	
+}
+
+
 int		Server::pass(Client client, std::vector<std::string> command, size_t cmdNumber)
 {
 	if (command.size() < 2)
@@ -109,7 +172,7 @@ int		Server::pass(Client client, std::vector<std::string> command, size_t cmdNum
 	return (0);
 }
 
-int	Server::kick(Client client, std::vector<std::string> command, size_t cmdNumber) //[:operatorName] KICK <channel> <user> [:<comment>]
+int	Server::kick(Client client, std::vector<std::string> command, size_t cmdNumber) //[:operatorName] KICK <channel> <user>[,<user>,...] [:<comment>]
 {
 	std::vector<std::string>	users;
 	std::string					channelName, comment = "for NO Reason";
@@ -190,7 +253,7 @@ int	Server::invite(Client client, std::vector<std::string> command, size_t cmdNu
 		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NOSUCHCHANNEL, client, channelName)), 1);
 
 	//CHECK IF COMMAND ISSUER PART OF THAT CHANNEL
-	if (toInviteTo->getUser(client.getNickname()) == NULL);
+	if (toInviteTo->getUser(client.getNickname()) == NULL)
 		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NOTONCHANNEL, client, channelName)), 1);
 
 	//CHECK IF CLIENT IS PART OF THAT CHANNEL
@@ -335,12 +398,12 @@ std::string Server::createReplyToClient(int messageCode, Client client, std::str
 		returnMessage += argument;
 		returnMessage += " :No such channel\r\n";
 	}
-	else if (messageCode == ERR_NEEDMOREPARAMS)
+	else if (messageCode == ERR_TOOMANYCHANNELS)
 	{
 		returnMessage += client.getUsername();
 		returnMessage += " ";
 		returnMessage += argument;
-		returnMessage += " :Not enough parameters\r\n";
+		returnMessage += " :You have joined too many channels\r\n";
 	}
 	else if (messageCode == ERR_NOTONCHANNEL)
 	{
@@ -348,6 +411,41 @@ std::string Server::createReplyToClient(int messageCode, Client client, std::str
 		returnMessage += " ";
 		returnMessage += argument;
 		returnMessage += " :You're not on that channel\r\n";
+	}
+	else if (messageCode == ERR_NEEDMOREPARAMS)
+	{
+		returnMessage += client.getUsername();
+		returnMessage += " ";
+		returnMessage += argument;
+		returnMessage += " :Not enough parameters\r\n";
+	}
+	else if (messageCode == ERR_CHANNELISFULL)
+	{
+		returnMessage += client.getUsername();
+		returnMessage += " ";
+		returnMessage += argument;
+		returnMessage += " :Cannot join channel (+l)\r\n";
+	}
+	else if (messageCode == ERR_INVITEONLYCHAN)
+	{
+		returnMessage += client.getUsername();
+		returnMessage += " ";
+		returnMessage += argument;
+		returnMessage += " :Cannot join channel (+i)\r\n";
+	}
+	else if (messageCode == ERR_BANNEDFROMCHAN)
+	{
+		returnMessage += client.getUsername();
+		returnMessage += " ";
+		returnMessage += argument;
+		returnMessage += " :Cannot join channel (+b)\r\n";
+	}
+	else if (messageCode == ERR_BADCHANNELKEY)
+	{
+		returnMessage += client.getUsername();
+		returnMessage += " ";
+		returnMessage += argument;
+		returnMessage += " :Cannot join channel (+k)\r\n";
 	}
 	else if (messageCode == ERR_BADCHANMASK)
 	{

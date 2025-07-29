@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: shaintha <shaintha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/28 16:34:09 by shaintha         ###   ########.fr       */
+/*   Updated: 2025/07/29 16:05:16 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,17 +44,27 @@
 #define ERR_UNKNOWNMODE 472
 
 //ADDED BY STEPHAN
+#define RPL_NOTOPIC 331
 #define RPL_TOPIC 332
 #define RPL_INVITING 341
 #define ERR_USERNOTINCHANNEL 441
 #define ERR_NOTONCHANNEL 442
 #define ERR_USERONCHANNEL 443
-#define ERR_BADCHANMASK 476
-
 #define ERR_ALREADYREGISTERED 462
 #define ERR_PASSWDMISMATCH 464
+#define ERR_CHANNELISFULL 471
+#define ERR_INVITEONLYCHAN 473
+#define ERR_BANNEDFROMCHAN 474
+#define ERR_BADCHANNELKEY 475
+#define ERR_BADCHANMASK 476
 #define ERR_CHANOPRIVSNEEDED 482
-#define RPL_NOTOPIC 331
+
+//TO-DO
+//RPL_NAMREPLY (353)
+//RPL_ENDOFNAMES (366)
+
+
+
 
 
 
