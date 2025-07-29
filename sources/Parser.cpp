@@ -110,7 +110,6 @@ int	Server::join(Client client, std::vector<std::string> command, size_t cmdNumb
 		else
 			keyNames.push_back(command[cmdNumber++]);
 	}
-
 	if (cmdNumber < command.size()) 
 		return (std::cerr << "TOO MANY PARAMETERS" << std::endl, 1);
 
@@ -123,8 +122,6 @@ int	Server::join(Client client, std::vector<std::string> command, size_t cmdNumb
 			sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_BADCHANMASK, client, channelNames[i]));
 			continue ;
 		}
-		
-
 		toJoinTo = getChannel(channelNames[i]);
 		// if (toJoinTo == NULL)
 		// {
@@ -136,7 +133,7 @@ int	Server::join(Client client, std::vector<std::string> command, size_t cmdNumb
 			Channel *newChannel = new Channel(channelNames[i], "", "");
 			addChannel(newChannel);
 			newChannel->addUser(&client);
-			//Give operATOR permissions
+			newChannel->addOperator(&client);
 		}
 		else
 		{
@@ -145,7 +142,6 @@ int	Server::join(Client client, std::vector<std::string> command, size_t cmdNumb
 				sendMessageToClient(client.getSocketFD(), "You are already on that Channel\r\n");
 				continue ;
 			}
-				
 			else if (toJoinTo->hasMode('k') == true)
 			{
 				if (i != keyNames.size() - 1 || keyNames[i].compare(toJoinTo->getChannelKey()) != 0)
@@ -177,17 +173,14 @@ int	Server::join(Client client, std::vector<std::string> command, size_t cmdNumb
 				continue ;
 			}
 			toJoinTo->addUser(&client);
+			//THE 3 Steps of messages!!
 		}
-
 	}
-	for (size_t i = 0; i < _channels.size(); i++)
-	{
-		std::cout << "Channel " << i + 1 << ": " << _channels[i]->getName() << std::endl;
-	}
-
+	// for (size_t i = 0; i < _channels.size(); i++)
+	// {
+	// 	std::cout << "Channel " << i + 1 << ": " << _channels[i]->getName() << std::endl;
+	// }
 	return (0);
-
-	
 }
 
 
