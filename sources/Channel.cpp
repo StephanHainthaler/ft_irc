@@ -12,9 +12,11 @@
 
 #include "../headers/Channel.hpp"
 
-Channel::Channel(const std::string &name, const std::string &topic, const std::string &state, const std::string &mode)
-	: _name(name), _topic(topic), _state(state), _mode(mode)
+Channel::Channel(const std::string &name, const std::string &topic, const std::string &modes)
+	: _name(name), _topic(topic), _modes(modes)
 {
+	_userLimit = 100;
+	_channelKey = "";	
 }
 
 Channel::~Channel(void)
@@ -38,39 +40,42 @@ void	Channel::setTopic(std::string topic)
 	_topic = topic;
 }
 
-std::string Channel::getState(void) const
+std::string Channel::getModes(void) const
 {
-	return _state;
+	return _modes;
 }
 
-void Channel::setState(std::string state)
+bool Channel::isValidChannelMode(char mode) const
 {
-	_state = state;
+	return (mode == 'i' || mode == 't' || mode == 'k' || mode == 'o' || mode == 'l');
 }
 
-std::string Channel::getMode(void) const
+int Channel::setMode(char mode, bool enable)
 {
-	return _mode;
+	if (isValidChannelMode(mode))
+	{
+		if (enable && _modes.find(mode) == std::string::npos)
+			_modes += mode;
+		else
+		{ // Disable/remove mode if "false" passed as boolean
+			std::string::size_type pos = _modes.find(mode);
+			if (pos != std::string::npos)
+				_modes.erase(pos, 1);
+		}
+		return (0);
+	}
+	else
+		return (ERR_UNKNOWNMODE) ;
+}
+
+bool Channel::hasMode(char mode) const
+{
+	return (_modes.find(mode) != std::string::npos);
 }
 
 std::vector<Client *> Channel::getChannelUsers(void) const
 {
 	return _channelUsers;
-}
-
-std::vector<Client *> Channel::getOperators(void) const
-{
-	return _operators;
-}
-
-Client *Channel::getUser(const std::string &nickname) const
-{
-	for (std::vector<Client *>::const_iterator it = _channelUsers.begin(); it != _channelUsers.end(); ++it)
-	{
-		if ((*it)->getNickname() == nickname)
-			return *it;
-	}
-	return NULL;
 }
 
 void Channel::addUser(Client *client)
@@ -89,6 +94,21 @@ void Channel::removeUser(Client *client)
 	}
 }
 
+Client *Channel::getUser(const std::string &nickname) const
+{
+	for (std::vector<Client *>::const_iterator it = _channelUsers.begin(); it != _channelUsers.end(); ++it)
+	{
+		if ((*it)->getNickname() == nickname)
+			return *it;
+	}
+	return NULL;
+}
+
+std::vector<Client *> Channel::getOperators(void) const
+{
+	return _operators;
+}
+
 void Channel::addOperator(Client *client)
 {
 	if (client && std::find(_operators.begin(), _operators.end(), client) == _operators.end())
@@ -103,4 +123,24 @@ void Channel::removeOperator(Client *client)
 		if (it != _operators.end())
 			_operators.erase(it);
 	}
+}
+
+std::string Channel::getChannelKey(void)
+{
+	return _channelKey;
+}
+
+void Channel::setChannelKey(const std::string &key)
+{
+	_channelKey = key;
+}
+
+unsigned int Channel::getUserLimit(void) const
+{
+	return _userLimit;
+}
+
+void Channel::setUserLimit(unsigned int limit)
+{
+	_userLimit = limit;
 }

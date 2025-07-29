@@ -18,52 +18,64 @@
 
 # include "Client.hpp"
 
-/*
-3. ChannelClass
-    user_limit
-    password (private Channels) - optional / can be NULL, _k für key    (private attribute)
-    	KICK-      Eject a client from the channel
-        INVITE-    Invite a client to a channel
-        TOPIC-     Change or view the channel topic
-        MODE-      Change the channels mode:
-            · i: Set/remove Invite-only channel
-            · t: Set/remove the restrictions of the TOPIC command to channel operators
-            · k: Set/remove the channel key (password)
-            · o: Give/take channel operator privilege
-            · l: Set/remove the user limit to channel
-*/
 class Channel
 {
 	public:
-		Channel(const std::string &name, const std::string &topic, const std::string &state, const std::string &mode);
+		Channel(const std::string &name, const std::string &topic, const std::string &modes);
 		~Channel(void);
 
 		std::string					getName(void) const;
+
 		std::string					getTopic(void) const;
 		void						setTopic(std::string topic);
-		std::string					getState(void) const;
-		void						setState(std::string state);
-		std::string					getMode(void) const;
-		std::vector<Client *>		getChannelUsers(void) const;
-		std::vector<Client *>		getOperators(void) const;
-		Client						*getUser(const std::string &nickname) const;
 
+		std::string					getModes(void) const;
+		bool						isValidChannelMode(char mode) const;
+		int							setMode(char mode, bool enable);
+		bool 						hasMode(char mode) const;
+
+		std::vector<Client *>		getChannelUsers(void) const;
 		void						addUser(Client *client);
 		void						removeUser(Client *client);
+		Client						*getUser(const std::string &nickname) const;
+		
+		std::vector<Client *>		getOperators(void) const;
 		void						addOperator(Client *client);
 		void						removeOperator(Client *client);
+
+		std::string					getChannelKey(void);
+		void						setChannelKey(const std::string &key);
+
+		unsigned int				getUserLimit(void) const;
+		void						setUserLimit(unsigned int limit);
 
 	private:
 		Channel(void);
 		Channel(const Channel &other);
 		Channel	&operator=(const Channel &other);
 
-		std::string					_name; //Added By Stephan for compiling
-		std::string					_topic;	//Added By Stephan for compiling
-		std::string					_state;
-		std::string					_mode;	// (e.g., +i, +t)
-		std::vector<Client *>		_channelUsers;	//Added By Stephan for compiling
+		std::string					_name;
+		std::string					_topic;
+		std::string					_modes;
+		std::vector<Client *>		_channelUsers;
+
+		std::string					_channelKey; // Channel key (password)
 		std::vector<Client *>		_operators; // (ClientClass objs with operator status)
+		unsigned int 				_userLimit; // User limit to channel
+
+		/* Mode flags
+		MODE +-i  				| Invite-only
+		MODE +-t  				| Restrict topic changes to channel operators
+		MODE +-k <password> 	| Channel key (password)
+		MODE +-o <nickname> 	| Channel operator privilege
+		MODE +-l <limit> 		| User limit to channel
+		
+		CHANNEL_KEY
+		https://modern.ircdocs.horse/#topic-message
+		If this mode is set, its’ value is the key that is required. 
+		Servers may validate the value (eg. to forbid spaces, as they make it harder to use the key in JOIN messages). 
+		If the value is invalid, they SHOULD return ERR_INVALIDMODEPARAM
+		*/
 };
 
 #endif
