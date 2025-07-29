@@ -35,14 +35,19 @@ class Channel
 		bool 						hasMode(char mode) const;
 
 		std::vector<Client *>		getChannelUsers(void) const;
-		std::vector<Client *>		getOperators(void) const;
-		Client						*getUser(const std::string &nickname) const;
-
 		void						addUser(Client *client);
 		void						removeUser(Client *client);
+		Client						*getUser(const std::string &nickname) const;
+		
+		std::vector<Client *>		getOperators(void) const;
 		void						addOperator(Client *client);
 		void						removeOperator(Client *client);
 
+		std::string					getChannelKey(void);
+		void						setChannelKey(const std::string &key);
+
+		unsigned int				getUserLimit(void) const;
+		void						setUserLimit(unsigned int limit);
 
 	private:
 		Channel(void);

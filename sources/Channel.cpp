@@ -78,21 +78,6 @@ std::vector<Client *> Channel::getChannelUsers(void) const
 	return _channelUsers;
 }
 
-std::vector<Client *> Channel::getOperators(void) const
-{
-	return _operators;
-}
-
-Client *Channel::getUser(const std::string &nickname) const
-{
-	for (std::vector<Client *>::const_iterator it = _channelUsers.begin(); it != _channelUsers.end(); ++it)
-	{
-		if ((*it)->getNickname() == nickname)
-			return *it;
-	}
-	return NULL;
-}
-
 void Channel::addUser(Client *client)
 {
 	if (client && std::find(_channelUsers.begin(), _channelUsers.end(), client) == _channelUsers.end())
@@ -109,6 +94,21 @@ void Channel::removeUser(Client *client)
 	}
 }
 
+Client *Channel::getUser(const std::string &nickname) const
+{
+	for (std::vector<Client *>::const_iterator it = _channelUsers.begin(); it != _channelUsers.end(); ++it)
+	{
+		if ((*it)->getNickname() == nickname)
+			return *it;
+	}
+	return NULL;
+}
+
+std::vector<Client *> Channel::getOperators(void) const
+{
+	return _operators;
+}
+
 void Channel::addOperator(Client *client)
 {
 	if (client && std::find(_operators.begin(), _operators.end(), client) == _operators.end())
@@ -123,4 +123,24 @@ void Channel::removeOperator(Client *client)
 		if (it != _operators.end())
 			_operators.erase(it);
 	}
+}
+
+std::string Channel::getChannelKey(void)
+{
+	return _channelKey;
+}
+
+void Channel::setChannelKey(const std::string &key)
+{
+	_channelKey = key;
+}
+
+unsigned int Channel::getUserLimit(void) const
+{
+	return _userLimit;
+}
+
+void Channel::setUserLimit(unsigned int limit)
+{
+	_userLimit = limit;
 }
