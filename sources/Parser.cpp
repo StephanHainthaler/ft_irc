@@ -114,8 +114,17 @@ int	Server::join(Client client, std::vector<std::string> command, size_t cmdNumb
 	if (cmdNumber < command.size()) 
 		return (std::cerr << "TOO MANY PARAMETERS" << std::endl, 1);
 
-	for (size_t i = 0; i < channelNames.size(), i++)
+	//CHECK IN HOW MANY CHANNELS THE USER IS CURRENTLY IN -->TOOMANYCHANNELS
+
+	for (size_t i = 0; i < channelNames.size(); i++)
 	{
+		if (channelNames[i][0] != '#')
+		{
+			sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_BADCHANMASK, client, channelNames[i]));
+			continue ;
+		}
+		
+
 		toJoinTo = getChannel(channelNames[i]);
 		// if (toJoinTo == NULL)
 		// {
@@ -124,26 +133,57 @@ int	Server::join(Client client, std::vector<std::string> command, size_t cmdNumb
 		// }
 		if (toJoinTo == NULL)
 		{
-			Channel newChannel = new Channel(channelNames[i], "", "", "");
+			Channel *newChannel = new Channel(channelNames[i], "", "");
 			addChannel(newChannel);
-			newChannel.addUser(client);
+			newChannel->addUser(&client);
 			//Give operATOR permissions
 		}
 		else
 		{
-			if (toJoinTo.hasMode('k') == true)
+			if (toJoinTo->getUser(client.getNickname()) != NULL)
 			{
-				if (i != keyNames.size() || keyNames[i].compare(toJoinTo->getKey) == 0)
+				sendMessageToClient(client.getSocketFD(), "You are already on that Channel\r\n");
+				continue ;
 			}
+				
+			else if (toJoinTo->hasMode('k') == true)
+			{
+				if (i != keyNames.size() - 1 || keyNames[i].compare(toJoinTo->getChannelKey()) != 0)
+				{
+					sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_BADCHANNELKEY, client, channelNames[i]));
+					continue ;
+				}
+			}
+			else if (toJoinTo->hasMode('b') == true)
+			{
+				//CHECK IF BANNED ON CHANNELLSIT
+				// if (????)
+				// {
+				// 	sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_BANNEDFROMCHAN, client, channelNames[i]));
+				// 	continue ;
+				// }
+			}
+			else if (toJoinTo->hasMode('l') == true)
+			{
+				if (toJoinTo->getChannelUsers().size() >= toJoinTo->getUserLimit())
+				{
+					sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_BANNEDFROMCHAN, client, channelNames[i]));
+					continue ;
+				}
+			}
+			else if (toJoinTo->hasMode('i') == true)
+			{
+				sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_INVITEONLYCHAN, client, channelNames[i]));
+				continue ;
+			}
+			toJoinTo->addUser(&client);
 		}
 
 	}
-
-	
-
-	std::cout << "TEST" << std::endl;
-	printVector(channelNames);
-	printVector(keyNames);
+	for (size_t i = 0; i < _channels.size(); i++)
+	{
+		std::cout << "Channel " << i + 1 << ": " << _channels[i]->getName() << std::endl;
+	}
 
 	return (0);
 
