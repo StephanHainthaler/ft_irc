@@ -15,6 +15,8 @@
 Channel::Channel(const std::string &name, const std::string &topic, const std::string &modes)
 	: _name(name), _topic(topic), _modes(modes)
 {
+	_userLimit = 100;
+	_channelKey = "";	
 }
 
 Channel::~Channel(void)

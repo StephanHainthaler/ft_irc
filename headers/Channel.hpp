@@ -50,8 +50,14 @@ class Channel
 		Channel	&operator=(const Channel &other);
 
 		std::string					_name;
-		std::string					_topic;	
+		std::string					_topic;
 		std::string					_modes;
+		std::vector<Client *>		_channelUsers;
+
+		std::string					_channelKey; // Channel key (password)
+		std::vector<Client *>		_operators; // (ClientClass objs with operator status)
+		unsigned int 				_userLimit; // User limit to channel
+
 		/* Mode flags
 		MODE +-i  				| Invite-only
 		MODE +-t  				| Restrict topic changes to channel operators
@@ -65,9 +71,6 @@ class Channel
 		Servers may validate the value (eg. to forbid spaces, as they make it harder to use the key in JOIN messages). 
 		If the value is invalid, they SHOULD return ERR_INVALIDMODEPARAM
 		*/
-
-		std::vector<Client *>		_channelUsers;
-		std::vector<Client *>		_operators; // (ClientClass objs with operator status)
 };
 
 #endif
