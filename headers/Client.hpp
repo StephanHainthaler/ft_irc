@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: shaintha <shaintha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/28 12:34:27 by shaintha         ###   ########.fr       */
+/*   Updated: 2025/07/28 15:37:37 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,9 @@
 #define ERR_USERONCHANNEL 443
 #define ERR_BADCHANMASK 476
 
+#define ERR_ALREADYREGISTERED 462
+#define ERR_PASSWDMISMATCH 464
+
 
 
 class Client
@@ -73,6 +76,10 @@ class Client
 		
 	public:
 
+		// Commands
+		void	nick(const std::string& nickName);
+		void	setUser(std::string& userName, int zero, char asterisk, std::string& realName);
+		
 		// Format checks
 		int		isNickValid(const std::string& nickname) const;
 		bool	isRealNameValid(const std::string& realName) const;
@@ -102,7 +109,7 @@ class Client
 		
 		// Setters
 		void	setNick(const std::string& nickname);
-		void	setUser(std::string& userName, int zero, char asterisk, std::string& realName); // 2nd parameter should always be zero and 3rd "*"
+		//void	setUser(std::string& userName, int zero, char asterisk, std::string& realName); // 2nd parameter should always be zero and 3rd "*"
 		void	setState(ClientState newState);
 		void	setSocketFD(int socketFD);
 		void	setIP(const std::string& ip);
