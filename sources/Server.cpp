@@ -277,9 +277,9 @@ void Server::run(void)
 	to manipulate options at the sockets API level, "level" is specified as SOL_SOCKET
 	SO_REUSEADDR 	BOOL 	Allows the socket to be bound to an address that is already in use- see bind.
 	*/
-	int yes = 1;
+	int yes = 1; // value to set the option to
 	if (setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0) // set socket option to allow address reuse
-        std::cerr << "Error. Failed to configure socket." << std::endl;
+        throw ServerException("Error. Failed to configure socket.");
 		
 	/* sockaddr_in vs sockaddr
 	sockaddr_in is specifically for handling IPv4 addresses
@@ -309,10 +309,10 @@ void Server::run(void)
 	}*/ // BUGFIX: implement this
 
 	// Now the server is ready to handle incoming connections and client input
-/* 	setupSignals();
+	setupSignals();
 	while (g_shutdown == 0)
 		handleEvents();
-    std::cout << "Shutting down gracefully..." << std::endl; */
+    throw ServerException("Server shutdown requested.");
     //cleanup
 	
 }
