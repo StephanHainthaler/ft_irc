@@ -86,6 +86,16 @@ int Server::getState(void) const
 	return _state;
 }
 
+Client *Server::getClient(std::string nickname) const
+{
+	for (std::map<int, Client *>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		if (it->second->getNickname() == nickname)
+			return it->second;
+	}
+	return NULL;
+}
+
 // Member functions - server actions
 void Server::sendMessageToClient(int clientFD, std::string message)
 {

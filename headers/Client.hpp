@@ -6,7 +6,7 @@
 /*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/28 17:20:00 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/30 15:35:51 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,13 +45,12 @@
 #define ERR_UNKNOWNMODE 472
 
 //ADDED BY STEPHAN
+#define RPL_NOTOPIC 331
 #define RPL_TOPIC 332
 #define RPL_INVITING 341
 #define ERR_USERNOTINCHANNEL 441
 #define ERR_NOTONCHANNEL 442
 #define ERR_USERONCHANNEL 443
-#define ERR_BADCHANMASK 476
-
 #define ERR_ALREADYREGISTERED 462
 #define ERR_PASSWDMISMATCH 464
 
