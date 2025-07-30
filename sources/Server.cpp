@@ -28,9 +28,8 @@ Server::Server(const unsigned int &port, const std::string &password): _port(por
 	// AF_INET specifies IPv4 protocol family, SOCK_STREAM specifies TCP protocol
     _serverFd = socket(AF_INET, SOCK_STREAM, 0); // Create a TCP/IPv4 socket
     if (_serverFd == -1) 
-	{
 		throw ServerException("Error. Failed to create socket.");
-	}
+
     
 	_serverAddress.sin_family = AF_INET; // set the address family to IPv4 addresses
 	_serverAddress.sin_addr.s_addr = INADDR_ANY; // server should accept connections from any IPv4 address, used when we don't want to bind our socket to any particular IP, to mak eit listen to all available IPs
@@ -103,7 +102,7 @@ void Server::sendMessageToClient(int clientFD, std::string message)
 {
 	if (clientFD < 0)
 	{
-		std::cerr << RED << "Error. Invalid IRC client fd." << DEFAULT << std::endl;
+		std::cerr << RED << "Error. Invalid client fd." << DEFAULT << std::endl;
 		return;
 	}
 	
@@ -222,10 +221,8 @@ void Server::handleEvents(void)
 		// Handle client input with poll
 		int poll_count = poll(_pollfds.begin().base(), _pollfds.size(), -1);
 		if (poll_count < 0) // poll returns the number of fds, which are ready to read, because of POLLIN
-		{
-			std::cerr << RED << "Error checking sockets for readiness. " << DEFAULT << std::endl;
-			break;
-		}
+			throw ServerException("Error. Could not check sockets for events.");
+		
 		else if (poll_count == 0) // no events occurred
 		{
 			std::cout << "No events occurred." << std::endl;
