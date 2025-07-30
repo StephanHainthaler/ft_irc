@@ -6,11 +6,12 @@
 /*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/07/28 15:37:20 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/30 17:37:50 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../headers/Client.hpp"
+#include "../headers/Server.hpp"
 #include "../headers/main.hpp"
 
 
@@ -25,7 +26,10 @@ Client::Client(int socketFD, int port)
 	_port = port;
 }
 
-Client::~Client() {}
+Client::~Client() 
+{
+    disconnect();
+}
 
 void Client::disconnect()
 {
@@ -69,10 +73,17 @@ void	Client::setNick(const std::string& nickName)
 		_nickname = nickName;
 }
 
-void	Client::nick(const std::string& nickName)
+void	Client::nick(const std::string& nickName/* , Server server */)
 {
+	std::string message = "";
 	if (isNickValid(nickName) == 0)
+	{
 		setNick(nickName);
+/* 		message += "You are now known as ";
+		message += _nickname;
+		message += "\r\n";
+		server.sendMessageToClient(_socketFD, message); */
+	}
 }
 
 int		Client::isUserValid(std::string& userName)
@@ -115,6 +126,7 @@ std::string Client::getFullIdentifier() const
 }
 
 // CHANNELS
+
 
 void	Client::joinChannel(const std::string& channelName)
 {

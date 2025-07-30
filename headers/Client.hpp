@@ -6,13 +6,14 @@
 /*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/28 15:37:37 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/30 17:34:55 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
-//#include "Server.hpp"
+
 #include "main.hpp"
+#include "Server.hpp"
 #include <cstddef>
 #include <iostream>
 #include <string>
@@ -44,18 +45,24 @@
 #define ERR_UNKNOWNMODE 472
 
 //ADDED BY STEPHAN
+#define RPL_NOTOPIC 331
 #define RPL_TOPIC 332
 #define RPL_INVITING 341
 #define ERR_USERNOTINCHANNEL 441
 #define ERR_NOTONCHANNEL 442
 #define ERR_USERONCHANNEL 443
-#define ERR_BADCHANMASK 476
-
 #define ERR_ALREADYREGISTERED 462
 #define ERR_PASSWDMISMATCH 464
+#define ERR_CHANNELISFULL 471
+#define ERR_INVITEONLYCHAN 473
+#define ERR_BANNEDFROMCHAN 474
+#define ERR_BADCHANNELKEY 475
+#define ERR_BADCHANMASK 476
+#define ERR_CHANOPRIVSNEEDED 482
 
 
-
+class Server;
+class Channel;
 class Client
 {
 	private:
@@ -77,7 +84,7 @@ class Client
 	public:
 
 		// Commands
-		void	nick(const std::string& nickName);
+		void	nick(const std::string& nickName/* , Server server */);
 		void	setUser(std::string& userName, int zero, char asterisk, std::string& realName);
 		
 		// Format checks
@@ -90,7 +97,7 @@ class Client
 
 		// Connection
 		int 						connectToServer(const std::string& serverIP, int serverPort);
-		int 						sendMessage(const std::string& message);
+		int							sendMessageToChannel(Channel* channel, std::string message);
 		std::vector<std::string> 	receiveCompleteMessages();
 		void 						disconnect();
 

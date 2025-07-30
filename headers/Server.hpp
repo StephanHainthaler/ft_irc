@@ -31,6 +31,7 @@
 # include "Client.hpp"
 # include "Channel.hpp"
 # include "Parser.hpp"
+#include "signal.h"
 
 # define MAX_MSG_LEN 1042
 
@@ -39,7 +40,11 @@
 # define NOT_RUNNING 0
 # define ERROR -1
 
+void signalHandler(int sig);
 void toLowercase(const std::string& str);
+
+class Client;
+class Channel;
 
 // useful: https:://www.geeksforgeeks.org/cpp/socket-programming-in-cpp/
 class Server
@@ -48,6 +53,10 @@ class Server
 		Server(const unsigned int &port, const std::string &password);
 		~Server(void);
 
+
+		// Signals
+		void setupSignals();
+		
 		// Getters
 		std::string 			getPassword(void) const;
 		Channel 				*getChannel(const std::string &channel_name) const;
@@ -58,6 +67,7 @@ class Server
 		// Member functions - server actions
 		void 					handleClientConnections(void); // like addClient
 		void 					sendMessageToClient(int clientFD, std::string message);
+		void					sendMessageToChannel(Client* client, Channel* channel, const std::string& message);
 		void 					handleClientMessage(int clientFd);
 		void 					handleClientDisconnections(int i);  // like removeClient
 		void 					handleEvents(void);
@@ -77,10 +87,11 @@ class Server
 		void					parseStringToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters);
 		void					executeCommand(Client client, std::vector<std::string> command);
 		void					printVector(std::vector<std::string> vector);
+		int						join(Client client, std::vector<std::string> command, size_t cmdNumber);
 		int						pass(Client client, std::vector<std::string> command, size_t cmdNumber);
-		int						kick(Client client, std::vector<std::string> command, size_t cmdNumber, std::string operatorName);
+		int						kick(Client client, std::vector<std::string> command, size_t cmdNumber);
 		int						invite(Client client, std::vector<std::string> command, size_t cmdNumber);
-		int						topic(std::vector<std::string> command, size_t cmdNumber);
+		int						topic(Client client, std::vector<std::string> command, size_t cmdNumber);
 		std::string 			createReplyToClient(int messageCode, Client client);
 		std::string				createReplyToClient(int messageCode, Client client, std::string argument);
 		std::string				createReplyToClient(int messageCode, Client client, std::string arg1, std::string arg2);
