@@ -87,6 +87,26 @@ void Server::printVector(std::vector<std::string> vector)
 	}
 }
 
+int		Server::pass(Client client, std::vector<std::string> command, size_t cmdNumber)
+{
+	if (command.size() < 2)
+		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NEEDMOREPARAMS, client, "PASS")), 1);
+	std::cout << client.getState() << std::endl;
+	//DOES NOT CHANGE
+	if (client.getState() >= AUTHENTICATED)
+		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_ALREADYREGISTERED, client)), 1);
+		
+	if (command[cmdNumber].compare(_password) == 0)
+	{
+		//MOVE THIS AFTER REGISTERED
+		sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_WELCOME, client));
+		
+		client.setState(AUTHENTICATED);
+	}
+	else
+		sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_PASSWDMISMATCH, client));
+	return (0);
+}
 
 int	Server::join(Client client, std::vector<std::string> command, size_t cmdNumber) //JOIN <channel>{,<channel>} [<key>{,<key>}]
 {
@@ -117,6 +137,10 @@ int	Server::join(Client client, std::vector<std::string> command, size_t cmdNumb
 
 	for (size_t i = 0; i < channelNames.size(); i++)
 	{
+		// if (channelNames.size() == 1 && channelNames[i].compare("0") == 0)
+		// {
+		// 	//PART WIH ALL CHANNELS
+		// }
 		if (channelNames[i][0] != '#')
 		{
 			sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_BADCHANMASK, client, channelNames[i]));
@@ -134,6 +158,7 @@ int	Server::join(Client client, std::vector<std::string> command, size_t cmdNumb
 			addChannel(newChannel);
 			newChannel->addUser(&client);
 			newChannel->addOperator(&client);
+			client.joinChannel(newChannel->getName());
 		}
 		else
 		{
@@ -180,28 +205,6 @@ int	Server::join(Client client, std::vector<std::string> command, size_t cmdNumb
 	// {
 	// 	std::cout << "Channel " << i + 1 << ": " << _channels[i]->getName() << std::endl;
 	// }
-	return (0);
-}
-
-
-int		Server::pass(Client client, std::vector<std::string> command, size_t cmdNumber)
-{
-	if (command.size() < 2)
-		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NEEDMOREPARAMS, client, "PASS")), 1);
-	std::cout << client.getState() << std::endl;
-	//DOES NOT CHANGE
-	if (client.getState() >= AUTHENTICATED)
-		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_ALREADYREGISTERED, client)), 1);
-		
-	if (command[cmdNumber].compare(_password) == 0)
-	{
-		//MOVE THIS AFTER REGISTERED
-		sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_WELCOME, client));
-		
-		client.setState(AUTHENTICATED);
-	}
-	else
-		sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_PASSWDMISMATCH, client));
 	return (0);
 }
 
