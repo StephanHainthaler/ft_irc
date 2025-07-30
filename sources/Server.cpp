@@ -256,6 +256,14 @@ void Server::handleEvents(void)
 
 void Server::run(void)
 {
+	/* linux.die.net/man/2/setsockopt AND https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-setsockopt
+	to manipulate options at the sockets API level, "level" is specified as SOL_SOCKET
+	SO_REUSEADDR 	BOOL 	Allows the socket to be bound to an address that is already in use- see bind.
+	*/
+	int yes = 1;
+	if (setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0) // set socket option to allow address reuse
+        std::cerr << "Error. Failed to configure socket." << std::endl;
+		
 	/* sockaddr_in vs sockaddr
 	sockaddr_in is specifically for handling IPv4 addresses
 	sockaddr is a generic structure that can be used for both IPv4 and IPv6 addresses
