@@ -40,6 +40,7 @@
 # define NOT_RUNNING 0
 # define ERROR -1
 
+void signalHandler(int sig);
 void toLowercase(const std::string& str);
 
 class Client;
@@ -52,6 +53,10 @@ class Server
 		Server(const unsigned int &port, const std::string &password);
 		~Server(void);
 
+
+		// Signals
+		void setupSignals();
+		
 		// Getters
 		std::string 			getPassword(void) const;
 		Channel 				*getChannel(const std::string &channel_name) const;
@@ -62,6 +67,7 @@ class Server
 		// Member functions - server actions
 		void 					handleClientConnections(void); // like addClient
 		void 					sendMessageToClient(int clientFD, std::string message);
+		void					sendMessageToChannel(Client* client, Channel* channel, const std::string& message);
 		void 					handleClientMessage(int clientFd);
 		void 					handleClientDisconnections(int i);  // like removeClient
 		void 					handleEvents(void);

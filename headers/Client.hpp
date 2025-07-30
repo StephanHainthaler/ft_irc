@@ -6,7 +6,7 @@
 /*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/30 15:35:51 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/30 17:34:55 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,12 @@
 #define ERR_USERONCHANNEL 443
 #define ERR_ALREADYREGISTERED 462
 #define ERR_PASSWDMISMATCH 464
+#define ERR_CHANNELISFULL 471
+#define ERR_INVITEONLYCHAN 473
+#define ERR_BANNEDFROMCHAN 474
+#define ERR_BADCHANNELKEY 475
+#define ERR_BADCHANMASK 476
+#define ERR_CHANOPRIVSNEEDED 482
 
 
 class Server;
@@ -91,7 +97,7 @@ class Client
 
 		// Connection
 		int 						connectToServer(const std::string& serverIP, int serverPort);
-		int 						sendMessage(const std::string& message);
+		int							sendMessageToChannel(Channel* channel, std::string message);
 		std::vector<std::string> 	receiveCompleteMessages();
 		void 						disconnect();
 

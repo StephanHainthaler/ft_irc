@@ -17,6 +17,8 @@
 
 # include "Client.hpp"
 
+class Client;
+class Server;
 class Channel
 {
 	public:
@@ -48,6 +50,8 @@ class Channel
 		unsigned int				getUserLimit(void) const;
 		void						setUserLimit(unsigned int limit);
 
+		int							sendMessageToChannel(Client* client, std::string message);
+
 	private:
 		Channel(void);
 		Channel(const Channel &other);
@@ -76,5 +80,3 @@ class Channel
 		If the value is invalid, they SHOULD return ERR_INVALIDMODEPARAM
 		*/
 };
-
-#endif

@@ -12,6 +12,8 @@
 
 #include "../headers/Server.hpp"
 
+volatile sig_atomic_t g_shutdown = 0;
+
 /* sockaddr_in / sockaddr_in6 
 is a structure specifically for handling IPv4 addresses
 subject: "communication between client and server has to be done via TCP/IP (v4 or v6)"
@@ -114,6 +116,21 @@ void Server::sendMessageToClient(int clientFD, std::string message)
 		if (sent == -1) 
 			break;
 		totalSent += sent;
+	}
+}
+
+void Server::sendMessageToChannel(Client* client, Channel* channel, const std::string& message)
+{
+	std::vector<Client*> usersInChannel = channel->getChannelUsers();
+	
+	for (size_t i = 0; i < usersInChannel.size(); i++)
+	{
+		Client* targetClient = usersInChannel[i];
+		
+		if (targetClient != client)
+		{
+			sendMessageToClient(targetClient->getSocketFD(), message);
+		}
 	}
 }
 
@@ -284,7 +301,12 @@ void Server::run(void)
 	}*/ // BUGFIX: implement this
 
 	// Now the server is ready to handle incoming connections and client input
-	handleEvents();
+/* 	setupSignals();
+	while (g_shutdown == 0)
+		handleEvents();
+    std::cout << "Shutting down gracefully..." << std::endl; */
+    //cleanup
+	
 }
 
 // Member functions - user triggered actions
@@ -320,6 +342,21 @@ void toLowercase(const std::string& str)
 {
 	std::string result = str;
 	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+}
+
+void signalHandler(int sig)
+{
+    if (sig == SIGINT || sig == SIGTERM)
+	{
+        g_shutdown = 1;
+    }
+}
+
+void Server::setupSignals()
+{
+	signal(SIGINT, signalHandler);
+	signal(SIGTERM, signalHandler);
+	signal(SIGPIPE, SIG_IGN);
 }
 
 // For nickname changes within the same Client -- this will allow lower/upper case changes, for example: pia to Pia

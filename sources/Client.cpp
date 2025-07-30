@@ -6,7 +6,7 @@
 /*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/07/28 17:20:13 by juitz            ###   ########.fr       */
+/*   Updated: 2025/07/30 17:37:50 by juitz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,10 @@ Client::Client(int socketFD, int port)
 	_port = port;
 }
 
-Client::~Client() {}
+Client::~Client() 
+{
+    disconnect();
+}
 
 void Client::disconnect()
 {
@@ -123,6 +126,7 @@ std::string Client::getFullIdentifier() const
 }
 
 // CHANNELS
+
 
 void	Client::joinChannel(const std::string& channelName)
 {
