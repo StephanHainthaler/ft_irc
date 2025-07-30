@@ -146,9 +146,9 @@ fcntl(sockfd, F_SETFL, O_NONBLOCK)
 send(client_fd, buffer, len, 0)
 recv(client_fd, buffer, sizeof(buffer), 0)
 poll(fds, nfds, timeout)
+setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes))
 
 ***MIGHT BE USEFUL:
-setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes))
 lseek(fd, 0, SEEK_END)
 
 ***UNUSED FUNCTIONS:
