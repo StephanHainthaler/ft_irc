@@ -147,6 +147,8 @@ send(client_fd, buffer, len, 0)
 recv(client_fd, buffer, sizeof(buffer), 0)
 poll(fds, nfds, timeout)
 setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes))
+- signal(SIGINT, handle_sigint)
+- sigaction(SIGINT, &sa, NULL)
 
 ***MIGHT BE USEFUL:
 lseek(fd, 0, SEEK_END)
@@ -161,7 +163,5 @@ htonl()
 ntohl(addr.sin_addr.s_addr)
 inet_addr("127.0.0.1")
 inet_ntoa(addr.sin_addr)
-signal(SIGINT, handle_sigint)
-sigaction(SIGINT, &sa, NULL)
 fstat(fd, &info)
 */
