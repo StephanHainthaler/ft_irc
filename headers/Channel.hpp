@@ -78,5 +78,8 @@ class Channel
 		If this mode is set, its’ value is the key that is required. 
 		Servers may validate the value (eg. to forbid spaces, as they make it harder to use the key in JOIN messages). 
 		If the value is invalid, they SHOULD return ERR_INVALIDMODEPARAM
+
+		if the channel has a key, can join only if the key is provided, meaning with
+		JOIN #foo key
 		*/
 };
