@@ -28,7 +28,7 @@ Client::Client(int socketFD, int port)
 
 Client::~Client() 
 {
-    disconnect();
+    // disconnect();
 }
 
 void Client::disconnect()
