@@ -67,7 +67,7 @@ void Server::gracefulShutdown()
 	std::cout << YELLOW << "\n[SERVER] Starting graceful shutdown..." << DEFAULT << std::endl;
 	
 	// Notify all connected clients about server shutdown
-	std::string shutdownMsg = "ERROR :Server shutting down\r\n";
+	std::string shutdownMsg = "ERROR: Server shutting down\r\n";
 	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 	{
 		sendMessageToClient(it->first, shutdownMsg);
@@ -300,9 +300,7 @@ void Server::run(void)
 	setupSignals();
 	while (g_shutdown == 0)
 		handleEvents();
-    std::cout << "Shutting down gracefully..." << std::endl;
-    //cleanup
-	
+    gracefulShutdown();
 }
 
 // Member functions - user triggered actions
@@ -344,6 +342,7 @@ void signalHandler(int sig)
 {
     if (sig == SIGINT || sig == SIGTERM)
 	{
+		
         g_shutdown = 1;
     }
 }
