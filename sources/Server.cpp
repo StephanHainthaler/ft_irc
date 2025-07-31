@@ -26,7 +26,7 @@ Server::Server(const unsigned int &port, const std::string &password): _port(por
 	if (port <= 0 || port > 65535)
 		throw ServerException("Error. Invalid port number.");
 	// AF_INET specifies IPv4 protocol family, SOCK_STREAM specifies TCP protocol
-    _serverFd = socket(AF_INET, SOCK_STREAM, 0); // Create a TCP/IPv4 socket
+    _serverFd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0); // Create a TCP/IPv4 socket
     if (_serverFd == -1) 
 		throw ServerException("Error. Failed to create socket.");
 
@@ -180,7 +180,7 @@ void	Server::handleClientMessage(int clientFd)
 	char 	buffer[MAX_MSG_LEN];
 
 	bzero(buffer, MAX_MSG_LEN);
-    int bytesReceived = recv(clientFd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT); // Flag for non-blocking
+    int bytesReceived = recv(clientFd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT); // Flag which makes the call non-blocking
     if (bytesReceived > 0)
     {
 		std::cout << "Client: " << buffer << std::endl; // first one is IRC client
@@ -298,8 +298,8 @@ void Server::run(void)
 	}
 	_state = RUNNING; // Server state - 1: running
 	
-	// subject: "All I/O operations must be non-blocking"
-	/*if (fcntl(_serverFd, F_SETFL, SOCK_NONBLOCK) == -1) // allow server to handle multiple clients at once
+	// subject: "All I/O operations must be non-blocking" - set non-blocking at socket creation
+	/*if (fcntl(_serverFd, F_SETFL, O_NONBLOCK) == -1) // allow server to handle multiple clients at once
 	{
 		close(_serverFd);
 		throw ServerException("Error. Failed to set socket to non-blocking mode.");
