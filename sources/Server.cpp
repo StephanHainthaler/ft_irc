@@ -304,8 +304,7 @@ void Server::run(void)
 	while (g_shutdown == 0)
 		handleEvents();
     throw ServerException("Server shutdown requested.");
-    //cleanup
-	
+	gracefulShutdown();
 }
 
 // Member functions - user triggered actions
@@ -415,6 +414,44 @@ void Server::handleNickCommand(Client* client, const std::string& newNickname)
     
     // Nickname is valid and available
     client->setNick(newNickname);
+}
+
+
+std::string Server::getPassword(void) const
+{
+	return _password;
+}
+
+Channel *Server::getChannel(const std::string &channel_name) const
+{
+	for (std::vector<Channel *>::const_iterator it = _channels.begin(); it != _channels.end(); ++it)
+	{
+		if ((*it)->getName() == channel_name)
+			return *it;
+	}
+	return NULL;
+}
+
+// Getters
+
+sockaddr_in Server::getServerAddress(void) const
+{
+	return _serverAddress;
+}
+
+int Server::getState(void) const
+{
+	return _state;
+}
+
+Client *Server::getClient(std::string nickname) const
+{
+	for (std::map<int, Client *>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		if (it->second->getNickname() == nickname)
+			return it->second;
+	}
+	return NULL;
 }
 
 // Exception
