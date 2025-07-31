@@ -96,6 +96,9 @@ class Server
 		std::string				createReplyToClient(int messageCode, Client client, std::string argument);
 		std::string				createReplyToClient(int messageCode, Client client, std::string arg1, std::string arg2);
 
+		// Cleanup
+		void					gracefulShutdown();
+
 		// Exception
 		class ServerException: public std::exception
 		{

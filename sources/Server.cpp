@@ -61,40 +61,34 @@ Server::~Server(void)
 	} 
 }
 
-// Getters
-std::string Server::getPassword(void) const
+void Server::gracefulShutdown()
 {
-	return _password;
-}
-
-Channel *Server::getChannel(const std::string &channel_name) const
-{
-	for (std::vector<Channel *>::const_iterator it = _channels.begin(); it != _channels.end(); ++it)
+	std::cout << YELLOW << "\n[SERVER] Starting graceful shutdown..." << DEFAULT << std::endl;
+	
+	// Notify all connected clients about server shutdown
+	std::string shutdownMsg = "ERROR: Server shutting down\r\n";
+	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 	{
-		if ((*it)->getName() == channel_name)
-			return *it;
+		sendMessageToClient(it->first, shutdownMsg);
+		std::cout << "Notified client " << it->first << " about shutdown" << std::endl;
 	}
-	return NULL;
-}
-
-sockaddr_in Server::getServerAddress(void) const
-{
-	return _serverAddress;
-}
-
-int Server::getState(void) const
-{
-	return _state;
-}
-
-Client *Server::getClient(std::string nickname) const
-{
-	for (std::map<int, Client *>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
+	
+	// Give clients a moment to receive the message
+	usleep(100000); // 100ms
+	
+	// Close all client connections
+	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 	{
-		if (it->second->getNickname() == nickname)
-			return it->second;
+		close(it->first);
 	}
-	return NULL;
+	_clients.clear();
+	
+	// Clean up channels
+	for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+	{
+		delete *it;
+	}
+	_channels.clear();
 }
 
 // Member functions - server actions
@@ -216,7 +210,7 @@ void Server::handleEvents(void)
 
 	std::cout << GRAY << "Server is now running and waiting for events..." << DEFAULT << std::endl;
 
-	while (_state == RUNNING) // while server is running
+	while (_state == RUNNING && !g_shutdown) // while server is running and no shutdown signal
 	{
 		// Handle client input with poll
 		int poll_count = poll(_pollfds.begin().base(), _pollfds.size(), -1);
@@ -310,8 +304,7 @@ void Server::run(void)
 	while (g_shutdown == 0)
 		handleEvents();
     throw ServerException("Server shutdown requested.");
-    //cleanup
-	
+	gracefulShutdown();
 }
 
 // Member functions - user triggered actions
@@ -353,6 +346,7 @@ void signalHandler(int sig)
 {
     if (sig == SIGINT || sig == SIGTERM)
 	{
+		
         g_shutdown = 1;
     }
 }
@@ -420,6 +414,44 @@ void Server::handleNickCommand(Client* client, const std::string& newNickname)
     
     // Nickname is valid and available
     client->setNick(newNickname);
+}
+
+
+std::string Server::getPassword(void) const
+{
+	return _password;
+}
+
+Channel *Server::getChannel(const std::string &channel_name) const
+{
+	for (std::vector<Channel *>::const_iterator it = _channels.begin(); it != _channels.end(); ++it)
+	{
+		if ((*it)->getName() == channel_name)
+			return *it;
+	}
+	return NULL;
+}
+
+// Getters
+
+sockaddr_in Server::getServerAddress(void) const
+{
+	return _serverAddress;
+}
+
+int Server::getState(void) const
+{
+	return _state;
+}
+
+Client *Server::getClient(std::string nickname) const
+{
+	for (std::map<int, Client *>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		if (it->second->getNickname() == nickname)
+			return it->second;
+	}
+	return NULL;
 }
 
 // Exception
