@@ -28,9 +28,8 @@ Server::Server(const unsigned int &port, const std::string &password): _port(por
 	// AF_INET specifies IPv4 protocol family, SOCK_STREAM specifies TCP protocol
     _serverFd = socket(AF_INET, SOCK_STREAM, 0); // Create a TCP/IPv4 socket
     if (_serverFd == -1) 
-	{
 		throw ServerException("Error. Failed to create socket.");
-	}
+
     
 	_serverAddress.sin_family = AF_INET; // set the address family to IPv4 addresses
 	_serverAddress.sin_addr.s_addr = INADDR_ANY; // server should accept connections from any IPv4 address, used when we don't want to bind our socket to any particular IP, to mak eit listen to all available IPs
@@ -97,7 +96,7 @@ void Server::sendMessageToClient(int clientFD, std::string message)
 {
 	if (clientFD < 0)
 	{
-		std::cerr << RED << "Error. Invalid IRC client fd." << DEFAULT << std::endl;
+		std::cerr << RED << "Error. Invalid client fd." << DEFAULT << std::endl;
 		return;
 	}
 	
@@ -216,12 +215,8 @@ void Server::handleEvents(void)
 		// Handle client input with poll
 		int poll_count = poll(_pollfds.begin().base(), _pollfds.size(), -1);
 		if (poll_count < 0) // poll returns the number of fds, which are ready to read, because of POLLIN
-		{
-			if (errno == EINTR && g_shutdown) // Interrupted by signal
-				break;
-			std::cerr << RED << "Error checking sockets for readiness. " << DEFAULT << std::endl;
-			break;
-		}
+			throw ServerException("Error. Could not check sockets for events.");
+		
 		else if (poll_count == 0) // no events occurred
 		{
 			std::cout << "No events occurred." << std::endl;
@@ -269,6 +264,14 @@ void Server::handleEvents(void)
 
 void Server::run(void)
 {
+	/* linux.die.net/man/2/setsockopt AND https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-setsockopt
+	to manipulate options at the sockets API level, "level" is specified as SOL_SOCKET
+	SO_REUSEADDR 	BOOL 	Allows the socket to be bound to an address that is already in use- see bind.
+	*/
+	int yes = 1; // value to set the option to
+	if (setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0) // set socket option to allow address reuse
+        throw ServerException("Error. Failed to configure socket.");
+		
 	/* sockaddr_in vs sockaddr
 	sockaddr_in is specifically for handling IPv4 addresses
 	sockaddr is a generic structure that can be used for both IPv4 and IPv6 addresses
@@ -300,7 +303,9 @@ void Server::run(void)
 	setupSignals();
 	while (g_shutdown == 0)
 		handleEvents();
-    gracefulShutdown();
+    throw ServerException("Server shutdown requested.");
+    //cleanup
+	
 }
 
 // Member functions - user triggered actions
