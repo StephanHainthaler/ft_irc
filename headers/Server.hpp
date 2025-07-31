@@ -31,7 +31,7 @@
 # include "Client.hpp"
 # include "Channel.hpp"
 # include "Parser.hpp"
-# include "signal.h"
+#include "signal.h"
 
 # define MAX_MSG_LEN 1042
 
