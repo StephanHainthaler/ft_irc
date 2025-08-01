@@ -6,7 +6,7 @@
 /*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/08/01 17:21:52 by marvin           ###   ########.fr       */
+/*   Updated: 2025/08/01 19:23:36 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,14 +48,14 @@ void Client::disconnect()
 int	Client::isNickValid(const std::string& nickname) const
 {
 	if (nickname.size() > 9 || nickname.size() == 0)
-			return (std::cerr << "Error: Nickname must be at least 1 character and can only be max 9 characters long." << std::endl, ERR_ERRONEUSNICKNAME);
+			return (ERR_ERRONEUSNICKNAME);
 	if (nickname[0] == '$' || nickname[0] == ':' || nickname[0] == '#' || nickname[0] == '~' || nickname[0] == '&' || nickname[0] == '+')
-			return (std::cerr << "Error: Nickname invalid." << std::endl, ERR_ERRONEUSNICKNAME);
+			return (ERR_ERRONEUSNICKNAME);
 
 	for (size_t i = 0; i < nickname.size(); i++)
 	{
 		if (nickname[i] == ' ' || nickname[i] == ',' || nickname[i] == '*' || nickname[i] == '?' || nickname[i] == '!' || nickname[i] == '@')
-			return (std::cerr << "Error: Nickname invalid." << std::endl, ERR_ERRONEUSNICKNAME);
+			return (ERR_ERRONEUSNICKNAME);
 	}
 	return (0);
 }

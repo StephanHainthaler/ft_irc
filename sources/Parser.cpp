@@ -102,8 +102,11 @@ int		Server::pass(Client &client, std::vector<std::string> command, size_t cmdNu
 int	Server::nick(Client &client, std::vector<std::string> command, size_t cmdNumber)
 {
 	if (client.isNickValid(command[cmdNumber]) != 0)
-		return (1);
+		return (sendMessageToClient(client.getSocketFD(), client.getNickname() + ":Erroneus nickname"), 1);
+	std::string oldNick = client.getNickname().empty() ? "*" : client.getNickname();
 	client.setNick(command[cmdNumber]);
+	std::string nickResponse = ":" + oldNick + "!" + client.getUsername() + "@" + client.getHostname() + " NICK :" + client.getNickname();
+    sendMessageToClient(client.getSocketFD(), nickResponse);
 	sendMessageToClient(client.getSocketFD(), "You are now known as " + client.getNickname());
 	if (client.getNickname().empty() == false && client.getUsername().empty() == false && client.getRealname().empty() == false)
 	{
