@@ -37,23 +37,23 @@ void	Server::executeCommand(Client client, std::vector<std::string> command)
 	//CHECK for AUTHENTICATIOn when using ALL but PASS
 	// if (client.getState() < AUTHENTICATED && !(command[i].compare("PASS") == 0))
 	// {
-	// 	sendMessageToClient(client.getSocketFD(), "Authentication required! Please enter the server password with command PASS.\r\n");
+	// 	sendMessageToClient(client.getSocketFD(), "Authentication required! Please enter the server password with command PASS.");
 	// 	return ;
 	// }
 
 	if (command[0].compare("PASS") == 0)
 		pass(client, command, 1);
-	else if (command[i].compare("NICK") == 0)
+	else if (command[0].compare("NICK") == 0)
 	{
-		client.nick(command[i + 1]);
+		std::string message = "";
+		client.nick(command[1]);
 		message += "You are now known as ";
 		message += client.getNickname();
-		message += "\r\n";
 		sendMessageToClient(client.getSocketFD(), message);
 	} 
-	else if (command[i].compare("USER") == 0 && client.getState() < REGISTERED)
+	else if (command[0].compare("USER") == 0 && client.getState() < REGISTERED)
 	{
-		client.setUser(command[i + 1], 0, '*', command[i + 2]);
+		client.setUser(command[1], 0, '*', command[2]);
 		client.isFullyRegistered();
 	}
 	else if (command[0].compare("JOIN") == 0)
@@ -94,7 +94,7 @@ int		Server::pass(Client client, std::vector<std::string> command, size_t cmdNum
 	else if (command[cmdNumber].compare(_password) == 0)
 	{
 		client.setState(AUTHENTICATED);
-		sendMessageToClient(client.getSocketFD(), "You are now authenticated! Please input your nickname and username with the NICK and USER command respectively!\r\n");
+		sendMessageToClient(client.getSocketFD(), "You are now authenticated! Please input your nickname and username with the NICK and USER command respectively!");
 	}
 	else
 		sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_PASSWDMISMATCH, client));
@@ -154,7 +154,7 @@ int	Server::join(Client client, std::vector<std::string> command, size_t cmdNumb
 		{
 			if (toJoinTo->getUser(client.getNickname()) != NULL)
 			{
-				sendMessageToClient(client.getSocketFD(), "You are already on that Channel\r\n");
+				sendMessageToClient(client.getSocketFD(), "You are already on that Channel");
 				continue ;
 			}
 			else if (toJoinTo->hasMode('k') == true)
@@ -189,7 +189,7 @@ int	Server::join(Client client, std::vector<std::string> command, size_t cmdNumb
 			}
 			toJoinTo->addUser(&client);
 			//	1. actually to all in the channel
-			sendMessageToClient(client.getSocketFD(), client.getFullIdentifier() + " JOIN " + toJoinTo->getName() + "\r\n");
+			sendMessageToClient(client.getSocketFD(), client.getFullIdentifier() + " JOIN " + toJoinTo->getName());
 
 			//	2. Send topic of channel
 			if (toJoinTo->getTopic().empty() == true)
@@ -394,7 +394,7 @@ std::string Server::createReplyToClient(int messageCode, Client client)
 		else
 			returnMessage = client.getNickname() + " :Password incorrect"; //SHPUlD THEpreTicAlly Never APpeaR
 	}
-	return (returnMessage + "\r\n");
+	return (returnMessage);
 }
 
 std::string Server::createReplyToClient(int messageCode, Client client, std::string argument)
@@ -429,7 +429,7 @@ std::string Server::createReplyToClient(int messageCode, Client client, std::str
 		returnMessage = client.getNickname() + " " + argument + " :Bad Channel Mask";
 	else if (messageCode == ERR_CHANOPRIVSNEEDED)
 		returnMessage = client.getNickname() + " " + argument + " :You're not channel operator";
-	return (returnMessage + "\r\n");
+	return (returnMessage);
 }
 
 std::string Server::createReplyToClient(int messageCode, Client client, std::string arg1, std::string arg2)
@@ -446,5 +446,5 @@ std::string Server::createReplyToClient(int messageCode, Client client, std::str
 		returnMessage = client.getNickname() + " " + arg1 + " " + arg2 + " :They aren't on that channel";
 	else if (messageCode == ERR_USERONCHANNEL)
 		returnMessage = client.getNickname() + " " + arg1 + " " + arg2 + " :is already on channel";
-	return (returnMessage + "\r\n");
+	return (returnMessage);
 }

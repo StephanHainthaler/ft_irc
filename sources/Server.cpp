@@ -66,7 +66,7 @@ void Server::gracefulShutdown()
 	std::cout << YELLOW << "\n[SERVER] Starting graceful shutdown..." << DEFAULT << std::endl;
 	
 	// Notify all connected clients about server shutdown
-	std::string shutdownMsg = "ERROR: Server shutting down\r\n";
+	std::string shutdownMsg = "ERROR: Server shutting down";
 	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 	{
 		sendMessageToClient(it->first, shutdownMsg);
@@ -136,6 +136,8 @@ void Server::sendMessageToClient(int clientFD, std::string message)
 		return;
 	}
 	
+	message += "\r\n";
+
 	long long totalSent = 0;
 	long long msgLength = message.length();
 
@@ -197,7 +199,7 @@ void Server::handleClientConnections(void)
 	Client *newClient = new Client(clientFd, _port); // create a new Client object
 	_clients.insert(std::make_pair(clientFd, newClient)); // add the new client to the map
 
-	sendMessageToClient(clientFd, "Please enter the password to access the StePiaAn IRC server!\r\n"); // send welcome message to IRC client
+	sendMessageToClient(clientFd, "Please enter the password to access the StePiaAn IRC server!"); // send welcome message to IRC client
 }
 
 /* https://modern.ircdocs.horse/
