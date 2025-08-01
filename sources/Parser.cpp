@@ -12,7 +12,7 @@
 
 #include "../headers/Server.hpp"
 
-void	Server::handleInput(Client client, std::string input)
+void	Server::handleInput(Client *client, std::string input)
 {
 	std::vector<std::string>	command;
 
@@ -22,45 +22,52 @@ void	Server::handleInput(Client client, std::string input)
 
 void    Server::parseStringToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters)
 {
+	// char *copy = NULL;
+	// input.copy(copy, input.length(), 0);
+
 	for (char* token = std::strtok((char *)input.c_str(), delimiters); token; token = std::strtok(NULL, delimiters))
 	{
-		if (token[0] == '\0')
-			vector->push_back("");	
-		else
-			vector->push_back(token);
+		// if (token[0] == ':')
+		// {
+		// 	std::cout << "Found a : in " << token << std::endl;
+		// 	std::cout << "Hackstack: " << copy << ", Needle: " << token << std::endl;
+		// 	std::cout << std::strstr((char *)copy, token) << std::endl;
+		// 	token = std::strstr((char *)copy, token);
+		// 	vector->push_back(token);
+		// 	return ;
+		// }
+		vector->push_back(token);
 	}
 		
 }
 
-void	Server::executeCommand(Client client, std::vector<std::string> command)
+void	Server::executeCommand(Client *client, std::vector<std::string> command)
 {
-	//CHECK for AUTHENTICATIOn when using ALL but PASS
-	// if (client.getState() < AUTHENTICATED && !(command[i].compare("PASS") == 0))
-	// {
-	// 	sendMessageToClient(client.getSocketFD(), "Authentication required! Please enter the server password with command PASS.");
-	// 	return ;
-	// }
-
-	if (command[0].compare("PASS") == 0)
-		pass(client, command, 1);
+	if (client->getState() < AUTHENTICATED && !(command[0].compare("PASS") == 0))
+	{
+		sendMessageToClient(client->getSocketFD(), "Authentication required! Please enter the server password with command PASS.");
+		return ;
+	}
+	else if (command[0].compare("PASS") == 0)
+		pass(*client, command, 1);
 	else if (command[0].compare("NICK") == 0)
-		nick(client, command, 1);
+		nick(*client, command, 1);
 	else if (command[0].compare("USER") == 0)
-		user(client, command, 1);
+		user(*client, command, 1);
 	else if (command[0].compare("JOIN") == 0)
-		join(client, command, 1);
+		join(*client, command, 1);
 	else if (command[0].compare("PRIVMSG") == 0)
 		std::cout << "PRIVMSG" << std::endl;
 	else if (command[0].compare("KICK") == 0)
-		kick(client, command, 1);
+		kick(*client, command, 1);
 	else if (command[0].compare("INVITE") == 0)
-		invite(client, command, 1);
+		invite(*client, command, 1);
 	else if (command[0].compare("TOPIC") == 0)
-		topic(client, command, 1);
+		topic(*client, command, 1);
 	else if (command[0].compare("MODE") == 0)
 		std::cout << "MODE" << std::endl;
 	else
-		sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_UNKNOWNCOMMAND, client, command[0]));
+		sendMessageToClient(client->getSocketFD(), createReplyToClient(ERR_UNKNOWNCOMMAND, *client, command[0]));
 }
 
 void Server::printVector(std::vector<std::string> vector)
@@ -76,7 +83,7 @@ void Server::printVector(std::vector<std::string> vector)
 	}
 }
 
-int		Server::pass(Client client, std::vector<std::string> command, size_t cmdNumber)
+int		Server::pass(Client &client, std::vector<std::string> command, size_t cmdNumber)
 {
 	if (command.size() < 2)
 		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NEEDMOREPARAMS, client, "PASS")), 1);
@@ -92,7 +99,7 @@ int		Server::pass(Client client, std::vector<std::string> command, size_t cmdNum
 	return (0);
 }
 
-int	Server::nick(Client client, std::vector<std::string> command, size_t cmdNumber)
+int	Server::nick(Client &client, std::vector<std::string> command, size_t cmdNumber)
 {
 	if (client.isNickValid(command[cmdNumber]) != 0)
 		return (1);
@@ -106,7 +113,7 @@ int	Server::nick(Client client, std::vector<std::string> command, size_t cmdNumb
 	return (0);
 }
 
-int	Server::user(Client client, std::vector<std::string> command, size_t cmdNumber)
+int	Server::user(Client &client, std::vector<std::string> command, size_t cmdNumber)
 {
 	if (!(client.getState() < REGISTERED))
 		return (1);
@@ -124,7 +131,7 @@ int	Server::user(Client client, std::vector<std::string> command, size_t cmdNumb
 	return (0);
 }
 
-int	Server::join(Client client, std::vector<std::string> command, size_t cmdNumber) //JOIN <channel>{,<channel>} [<key>{,<key>}]
+int	Server::join(Client &client, std::vector<std::string> command, size_t cmdNumber) //JOIN <channel>{,<channel>} [<key>{,<key>}]
 {
 	std::vector<std::string>	channelNames, keyNames;
 	Channel						*toJoinTo;
@@ -233,7 +240,7 @@ int	Server::join(Client client, std::vector<std::string> command, size_t cmdNumb
 	return (0);
 }
 
-int	Server::kick(Client client, std::vector<std::string> command, size_t cmdNumber) //KICK <channel> <user>[,<user>,...] [:<comment>]
+int	Server::kick(Client &client, std::vector<std::string> command, size_t cmdNumber) //KICK <channel> <user>[,<user>,...] [:<comment>]
 {
 	std::vector<std::string>	users;
 	std::string					channelName, comment = "for NO Reason";
@@ -291,7 +298,7 @@ int	Server::kick(Client client, std::vector<std::string> command, size_t cmdNumb
 	return (0);
 }
 
-int	Server::invite(Client client, std::vector<std::string> command, size_t cmdNumber) //INVITE <nickname> <channel>
+int	Server::invite(Client &client, std::vector<std::string> command, size_t cmdNumber) //INVITE <nickname> <channel>
 {
 	std::string	nickname, channelName;
 	Channel		*toInviteTo;
@@ -350,7 +357,7 @@ int	Server::invite(Client client, std::vector<std::string> command, size_t cmdNu
 	return (0);
 }
 
-int	Server::topic(Client client, std::vector<std::string> command, size_t cmdNumber) //TOPIC <channel> [<topic>]
+int	Server::topic(Client &client, std::vector<std::string> command, size_t cmdNumber) //TOPIC <channel> [<topic>]
 {
 	std::string	channelName, topic;
 	Channel		*toTakeTopicFrom;
@@ -402,7 +409,7 @@ int	Server::topic(Client client, std::vector<std::string> command, size_t cmdNum
 // int		Server::mode( size_t cmdNumber)
 
 
-std::string Server::createReplyToClient(int messageCode, Client client)
+std::string Server::createReplyToClient(int messageCode, Client &client)
 {
 	std::string	returnMessage = "";
 
@@ -420,7 +427,7 @@ std::string Server::createReplyToClient(int messageCode, Client client)
 	return (returnMessage);
 }
 
-std::string Server::createReplyToClient(int messageCode, Client client, std::string argument)
+std::string Server::createReplyToClient(int messageCode, Client &client, std::string argument)
 {
 	std::string	returnMessage = "";
 
@@ -455,7 +462,7 @@ std::string Server::createReplyToClient(int messageCode, Client client, std::str
 	return (returnMessage);
 }
 
-std::string Server::createReplyToClient(int messageCode, Client client, std::string arg1, std::string arg2)
+std::string Server::createReplyToClient(int messageCode, Client &client, std::string arg1, std::string arg2)
 {
 	std::string	returnMessage = "";
 
