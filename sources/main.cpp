@@ -43,6 +43,7 @@ bool	isPositiveNumber(char *string)
 
 /* HowTo start the chat:
 on 1st Terminal run: ./ircserv <port> <password>
+	clear && make re && valgrind -s --leak-check=full --show-leak-kinds=all ./ircserv "6667" "password"
 	clear && make re && ./ircserv "6667" "password" 
 on 2nd Terminal run: 
 	clear && flatpak run io.github.Hexchat
