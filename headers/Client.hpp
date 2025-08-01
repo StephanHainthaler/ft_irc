@@ -6,7 +6,7 @@
 /*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/08/01 14:52:39 by marvin           ###   ########.fr       */
+/*   Updated: 2025/08/01 15:57:18 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,10 +91,6 @@ class Client
 		
 	public:
 
-		// Commands
-		void	nick(const std::string& nickName/* , Server server */);
-		void	setUser(std::string& userName, int zero, char asterisk, std::string& realName);
-		
 		// Format checks
 		int		isNickValid(const std::string& nickname) const;
 		bool	isRealNameValid(const std::string& realName) const;
@@ -124,7 +120,7 @@ class Client
 		
 		// Setters
 		void	setNick(const std::string& nickname);
-		//void	setUser(std::string& userName, int zero, char asterisk, std::string& realName); // 2nd parameter should always be zero and 3rd "*"
+		void	setUser(std::string& userName, int zero, char asterisk, std::string& realName); // 2nd parameter should always be zero and 3rd "*"
 		void	setState(ClientState newState);
 		void	setSocketFD(int socketFD);
 		void	setIP(const std::string& ip);
