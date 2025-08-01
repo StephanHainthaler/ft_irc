@@ -82,20 +82,20 @@ class Server
 		void 					handleNickCommand(Client* client, const std::string& newNickname);
 
 		// PARSER
-		void					handleInput(Client client, std::string input);
+		void					handleInput(Client *client, std::string input);
 		void					parseStringToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters);
-		void					executeCommand(Client client, std::vector<std::string> command);
+		void					executeCommand(Client *client, std::vector<std::string> command);
 		void					printVector(std::vector<std::string> vector);
-		int						pass(Client client, std::vector<std::string> command, size_t cmdNumber);
-		int						nick(Client client, std::vector<std::string> command, size_t cmdNumber);
-		int						user(Client client, std::vector<std::string> command, size_t cmdNumber);
-		int						join(Client client, std::vector<std::string> command, size_t cmdNumber);
-		int						kick(Client client, std::vector<std::string> command, size_t cmdNumber);
-		int						invite(Client client, std::vector<std::string> command, size_t cmdNumber);
-		int						topic(Client client, std::vector<std::string> command, size_t cmdNumber);
-		std::string 			createReplyToClient(int messageCode, Client client);
-		std::string				createReplyToClient(int messageCode, Client client, std::string argument);
-		std::string				createReplyToClient(int messageCode, Client client, std::string arg1, std::string arg2);
+		int						pass(Client &client, std::vector<std::string> command, size_t cmdNumber);
+		int						nick(Client &client, std::vector<std::string> command, size_t cmdNumber);
+		int						user(Client &client, std::vector<std::string> command, size_t cmdNumber);
+		int						join(Client &client, std::vector<std::string> command, size_t cmdNumber);
+		int						kick(Client &client, std::vector<std::string> command, size_t cmdNumber);
+		int						invite(Client &client, std::vector<std::string> command, size_t cmdNumber);
+		int						topic(Client &client, std::vector<std::string> command, size_t cmdNumber);
+		std::string 			createReplyToClient(int messageCode, Client &client);
+		std::string				createReplyToClient(int messageCode, Client &client, std::string argument);
+		std::string				createReplyToClient(int messageCode, Client &client, std::string arg1, std::string arg2);
 
 		// Cleanup
 		void					gracefulShutdown();
