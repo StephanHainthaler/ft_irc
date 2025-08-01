@@ -44,18 +44,9 @@ void	Server::executeCommand(Client client, std::vector<std::string> command)
 	if (command[0].compare("PASS") == 0)
 		pass(client, command, 1);
 	else if (command[0].compare("NICK") == 0)
-	{
-		std::string message = "";
-		client.nick(command[1]);
-		message += "You are now known as ";
-		message += client.getNickname();
-		sendMessageToClient(client.getSocketFD(), message);
-	} 
-	else if (command[0].compare("USER") == 0 && client.getState() < REGISTERED)
-	{
-		client.setUser(command[1], 0, '*', command[2]);
-		client.isFullyRegistered();
-	}
+		nick(client, command, 1);
+	else if (command[0].compare("USER") == 0)
+		user(client, command, 1);
 	else if (command[0].compare("JOIN") == 0)
 		join(client, command, 1);
 	else if (command[0].compare("PRIVMSG") == 0)
@@ -98,6 +89,38 @@ int		Server::pass(Client client, std::vector<std::string> command, size_t cmdNum
 	}
 	else
 		sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_PASSWDMISMATCH, client));
+	return (0);
+}
+
+int	Server::nick(Client client, std::vector<std::string> command, size_t cmdNumber)
+{
+	if (client.isNickValid(command[cmdNumber]) != 0)
+		return (1);
+	client.setNick(command[cmdNumber]);
+	sendMessageToClient(client.getSocketFD(), "You are now known as " + client.getNickname());
+	if (client.getNickname().empty() == false && client.getUsername().empty() == false && client.getRealname().empty() == false)
+	{
+		client.setState(REGISTERED);
+		sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_WELCOME, client));
+	}
+	return (0);
+}
+
+int	Server::user(Client client, std::vector<std::string> command, size_t cmdNumber)
+{
+	if (!(client.getState() < REGISTERED))
+		return (1);
+
+	if (command.size() < 5)
+		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NEEDMOREPARAMS, client, "USER")), 1);
+	
+	//  DO CHECKS FOR 0 an *
+	client.setUser(command[cmdNumber], 0, '*', command[cmdNumber + 3]);
+	if (client.getNickname().empty() == false && client.getUsername().empty() == false && client.getRealname().empty() == false)
+	{
+		client.setState(REGISTERED);
+		sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_WELCOME, client));
+	}
 	return (0);
 }
 
