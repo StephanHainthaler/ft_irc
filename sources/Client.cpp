@@ -24,6 +24,7 @@ Client::Client(int socketFD, int port)
 {
 	_socketFD = socketFD; 
 	_port = port;
+    _state = CONNECTING;
 }
 
 Client::~Client() 
