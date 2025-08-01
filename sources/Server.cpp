@@ -48,11 +48,21 @@ Server::~Server(void)
 		close(_serverFd);
 
 	if (!_clients.empty())
+	{
+		for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+			delete it->second;
+
 		_clients.clear();
+	}
 
 	if (!_channels.empty())
-		_channels.clear();
+	{
+		for (std::vector<Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+			delete *it;
 
+		_channels.clear();
+	}
+	
 	// close all in pollfds
 	for (std::vector<pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it)
 	{
