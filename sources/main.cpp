@@ -47,6 +47,11 @@ on 1st Terminal run: ./ircserv <port> <password>
 on 2nd Terminal run: 
 	clear && flatpak run io.github.Hexchat
 	hexchat
+in Hexchat 
+	/PASS password
+	/NICK pgober
+	/USER pgober 0 * :pgober
+	/JOIN #test
 */
 int	main(int argc, char *argv[])
 {
