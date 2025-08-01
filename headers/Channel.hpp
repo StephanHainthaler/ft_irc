@@ -49,6 +49,9 @@ class Channel
 		unsigned int				getUserLimit(void) const;
 		void						setUserLimit(unsigned int limit);
 
+		//ADDED BY STEPHAN
+		std::string					getNamesOfChannelMembers(void) const;
+
 	private:
 		Channel(void);
 		Channel(const Channel &other);

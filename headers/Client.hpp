@@ -6,7 +6,7 @@
 /*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/07/29 16:05:16 by marvin           ###   ########.fr       */
+/*   Updated: 2025/08/01 14:05:34 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,9 @@
 #define RPL_NOTOPIC 331
 #define RPL_TOPIC 332
 #define RPL_INVITING 341
+#define RPL_NAMREPLY 353
+#define RPL_ENDOFNAMES 366
+#define ERR_UNKNOWNCOMMAND 421
 #define ERR_USERNOTINCHANNEL 441
 #define ERR_NOTONCHANNEL 442
 #define ERR_USERONCHANNEL 443
@@ -59,9 +62,8 @@
 #define ERR_BADCHANMASK 476
 #define ERR_CHANOPRIVSNEEDED 482
 
-//TO-DO
-//RPL_NAMREPLY (353)
-//RPL_ENDOFNAMES (366)
+
+
 
 
 
