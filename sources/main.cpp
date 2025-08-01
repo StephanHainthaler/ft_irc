@@ -63,46 +63,57 @@ int	main(int argc, char *argv[])
 
 		server.run(); // start the server and listen for incoming connections
 	}
-	catch(const std::exception& e)
+	catch (const std::exception& e)
 	{
 		std::cerr << RED << e.what() << DEFAULT << std::endl;
 	}
-	return 0;
+	return (0);
 }
 
-// Client main
-/*
-#include <iostream>
-#include <unistd.h>
-#include <cstdlib>
-#include <cstring> // BUGFIX: allowed?
-
-// #include "../headers/Server.hpp"
-// #include "../headers/Parser.hpp"
-// #include "../headers/Client.hpp"
-
-//NAME CHECKS
-
-// int main(void)
+// bool	isDelimiter(char c, const char *delimiters)
 // {
-// 	Client client;
+// 	for (size_t i = 0; i < std::strlen(delimiters); i++)
+// 		if (c == delimiters[i])
+// 			return (true);
+// 	return (false);
+// }
 
-// 	client.setNick("julianwadawd");
-// 	if (client.connectToServer("127.0.0.1", 6667) == -1)
+// std::vector<std::string>    parseStringToVector(std::string &input, const char *delimiters)
+// {
+// 	std::vector<std::string>	vector;
+// 	size_t i = 0;
+
+// 	std::cout << "String to Parse: \n" << input << std::endl;
+
+// 	for (char* token = std::strtok((char *)input.c_str(), delimiters); token; token = std::strtok(NULL, delimiters))
 // 	{
-// 		std::cerr << "Failed to connect to server" << std::endl;
+// 		std::cout << input << std::endl;
+// 		vector.push_back(token);
+// 		i += std::strlen(token) - 1;
+// 		std::cout << "Charcter: '" << input[i] << "' is at " << i << std::endl;
+
+// 		for (size_t pos = i; isDelimiter(input[pos], ",") == true; pos++)
+// 		{
+// 			std::cout << input[pos] << std::endl;
+// 		}
+// 	}
+// 	return (vector);
+		
+// }
+
+// int	main(int argc, char *argv[])
+// {
+// 	if (argc == 1)
 // 		return (1);
+	
+// 	std::vector<std::string>	args;
+// 	std::string test = argv[1];
+
+// 	args = parseStringToVector(test, ",");
+// 	for (size_t i = 0; i < args.size(); i++)
+// 	{
+// 		std::cout << args[i] << std::endl;
 // 	}
 
-// 	client.setNick("julian");
-// 	if (!client.getNickname().empty())
-// 		std::cout << "Nick: " << client.getNickname() << std::endl;
-
-// 	std::string userName = "Julian";
-//     std::string realName = "Julian Uitz";
-
-// 	client.setUser(userName, 0, '*', realName);
-// 		std::cout << "User: " << client.getUsername() << "\n" << "Real name: " << client.getRealname() << std::endl;
-
-	return (0);
-}*/
+// 	return (0);
+// }

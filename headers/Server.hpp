@@ -26,12 +26,11 @@
 # include <stdio.h>
 # include <string>
 # include <cstring> // for strncpy, strcmp
+# include <signal.h>
 
 # include "main.hpp"
 # include "Client.hpp"
 # include "Channel.hpp"
-# include "Parser.hpp"
-#include "signal.h"
 
 # define MAX_MSG_LEN 1042
 

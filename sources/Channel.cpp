@@ -144,3 +144,17 @@ void Channel::setUserLimit(unsigned int limit)
 {
 	_userLimit = limit;
 }
+
+//ADDED BY STEPHAN
+std::string					Channel::getNamesOfChannelMembers(void) const
+{
+	std::string namesOfUsers = "";
+
+	for (size_t i = 0; i < _channelUsers.size(); i++)
+	{
+		namesOfUsers += _channelUsers[i]->getNickname();
+		if ((i + 1) != _channelUsers.size())
+			namesOfUsers += " ";
+	}
+	return (namesOfUsers);
+}
