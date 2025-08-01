@@ -86,8 +86,10 @@ class Server
 		void					parseStringToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters);
 		void					executeCommand(Client client, std::vector<std::string> command);
 		void					printVector(std::vector<std::string> vector);
-		int						join(Client client, std::vector<std::string> command, size_t cmdNumber);
 		int						pass(Client client, std::vector<std::string> command, size_t cmdNumber);
+		int						nick(Client client, std::vector<std::string> command, size_t cmdNumber);
+		int						user(Client client, std::vector<std::string> command, size_t cmdNumber);
+		int						join(Client client, std::vector<std::string> command, size_t cmdNumber);
 		int						kick(Client client, std::vector<std::string> command, size_t cmdNumber);
 		int						invite(Client client, std::vector<std::string> command, size_t cmdNumber);
 		int						topic(Client client, std::vector<std::string> command, size_t cmdNumber);
