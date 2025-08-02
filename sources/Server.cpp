@@ -158,7 +158,7 @@ void Server::sendMessageToClient(int clientFD, std::string message)
     {
         if (_pollfds[i].fd == clientFD)
         {
-            _pollfds[i].events = POLLIN | POLLOUT; // set events to also check for POLLOUT, since we have data to send
+            _pollfds[i].events = POLLIN | POLLOUT; // tell events to also start checking for POLLOUT, since we have data to send
             break;
         }
     }
@@ -178,7 +178,7 @@ void Server::handleSendingToClient(int i)
 
 	// If everything is sent, stop polling for write events
 	if (buffer.empty())
-		_pollfds[i].events = POLLIN; // if everything was sent, remove POLLOUT from events, so that we don't keep checking for write events
+		_pollfds[i].events = POLLIN; // if everything was sent, remove POLLOUT from events, so that we don't keep checking for write events (efficiency and best practice)
 }
 
 void Server::sendMessageToChannel(Client* client, Channel* channel, const std::string& message)
