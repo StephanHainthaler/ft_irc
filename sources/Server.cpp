@@ -55,6 +55,10 @@ Server::~Server(void)
 		_clients.clear();
 	}
 
+	if (!_outgoingMessages.empty())
+		_outgoingMessages.clear();
+
+
 	if (!_channels.empty())
 	{
 		for (std::vector<Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
@@ -140,24 +144,24 @@ Client *Server::getClient(std::string nickname) const
 // Member functions - server actions
 void Server::sendMessageToClient(int clientFD, std::string message)
 {
-	if (clientFD < 0)
-	{
-		std::cerr << RED << "Error. Invalid client fd." << DEFAULT << std::endl;
-		return;
-	}
-	
-	message += "\r\n";
+    if (clientFD < 0)
+    {
+        std::cerr << RED << "Error. Invalid client fd." << DEFAULT << std::endl;
+        return;
+    }
 
-	long long totalSent = 0;
-	long long msgLength = message.length();
+    // Append message to the outgoing buffer for this client
+    _outgoingMessages[clientFD] += message + "\r\n";
 
-	while (totalSent < msgLength) 
-	{
-		long long sent = send(clientFD, message.c_str() + totalSent, msgLength - totalSent, 0);
-		if (sent == -1) 
-			break;
-		totalSent += sent;
-	}
+    // Enable POLLOUT for this socket in pollfds
+    for (size_t i = 0; i < _pollfds.size(); ++i)
+    {
+        if (_pollfds[i].fd == clientFD)
+        {
+            _pollfds[i].events |= POLLOUT; // set events to also check for POLLOUT, since we have data to send
+            break;
+        }
+    }
 }
 
 void Server::sendMessageToChannel(Client* client, Channel* channel, const std::string& message)
@@ -201,13 +205,14 @@ void Server::handleClientConnections(void)
 	*/
 	pollfd pfd = {};
 	pfd.fd = clientFd;
-	pfd.events = POLLIN;
+	pfd.events = POLLIN; // at the beginning, we only care about POLLIN (ready to read), because writing is only necessary as a response to a client's message
 	pfd.revents = 0; // initially no events
 
 	_pollfds.push_back(pfd);
 
 	Client *newClient = new Client(clientFd, _port); // create a new Client object
 	_clients.insert(std::make_pair(clientFd, newClient)); // add the new client to the map
+	_outgoingMessages.insert(std::make_pair(clientFd, "")); // initialize the outgoing buffer for the new client
 
 	sendMessageToClient(clientFd, "Please enter the password to access the StePiaAn IRC server!"); // send welcome message to IRC client
 }
@@ -249,8 +254,7 @@ void Server::handleEvents(void)
 {
 	pollfd sfd;
 	sfd.fd = _serverFd; // server socket
-	sfd.events = POLLIN; // listen for incoming connections
-	// POLLOUT = ready to write, POLLERR = error on the fd, POLLHUP = client closed socket
+	sfd.events = POLLIN; // POLLIN = ready to read, POLLOUT = ready to write but server is a listening socket, so we only care about POLLIN
 	sfd.revents = 0; // initially no events
 	(pollfd)sfd;
 	
@@ -271,7 +275,7 @@ void Server::handleEvents(void)
 			continue; // retry polling
 		}
 
-		// else: if one or more sockets / fds are ready for reading
+		// else: if one or more sockets / fds are ready for reading or writing
 
 		// Check for events on each client socket
 		for (int i = 0; i <= poll_count; ++i)
@@ -305,6 +309,32 @@ void Server::handleEvents(void)
 				
 				// for client sockets, data to read can be a message from another client
 				handleClientMessage(_pollfds[i].fd);
+			}
+
+			// Case 4: there is data to write in the client's outgoing buffer
+			if ((_pollfds[i].revents & POLLOUT) == POLLOUT)
+			{
+				int fd = _pollfds[i].fd;
+				std::string &buffer = _outgoingMessages[fd];
+
+				if (!buffer.empty())
+				{
+					ssize_t sent = send(fd, buffer.c_str(), buffer.size(), MSG_DONTWAIT); // makes the call non-blocking
+
+					if (sent > 0)
+					{
+						buffer.erase(0, sent); // remove sent bytes
+					}
+					else if (sent == -1)
+					{
+						handleClientDisconnections(fd); // socket error
+						continue;
+					}
+				}
+
+				// If everything is sent, stop polling for write events
+				if (buffer.empty()) // ~ is the NOT bitwise operator so it reverts the previously set POLLOUT event
+					_pollfds[i].events &= ~POLLOUT; // if everything was sent, remove POLLOUT from events, so that we don't keep checking for write events
 			}
 		}
 	}
