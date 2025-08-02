@@ -158,10 +158,27 @@ void Server::sendMessageToClient(int clientFD, std::string message)
     {
         if (_pollfds[i].fd == clientFD)
         {
-            _pollfds[i].events |= POLLOUT; // set events to also check for POLLOUT, since we have data to send
+            _pollfds[i].events = POLLIN | POLLOUT; // set events to also check for POLLOUT, since we have data to send
             break;
         }
     }
+}
+
+void Server::handleSendingToClient(int i)
+{
+	std::string &buffer = _outgoingMessages[_pollfds[i].fd];
+
+	if (!buffer.empty())
+	{
+		ssize_t sent = send(_pollfds[i].fd, buffer.c_str(), buffer.size(), MSG_DONTWAIT); // makes the call non-blocking
+
+		if (sent > 0)
+			buffer.erase(0, sent); // remove sent bytes
+	}
+
+	// If everything is sent, stop polling for write events
+	if (buffer.empty())
+		_pollfds[i].events = POLLIN; // if everything was sent, remove POLLOUT from events, so that we don't keep checking for write events
 }
 
 void Server::sendMessageToChannel(Client* client, Channel* channel, const std::string& message)
@@ -245,7 +262,9 @@ void Server::handleClientDisconnections(int i)
 		client->disconnect();
 		close(_pollfds[i].fd); // close hotel room (socket)
 		_clients.erase(_pollfds[i].fd); // remove client from the map
-		_pollfds.erase(_pollfds.begin() + i);
+		_pollfds.erase(_pollfds.begin() + i); // remove client from pollfds
+		_outgoingMessages.erase(_pollfds[i].fd); // remove client's outgoing buffer
+		delete client; // delete Client object
 		std::cout << GRAY << "Client disconnected: " << _pollfds[i].fd << DEFAULT << std::endl;
 	}
 }
@@ -293,7 +312,7 @@ void Server::handleEvents(void)
 			*/
 			if ((_pollfds[i].revents & POLLHUP) == POLLHUP) // if the client closed the connection
 			{
-				handleClientDisconnections(_pollfds[i].fd); // handle client disconnection
+				handleClientDisconnections(i); // handle client disconnection
 				break ;
 			}
 
@@ -314,27 +333,7 @@ void Server::handleEvents(void)
 			// Case 4: there is data to write in the client's outgoing buffer
 			if ((_pollfds[i].revents & POLLOUT) == POLLOUT)
 			{
-				int fd = _pollfds[i].fd;
-				std::string &buffer = _outgoingMessages[fd];
-
-				if (!buffer.empty())
-				{
-					ssize_t sent = send(fd, buffer.c_str(), buffer.size(), MSG_DONTWAIT); // makes the call non-blocking
-
-					if (sent > 0)
-					{
-						buffer.erase(0, sent); // remove sent bytes
-					}
-					else if (sent == -1)
-					{
-						handleClientDisconnections(fd); // socket error
-						continue;
-					}
-				}
-
-				// If everything is sent, stop polling for write events
-				if (buffer.empty()) // ~ is the NOT bitwise operator so it reverts the previously set POLLOUT event
-					_pollfds[i].events &= ~POLLOUT; // if everything was sent, remove POLLOUT from events, so that we don't keep checking for write events
+				handleSendingToClient(i);
 			}
 		}
 	}
