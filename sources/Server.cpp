@@ -312,8 +312,8 @@ void Server::handleEvents(void)
 			*/
 			if ((_pollfds[i].revents & POLLHUP) == POLLHUP) // if the client closed the connection
 			{
-				handleClientDisconnections(i); // handle client disconnection
-				break ;
+				handleClientDisconnections(i);
+				break ; // skip to next fd
 			}
 
 			// Case 3: there was an event with that fd
