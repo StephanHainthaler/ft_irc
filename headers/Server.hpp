@@ -66,6 +66,7 @@ class Server
 		// Member functions - server actions
 		void 					handleClientConnections(void); // like addClient
 		void 					sendMessageToClient(int clientFD, std::string message);
+		void					handleSendingToClient(int i);
 		void					sendMessageToChannel(Client* client, Channel* channel, const std::string& message);
 		void 					handleClientMessage(int clientFd);
 		void 					handleClientDisconnections(int i);  // like removeClient
@@ -131,6 +132,7 @@ class Server
 		const std::string		_password;
 		std::map<int, Client *>	_clients;	// List of connected clients (ClientClass objs)
 		std::vector<pollfd>		_pollfds; // +1 for the server socket
+		std::map<int, std::string> _outgoingMessages; // Buffer for outgoing messages
 		std::vector<Channel *>	_channels;	// List of channels (ChannelClass objs)
 		//std::vector<std::string>	_users; // auf 10 users limitieren
 
