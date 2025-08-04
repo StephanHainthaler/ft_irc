@@ -62,8 +62,8 @@ void	Server::executeCommand(Client *client, std::vector<std::string> command)
 		user(*client, command, 1);
 	else if (command[0].compare("JOIN") == 0)
 		join(*client, command, 1);
-/* 	else if (command[0].compare("PRIVMSG") == 0 && command[1][0] == '#')
-		privMsgCh(*client, command); */
+	else if (command[0].compare("PRIVMSG") == 0 && command[1][0] == '#')
+		privMsg(*client, command, 1);
 	else if (command[0].compare("KICK") == 0)
 		kick(*client, command, 1);
 	else if (command[0].compare("INVITE") == 0)
@@ -87,6 +87,45 @@ void Server::printVector(std::vector<std::string> vector)
 	{			
 		std::cout << vector[i] << std::endl;
 	}
+}
+
+int		Server::privMsg(Client &client, std::vector<std::string> command, size_t cmdNumber)
+{
+	if (command.size() < 2)
+		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NEEDMOREPARAMS, client, "PRIVMSG")), 1);
+
+	std::vector<std::string> targets;
+	std::string message;
+
+	if (command[cmdNumber].find(","))
+		parseStringToVector(command[cmdNumber++], &targets, ",");
+	else
+		targets.push_back(command[cmdNumber++]);
+
+	for (size_t i = 0; i < targets.size(); i++)
+	{
+		if (targets[i][0] == '#')
+		{
+			Channel *channel = getChannel(targets[i]);
+			if (channel == NULL)
+			{
+				sendMessageToClient(client.getSocketFD(), createReplyToClient (ERR_NOSUCHCHANNEL, client, targets[i]));
+				continue ;
+			}
+			sendMessageToChannel(&client, channel, ":" + client.getFullIdentifier() + " PRIVMSG " + targets[i] + " :" + message);
+		}
+		else
+		{
+			Client *targetUser = getClient(targets[i]);
+			if (targetUser == NULL)
+			{
+				sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NOSUCHNICK, client, targets[i]));
+				continue ;
+			}
+			sendMessageToClient(targetUser->getSocketFD(), ":" + client.getFullIdentifier() + " PRIVMSG " + targets[i] + " :" + message);
+		}
+	}
+	return (0);
 }
 
 int		Server::pass(Client &client, std::vector<std::string> command, size_t cmdNumber)

@@ -82,12 +82,6 @@ class Server
 		bool 					isNicknameAvailable(const std::string& nickname) const;
 		void 					handleNickCommand(Client* client, const std::string& newNickname);
 
-		// PRIVMSG
-		void					privMsgCh(Client* client, Channel* channel, const std::string& message);
-		void					privMsgUser(Client* client, const std::string& message);
-		void					privMsg(Client* client, Channel* channel, const std::string& message);
-
-
 		// PARSER
 		void					handleInput(Client *client, std::string input);
 		void					parseStringToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters);
@@ -101,6 +95,7 @@ class Server
 		int						invite(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						topic(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						mode(Client &client, std::vector<std::string> command, size_t cmdNumber);
+		int						privMsg(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		std::string 			createReplyToClient(int messageCode, Client &client);
 		std::string				createReplyToClient(int messageCode, Client &client, std::string argument);
 		std::string				createReplyToClient(int messageCode, Client &client, std::string arg1, std::string arg2);

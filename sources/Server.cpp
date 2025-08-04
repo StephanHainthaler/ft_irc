@@ -182,7 +182,7 @@ void Server::handleSendingToClient(int i)
 		_pollfds[i].events = POLLIN;
 }
 
-/* void Server::privMsgCh(Client* client, Channel* channel, const std::string& message)
+void Server::sendMessageToChannel(Client* client, Channel* channel, const std::string& message)
 {
 	std::vector<Client*> usersInChannel = channel->getChannelUsers();
 	
@@ -196,16 +196,6 @@ void Server::handleSendingToClient(int i)
 		}
 	}
 }
-
-void Server::privMsgUser(Client* targetClient, const std::string& message)
-{
-	sendMessageToClient(targetClient->getSocketFD(), message);
-}
-
-void Server::privMsg(Client* client, Channel* channel, const std::string& message)
-{
-
-} */
 
 void Server::handleClientConnections(void)
 {
