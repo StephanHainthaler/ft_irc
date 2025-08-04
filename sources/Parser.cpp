@@ -174,11 +174,8 @@ int	Server::join(Client &client, std::vector<std::string> command, size_t cmdNum
 		// }
 		if (toJoinTo == NULL)
 		{
-			Channel *newChannel = new Channel(channelNames[i], "", "");
+			Channel *newChannel = new Channel(channelNames[i], client);
 			addChannel(newChannel);
-			newChannel->addUser(&client);
-			newChannel->addOperator(&client);
-			client.joinChannel(newChannel->getName());
 			// std::cout << ":" << client.getFullIdentifier() << " JOIN :" << newChannel->getName() << std::endl;
 			sendMessageToClient(client.getSocketFD(), ":" + client.getFullIdentifier() + " JOIN :" + newChannel->getName());
 		}
@@ -469,7 +466,7 @@ int		Server::mode(Client &client, std::vector<std::string> command, size_t cmdNu
 			{
 				// ERR_UNKNOWNMODE (472)
 			}
-			sendMessageToChannel(&client, toChangeMode, createReplyToClient(RPL_CHANNELMODEIS, client, channelName, toChangeMode->getModes(), toChangeMode->getModeArguments()), 1);
+			sendMessageToChannel(&client, toChangeMode, createReplyToClient(RPL_CHANNELMODEIS, client, channelName, toChangeMode->getModes(), toChangeMode->getModeArguments()));
 		}
 	}
 		
