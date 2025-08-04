@@ -55,6 +55,10 @@ Server::~Server(void)
 		_clients.clear();
 	}
 
+	if (!_outgoingMessages.empty())
+		_outgoingMessages.clear();
+
+
 	if (!_channels.empty())
 	{
 		for (std::vector<Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
@@ -80,7 +84,7 @@ void Server::gracefulShutdown()
 	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 	{
 		sendMessageToClient(it->first, shutdownMsg);
-		std::cout << "Notified client " << it->first << " about shutdown" << std::endl;
+		std::cout << GRAY << "Notified client " << it->first << " about shutdown" << DEFAULT << std::endl;
 	}
 	
 	// Give clients a moment to receive the message
@@ -140,24 +144,42 @@ Client *Server::getClient(std::string nickname) const
 // Member functions - server actions
 void Server::sendMessageToClient(int clientFD, std::string message)
 {
-	if (clientFD < 0)
-	{
-		std::cerr << RED << "Error. Invalid client fd." << DEFAULT << std::endl;
-		return;
-	}
-	
-	message += "\r\n";
+    if (clientFD < 0)
+    {
+        std::cerr << RED << "Error. Invalid client fd." << DEFAULT << std::endl;
+        return;
+    }
 
-	long long totalSent = 0;
-	long long msgLength = message.length();
+    // Add message to the outgoing buffer for this client
+    _outgoingMessages[clientFD] += message + "\r\n";
 
-	while (totalSent < msgLength) 
+    // tell events to also start checking for POLLOUT, since we have data to send
+    for (size_t i = 0; i < _pollfds.size(); ++i)
+    {
+        if (_pollfds[i].fd == clientFD)
+        {
+            _pollfds[i].events = POLLIN | POLLOUT;
+            break;
+        }
+    }
+}
+
+void Server::handleSendingToClient(int i)
+{
+	std::string &buffer = _outgoingMessages[_pollfds[i].fd];
+
+	if (!buffer.empty())
 	{
-		long long sent = send(clientFD, message.c_str() + totalSent, msgLength - totalSent, 0);
-		if (sent == -1) 
-			break;
-		totalSent += sent;
+		ssize_t sent = send(_pollfds[i].fd, buffer.c_str(), buffer.size(), MSG_DONTWAIT); // makes the call non-blocking
+
+		if (sent > 0)
+			buffer.erase(0, sent); // remove sent bytes
 	}
+
+	// if everything was sent, remove POLLOUT from events, 
+	// so that we don't keep checking for write events (efficiency and best practice)
+	if (buffer.empty())
+		_pollfds[i].events = POLLIN;
 }
 
 /* void Server::privMsgCh(Client* client, Channel* channel, const std::string& message)
@@ -211,13 +233,14 @@ void Server::handleClientConnections(void)
 	*/
 	pollfd pfd = {};
 	pfd.fd = clientFd;
-	pfd.events = POLLIN;
+	pfd.events = POLLIN; // at the beginning, we only care about POLLIN (ready to read), because writing is only necessary as a response to a client's message
 	pfd.revents = 0; // initially no events
 
 	_pollfds.push_back(pfd);
 
 	Client *newClient = new Client(clientFd, _port); // create a new Client object
 	_clients.insert(std::make_pair(clientFd, newClient)); // add the new client to the map
+	_outgoingMessages.insert(std::make_pair(clientFd, "")); // initialize the outgoing buffer for the new client
 
 	sendMessageToClient(clientFd, "Please enter the password to access the StePiaAn IRC server!"); // send welcome message to IRC client
 }
@@ -235,7 +258,7 @@ void	Server::handleClientMessage(int clientFd)
     int bytesReceived = recv(clientFd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT); // Flag which makes the call non-blocking
     if (bytesReceived > 0)
     {
-		std::cout << "Client: " << buffer << std::endl; // first one is IRC client
+		std::cout << GRAY << "Client: " << buffer << DEFAULT << std::endl; // first one is IRC client
 		std::map<int, Client *>::iterator it = _clients.find(clientFd);
 		handleInput(it->second, buffer);
 	}
@@ -250,8 +273,10 @@ void Server::handleClientDisconnections(int i)
 		client->disconnect();
 		close(_pollfds[i].fd); // close hotel room (socket)
 		_clients.erase(_pollfds[i].fd); // remove client from the map
-		_pollfds.erase(_pollfds.begin() + i);
-		std::cout << GRAY << "Client disconnected: " << _pollfds[i].fd << DEFAULT << std::endl;
+		_pollfds.erase(_pollfds.begin() + i); // remove client from pollfds
+		_outgoingMessages.erase(_pollfds[i].fd); // remove client's outgoing buffer
+		delete client; // delete Client object
+		std::cout << YELLOW << "Client disconnected: " << _pollfds[i].fd << DEFAULT << std::endl;
 	}
 }
 
@@ -259,10 +284,8 @@ void Server::handleEvents(void)
 {
 	pollfd sfd;
 	sfd.fd = _serverFd; // server socket
-	sfd.events = POLLIN; // listen for incoming connections
-	// POLLOUT = ready to write, POLLERR = error on the fd, POLLHUP = client closed socket
+	sfd.events = POLLIN; // POLLIN = ready to read, POLLOUT = ready to write but server is a listening socket, so we only care about POLLIN
 	sfd.revents = 0; // initially no events
-	(pollfd)sfd;
 	
 	_pollfds.push_back(sfd); // add server socket to pollfds
 
@@ -277,16 +300,17 @@ void Server::handleEvents(void)
 		
 		else if (poll_count == 0) // no events occurred
 		{
-			std::cout << "No events occurred." << std::endl;
+			std::cout << GRAY << "No events occurred." << DEFAULT << std::endl;
 			continue; // retry polling
 		}
 
-		// else: if one or more sockets / fds are ready for reading
+		// else: if one or more sockets / fds are ready for reading or writing
 
 		// Check for events on each client socket
 		for (int i = 0; i <= poll_count; ++i)
 		{
 			//std::cout << "Checking pollfd[" << i << "] with fd: " << _pollfds[i].fd << " revents: " << _pollfds[i].revents << std::endl;
+			std::cout << GRAY << "Checking pollfd[" << i << "] with fd: " << _pollfds[i].fd << " revents: " << _pollfds[i].revents <<  DEFAULT << std::endl;
 
 			// Case 1: there was no event with that fd
 			if (_pollfds[i].revents == 0)
@@ -299,8 +323,8 @@ void Server::handleEvents(void)
 			*/
 			if ((_pollfds[i].revents & POLLHUP) == POLLHUP) // if the client closed the connection
 			{
-				handleClientDisconnections(_pollfds[i].fd); // handle client disconnection
-				break ;
+				handleClientDisconnections(i);
+				break ; // skip to next fd
 			}
 
 			// Case 3: there was an event with that fd
@@ -315,6 +339,12 @@ void Server::handleEvents(void)
 				
 				// for client sockets, data to read can be a message from another client
 				handleClientMessage(_pollfds[i].fd);
+			}
+
+			// Case 4: there is data to send to the client => check if reverts caught POLLOUT
+			if ((_pollfds[i].revents & POLLOUT) == POLLOUT)
+			{
+				handleSendingToClient(i);
 			}
 		}
 	}
@@ -351,11 +381,12 @@ void Server::run(void)
 	_state = RUNNING; // Server state - 1: running
 	
 	// subject: "All I/O operations must be non-blocking" - set non-blocking at socket creation
+	// used SOCK_NONBLOCK flag in socket creation, which is equivalent to fcntl usage
 	/*if (fcntl(_serverFd, F_SETFL, O_NONBLOCK) == -1) // allow server to handle multiple clients at once
 	{
 		close(_serverFd);
 		throw ServerException("Error. Failed to set socket to non-blocking mode.");
-	}*/ // BUGFIX: implement this
+	}*/
 
 	// Now the server is ready to handle incoming connections and client input
 	setupSignals();

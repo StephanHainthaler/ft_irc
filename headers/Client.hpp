@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: shaintha <shaintha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/08/01 15:57:18 by marvin           ###   ########.fr       */
+/*   Updated: 2025/08/04 11:02:18 by shaintha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@
 #define ERR_UNKNOWNMODE 472
 
 //ADDED BY STEPHAN
+#define RPL_CHANNELMODEIS 324
 #define RPL_NOTOPIC 331
 #define RPL_TOPIC 332
 #define RPL_INVITING 341
@@ -62,6 +63,7 @@
 #define ERR_BADCHANNELKEY 475
 #define ERR_BADCHANMASK 476
 #define ERR_CHANOPRIVSNEEDED 482
+
 
 
 
