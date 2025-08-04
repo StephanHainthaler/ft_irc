@@ -179,6 +179,8 @@ int	Server::join(Client &client, std::vector<std::string> command, size_t cmdNum
 			newChannel->addUser(&client);
 			newChannel->addOperator(&client);
 			client.joinChannel(newChannel->getName());
+			// std::cout << ":" << client.getFullIdentifier() << " JOIN :" << newChannel->getName() << std::endl;
+			sendMessageToClient(client.getSocketFD(), ":" + client.getFullIdentifier() + " JOIN :" + newChannel->getName());
 		}
 		else
 		{
