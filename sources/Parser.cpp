@@ -230,8 +230,8 @@ int	Server::join(Client &client, std::vector<std::string> command, size_t cmdNum
 				sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_TOPIC, client, toJoinTo->getName(), toJoinTo->getTopic()));
 
 			// 3. 
-				sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_NAMREPLY, client, toJoinTo->getName(), toJoinTo->getNamesOfChannelMembers()));
-				sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_ENDOFNAMES, client, toJoinTo->getName()));
+			sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_NAMREPLY, client, toJoinTo->getName(), toJoinTo->getNamesOfChannelMembers()));
+			sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_ENDOFNAMES, client, toJoinTo->getName()));
 
 		}
 	}
