@@ -66,7 +66,7 @@ class Server
 		// Member functions - server actions
 		void 					handleClientConnections(void); // like addClient
 		void 					sendMessageToClient(int clientFD, std::string message);
-		void					sendMessageToChannel(Client* client, Channel* channel, const std::string& message);
+		//void					sendMessageToChannel(Client* client, Channel* channel, const std::string& message);
 		void 					handleClientMessage(int clientFd);
 		void 					handleClientDisconnections(int i);  // like removeClient
 		void 					handleEvents(void);
@@ -80,6 +80,12 @@ class Server
 		bool 					isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const;
 		bool 					isNicknameAvailable(const std::string& nickname) const;
 		void 					handleNickCommand(Client* client, const std::string& newNickname);
+
+		// PRIVMSG
+		void					privMsgCh(Client* client, Channel* channel, const std::string& message);
+		void					privMsgUser(Client* client, const std::string& message);
+		void					privMsg(Client* client, Channel* channel, const std::string& message);
+
 
 		// PARSER
 		void					handleInput(Client *client, std::string input);

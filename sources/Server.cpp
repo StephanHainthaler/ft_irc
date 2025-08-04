@@ -160,7 +160,7 @@ void Server::sendMessageToClient(int clientFD, std::string message)
 	}
 }
 
-void Server::sendMessageToChannel(Client* client, Channel* channel, const std::string& message)
+/* void Server::privMsgCh(Client* client, Channel* channel, const std::string& message)
 {
 	std::vector<Client*> usersInChannel = channel->getChannelUsers();
 	
@@ -174,6 +174,16 @@ void Server::sendMessageToChannel(Client* client, Channel* channel, const std::s
 		}
 	}
 }
+
+void Server::privMsgUser(Client* targetClient, const std::string& message)
+{
+	sendMessageToClient(targetClient->getSocketFD(), message);
+}
+
+void Server::privMsg(Client* client, Channel* channel, const std::string& message)
+{
+
+} */
 
 void Server::handleClientConnections(void)
 {
@@ -276,7 +286,7 @@ void Server::handleEvents(void)
 		// Check for events on each client socket
 		for (int i = 0; i <= poll_count; ++i)
 		{
-			std::cout << "Checking pollfd[" << i << "] with fd: " << _pollfds[i].fd << " revents: " << _pollfds[i].revents << std::endl;
+			//std::cout << "Checking pollfd[" << i << "] with fd: " << _pollfds[i].fd << " revents: " << _pollfds[i].revents << std::endl;
 
 			// Case 1: there was no event with that fd
 			if (_pollfds[i].revents == 0)
@@ -394,7 +404,6 @@ void signalHandler(int sig)
 {
     if (sig == SIGINT || sig == SIGTERM)
 	{
-		
         g_shutdown = 1;
     }
 }
@@ -430,38 +439,6 @@ bool Server::isNicknameAvailable(const std::string& nickname, const Client* excl
 bool Server::isNicknameAvailable(const std::string& nickname) const
 {
     return (isNicknameAvailable(nickname, NULL));
-}
-
-void Server::handleNickCommand(Client* client, const std::string& newNickname)
-{
-	int clientFd = client->getSocketFD();
-    
-	// First check format using Client's validation
-    if (client->isNickValid(newNickname) != 0)
-    {
-		// ERR_ERRONEUSNICKNAME (432) message, see https://modern.ircdocs.horse/#errnicknameinuse-433
-		// std::string msg = client;
-		std::string msg = newNickname;
-		msg += " :Erroneus nickname";
-
-		sendMessageToClient(clientFd, msg.c_str());
-        return ;
-    }
-    
-    // Then check uniqueness using Server's validation
-    if (!isNicknameAvailable(newNickname, client))
-    {
-        // ERR_NICKNAMEINUSE (433) message, see https://modern.ircdocs.horse/#errnicknameinuse-433
-		// std::string msg = client;
-		std::string msg = newNickname;
-		msg += " :Nickname is already in use";
-
-		sendMessageToClient(clientFd, msg.c_str());
-        return ;
-    }
-    
-    // Nickname is valid and available
-    client->setNick(newNickname);
 }
 
 // Exception

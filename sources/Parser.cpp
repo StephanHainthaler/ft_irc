@@ -43,6 +43,7 @@ void    Server::parseStringToVector(std::string &input, std::vector<std::string>
 
 void	Server::executeCommand(Client *client, std::vector<std::string> command)
 {
+	std::cout << "Authentication:" << (client->getState() == AUTHENTICATED) << std::endl;
 	if (client->getState() < AUTHENTICATED && !(command[0].compare("PASS") == 0))
 	{
 		sendMessageToClient(client->getSocketFD(), "Authentication required! Please enter the server password with command PASS.");
@@ -56,8 +57,8 @@ void	Server::executeCommand(Client *client, std::vector<std::string> command)
 		user(*client, command, 1);
 	else if (command[0].compare("JOIN") == 0)
 		join(*client, command, 1);
-	else if (command[0].compare("PRIVMSG") == 0)
-		std::cout << "PRIVMSG" << std::endl;
+/* 	else if (command[0].compare("PRIVMSG") == 0 && command[1][0] == '#')
+		privMsgCh(*client, command); */
 	else if (command[0].compare("KICK") == 0)
 		kick(*client, command, 1);
 	else if (command[0].compare("INVITE") == 0)
@@ -233,8 +234,8 @@ int	Server::join(Client &client, std::vector<std::string> command, size_t cmdNum
 				sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_TOPIC, client, toJoinTo->getName(), toJoinTo->getTopic()));
 
 			// 3. 
-				sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_NAMREPLY, client, toJoinTo->getName(), toJoinTo->getNamesOfChannelMembers()));
-				sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_ENDOFNAMES, client, toJoinTo->getName()));
+			sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_NAMREPLY, client, toJoinTo->getName(), toJoinTo->getNamesOfChannelMembers()));
+			sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_ENDOFNAMES, client, toJoinTo->getName()));
 
 		}
 	}
