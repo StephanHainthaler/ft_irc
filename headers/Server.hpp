@@ -93,9 +93,11 @@ class Server
 		int						kick(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						invite(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						topic(Client &client, std::vector<std::string> command, size_t cmdNumber);
+		int						mode(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		std::string 			createReplyToClient(int messageCode, Client &client);
 		std::string				createReplyToClient(int messageCode, Client &client, std::string argument);
 		std::string				createReplyToClient(int messageCode, Client &client, std::string arg1, std::string arg2);
+		std::string				createReplyToClient(int messageCode, Client &client, std::string arg1, std::string arg2, std::string arg3);
 
 		// Cleanup
 		void					gracefulShutdown();
