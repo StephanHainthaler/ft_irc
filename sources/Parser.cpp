@@ -474,7 +474,7 @@ int		Server::mode(Client &client, std::vector<std::string> command, size_t cmdNu
 	// ERR_NOTONCHANNEL (442)
 	// ERR_CHANOPRIVSNEEDED (482)
 
-	
+	return (0);
 }
 
 std::string Server::createReplyToClient(int messageCode, Client &client)
