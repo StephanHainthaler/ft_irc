@@ -24,7 +24,7 @@ class Server;
 class Channel
 {
 	public:
-		Channel(const std::string &name, const std::string &topic, const std::string &modes);
+		Channel(const std::string &name, Client &creator);
 		~Channel(void);
 
 		std::string					getName(void) const;
@@ -34,7 +34,7 @@ class Channel
 
 		std::string					getModes(void) const;
 		bool						isValidChannelMode(char mode) const;
-		void						setMode(char mode, bool enable);
+		void						setMode(char mode, std::string modearg, bool enable);
 		bool 						hasMode(char mode) const;
 		std::string					getModeArguments(void) const;
 
@@ -44,8 +44,8 @@ class Channel
 		Client						*getUser(const std::string &nickname) const;
 		
 		std::vector<Client *>		getOperators(void) const;
-		void						addOperator(Client *client);
-		void						removeOperator(Client *client);
+		bool						isOperator(Client *client) const;
+		void						setOperator(std::string &nickname, bool enable);
 
 		std::string					getChannelKey(void);
 		void						setChannelKey(const std::string &key);
