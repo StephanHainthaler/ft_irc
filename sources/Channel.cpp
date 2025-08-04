@@ -50,27 +50,46 @@ bool Channel::isValidChannelMode(char mode) const
 	return (mode == 'i' || mode == 't' || mode == 'k' || mode == 'o' || mode == 'l');
 }
 
-int Channel::setMode(char mode, bool enable)
+void Channel::setMode(char mode, bool enable)
 {
-	if (isValidChannelMode(mode))
-	{
-		if (enable && _modes.find(mode) == std::string::npos)
-			_modes += mode;
-		else
-		{ // Disable/remove mode if "false" passed as boolean
-			std::string::size_type pos = _modes.find(mode);
-			if (pos != std::string::npos)
-				_modes.erase(pos, 1);
-		}
-		return (0);
-	}
+	if (enable && _modes.find(mode) == std::string::npos)
+		_modes += mode;
 	else
-		return (ERR_UNKNOWNMODE) ;
+	{ // Disable/remove mode if "false" passed as boolean
+		std::string::size_type pos = _modes.find(mode);
+		if (pos != std::string::npos)
+			_modes.erase(pos, 1);
+	}
 }
 
 bool Channel::hasMode(char mode) const
 {
 	return (_modes.find(mode) != std::string::npos);
+}
+
+std::string Channel::getModeArguments(void) const
+{
+	std::string args = "";
+	for (size_t i = 0; i < _modes.size(); ++i)
+	{
+		if (_modes[i] == 'k')
+			args += _channelKey + " ";
+		else if (_modes[i] == 'l')
+		{
+			std::ostringstream oss;
+			oss << _userLimit;
+			args += oss.str() + " ";
+		}
+		else if (_modes[i] == 'o')
+		{
+			for (size_t j = 0; j < _operators.size(); ++j)
+			{
+				args += _operators[j]->getNickname();
+				args += " ";
+			}
+		}
+	}
+	return args;
 }
 
 std::vector<Client *> Channel::getChannelUsers(void) const

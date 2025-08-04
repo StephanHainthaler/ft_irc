@@ -14,6 +14,8 @@
 
 # include <iostream>
 # include <vector>
+# include <string>
+# include <sstream>
 
 # include "Client.hpp"
 
@@ -32,8 +34,9 @@ class Channel
 
 		std::string					getModes(void) const;
 		bool						isValidChannelMode(char mode) const;
-		int							setMode(char mode, bool enable);
+		void						setMode(char mode, bool enable);
 		bool 						hasMode(char mode) const;
+		std::string					getModeArguments(void) const;
 
 		std::vector<Client *>		getChannelUsers(void) const;
 		void						addUser(Client *client);
