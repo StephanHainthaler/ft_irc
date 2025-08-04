@@ -67,11 +67,11 @@ class Channel
 		unsigned int 				_userLimit; // User limit to channel
 
 		/* Mode flags
-		MODE +-i  				| Invite-only
-		MODE +-t  				| Restrict topic changes to channel operators
-		MODE +-k <password> 	| Channel key (password)
-		MODE +-o <nickname> 	| Channel operator privilege
-		MODE +-l <limit> 		| User limit to channel
+		MODE <channel> +/-i  				| Invite-only
+		MODE <channel> +/-t  				| Restrict topic changes to channel operators
+		MODE <channel> +/-k <password> 		| Channel key (password)
+		MODE <channel> +/-o <nickname> 		| Channel operator privilege
+		MODE <channel> +/-l <limit> 		| User limit to channel
 		
 		CHANNEL_KEY
 		https://modern.ircdocs.horse/#topic-message
