@@ -48,6 +48,11 @@ void	Server::executeCommand(Client *client, std::vector<std::string> command)
 		sendMessageToClient(client->getSocketFD(), "Authentication required! Please enter the server password with command PASS.");
 		return ;
 	}
+	else if (client->getState() == AUTHENTICATED && (command[0] != "PASS" && command[0] != "NICK" && command[0] != "USER"))
+	{
+		sendMessageToClient(client->getSocketFD(), "Registration required! Please enter the a nickname and a username with NICK and USER respectively.");
+		return ;
+	}
 	else if (command[0].compare("PASS") == 0)
 		pass(*client, command, 1);
 	else if (command[0].compare("NICK") == 0)
