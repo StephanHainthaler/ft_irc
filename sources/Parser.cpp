@@ -433,8 +433,9 @@ int		Server::mode(Client &client, std::vector<std::string> command, size_t cmdNu
 	else
 	{
 		//CHECK FOR CHANNEL PERMISSIONS
-		// ERR_CHANOPRIVSNEEDED (482)
-		//
+		if (toChangeMode->isOperator(&client) == false)
+			return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_CHANOPRIVSNEEDED, client, channelName)), 1);
+
 		modeString = command[cmdNumber++];
 		for (size_t i = 0; i < modeString.length(); i++)
 		{
@@ -454,9 +455,7 @@ int		Server::mode(Client &client, std::vector<std::string> command, size_t cmdNu
 					toChangeMode->setOperator(command[i++], doEnable);
 			}
 			else if (modeString[i] == 't')
-			{
 				toChangeMode->setMode('t', "", doEnable);
-			}
 			else if (modeString[i] == 'l')
 			{
 				if (i < command.size())
@@ -477,7 +476,6 @@ int		Server::mode(Client &client, std::vector<std::string> command, size_t cmdNu
 		
 
 	// ERR_NOTONCHANNEL (442)
-	// ERR_CHANOPRIVSNEEDED (482)
 
 	return (0);
 }
@@ -487,11 +485,13 @@ std::string Server::createReplyToClient(int messageCode, Client &client)
 	std::string	returnMessage = "";
 
 	if (messageCode == RPL_WELCOME)
-		returnMessage = ":" + client.getFullIdentifier() + " 001 " + client.getNickname() + " :Welcome to the Internet Relay Chat Network, " + client.getFullIdentifier(); 
+		returnMessage += ":" + client.getFullIdentifier() + " 001 " + client.getNickname() + " :Welcome to the Internet Relay Chat Network, " + client.getFullIdentifier();
 	else if (messageCode == ERR_ALREADYREGISTERED)
-		returnMessage = client.getNickname() + " :You may not reregister";
+	//":" + client.getFullIdentifier() + " 001 " + client.getNickname() + " :Welcome to the Internet Relay Chat Network, " + client.getFullIdentifier();
+		returnMessage += ":" + client.getFullIdentifier() + " 462 " + client.getNickname() + " :You may not reregister";
 	else if (messageCode == ERR_PASSWDMISMATCH)
 	{
+		//returnMessage += ":" + client.getFullIdentifier() + " 464 " + client.getNickname() + " :Password incorrect" + client.getFullIdentifier();
 		if (client.getState() < REGISTERED)
 			returnMessage = "Password incorrect. Please try again.";
 		else

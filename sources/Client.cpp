@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: shaintha <shaintha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/08/01 15:53:37 by marvin           ###   ########.fr       */
+/*   Updated: 2025/08/04 16:55:52 by shaintha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,8 @@ Client::Client(int socketFD, int port)
 	_socketFD = socketFD; 
 	_port = port;
     _state = CONNECTING;
+    _nickname = "*";
+    _userName = "*";
     _hostname = "localhost";
 }
 
