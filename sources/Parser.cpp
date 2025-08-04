@@ -62,7 +62,7 @@ void	Server::executeCommand(Client *client, std::vector<std::string> command)
 		user(*client, command, 1);
 	else if (command[0].compare("JOIN") == 0)
 		join(*client, command, 1);
-	else if (command[0].compare("PRIVMSG") == 0 && command[1][0] == '#')
+	else if (command[0].compare("PRIVMSG") == 0)
 		privMsg(*client, command, 1);
 	else if (command[0].compare("KICK") == 0)
 		kick(*client, command, 1);
