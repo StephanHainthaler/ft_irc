@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: shaintha <shaintha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/08/04 16:55:52 by shaintha         ###   ########.fr       */
+/*   Updated: 2025/08/05 17:45:24 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,14 +50,14 @@ void Client::disconnect()
 int	Client::isNickValid(const std::string& nickname) const
 {
 	if (nickname.size() > 9 || nickname.size() == 0)
-			return (std::cerr << "Error: Nickname must be at least 1 character and can only be max 9 characters long." << std::endl, ERR_ERRONEUSNICKNAME);
+			return (std::cerr << "Error: Nickname must be at least 1 character and can only be max 9 characters long." << std::endl, ERR_ERRONEUSNICKNAME2);
 	if (nickname[0] == '$' || nickname[0] == ':' || nickname[0] == '#' || nickname[0] == '~' || nickname[0] == '&' || nickname[0] == '+')
-			return (std::cerr << "Error: Nickname invalid." << std::endl, ERR_ERRONEUSNICKNAME);
+			return (std::cerr << "Error: Nickname invalid." << std::endl, ERR_ERRONEUSNICKNAME2);
 
 	for (size_t i = 0; i < nickname.size(); i++)
 	{
 		if (nickname[i] == ' ' || nickname[i] == ',' || nickname[i] == '*' || nickname[i] == '?' || nickname[i] == '!' || nickname[i] == '@')
-			return (std::cerr << "Error: Nickname invalid." << std::endl, ERR_ERRONEUSNICKNAME);
+			return (std::cerr << "Error: Nickname invalid." << std::endl, ERR_ERRONEUSNICKNAME2);
 	}
 	return (0);
 }
@@ -80,7 +80,7 @@ void	Client::setNick(const std::string& nickName)
 int		Client::isUserValid(std::string& userName)
 {
 	if (userName.size() == 0)
-		return (/* std::cerr << <client> "<USER> :Not enough parameters" << std::endl, */ ERR_NEEDMOREPARAMS);
+		return (/* std::cerr << <client> "<USER> :Not enough parameters" << std::endl, */ ERR_NEEDMOREPARAMS2);
 	if (userName.size() > USERLEN)
 		userName = truncName(userName);
 	return (0);
@@ -157,7 +157,7 @@ int Client::setMode(char mode, bool enable)
 	if (!isValidUserMode(mode))
 	{
 		std::cerr << "Error: Invalid user mode '" << mode << "'" << std::endl;
-		return (ERR_UNKNOWNMODE) ;
+		return (ERR_UNKNOWNMODE2) ;
 	}
     if (enable)
     {
