@@ -31,6 +31,7 @@
 # include "main.hpp"
 # include "Client.hpp"
 # include "Channel.hpp"
+# include "Replies.hpp"
 
 # define MAX_MSG_LEN 1042
 
@@ -62,6 +63,11 @@ class Server
 		sockaddr_in 			getServerAddress(void) const; // bc client will need it to connect to server
 		int 					getState(void) const;
 		Client 					*getClient(std::string nickname) const;
+
+
+		//ADDED BY STEPHAN
+		void					setName(std::string name);
+		std::string				getName(void) const;
 
 		// Member functions - server actions
 		void 					handleClientConnections(void); // like addClient
@@ -140,6 +146,10 @@ class Server
 		// clients must be unique within a channel
 
 		int						_state; // Server state - 0: not running, 1: running, -1: error (?)_
+
+
+		//ADDED BY STEPHAN
+		std::string				_name;
 };
 
 /* 

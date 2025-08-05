@@ -40,6 +40,11 @@ Server::Server(const unsigned int &port, const std::string &password): _port(por
 	// _clients and _channels remain empty at this point (?) - will get filled later
 
 	_state = NOT_RUNNING; // Server state - 0: not running
+
+
+	//ADDED BY STEPHAN
+	_name = "localhost";
+
 }
 
 Server::~Server(void)
@@ -506,4 +511,16 @@ const char* Server::ServerException::what() const throw()
 
 Server::ServerException::~ServerException() throw() 
 {
+}
+
+
+//ADDED BY STEPHAN
+void	Server::setName(std::string name)
+{
+	_name = name;
+}
+
+std::string	Server::getName(void) const
+{
+	return (_name);
 }
