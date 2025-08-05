@@ -226,6 +226,15 @@ int	Server::join(Client &client, std::vector<std::string> command, size_t cmdNum
 			addChannel(newChannel);
 			// std::cout << ":" << client.getFullIdentifier() << " JOIN :" << newChannel->getName() << std::endl;
 			sendMessageToClient(client.getSocketFD(), ":" + client.getFullIdentifier() + " JOIN :" + newChannel->getName());
+
+			sendMessageToClient(client.getSocketFD(), ":localhost MODE :" + newChannel->getName() + " +qo " + client.getNickname() + " " + client.getNickname());
+
+			if (newChannel->getTopic().empty() == true)
+				sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_NOTOPIC, client, newChannel->getName()));
+			else
+				sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_TOPIC, client, newChannel->getName(), newChannel->getTopic()));
+			sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_NAMREPLY, client, newChannel->getName(), newChannel->getNamesOfChannelMembers()));
+			sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_ENDOFNAMES, client, newChannel->getName()));
 		}
 		else
 		{
@@ -277,13 +286,11 @@ int	Server::join(Client &client, std::vector<std::string> command, size_t cmdNum
 			// 3. 
 			sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_NAMREPLY, client, toJoinTo->getName(), toJoinTo->getNamesOfChannelMembers()));
 			sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_ENDOFNAMES, client, toJoinTo->getName()));
+			sendMessageToChannel(&client, toJoinTo, createReplyToClient(RPL_NAMREPLY, client, toJoinTo->getName(), toJoinTo->getNamesOfChannelMembers()));
+			sendMessageToChannel(&client, toJoinTo, createReplyToClient(RPL_ENDOFNAMES, client, toJoinTo->getName()));
 
 		}
 	}
-	// for (size_t i = 0; i < _channels.size(); i++)
-	// {
-	// 	std::cout << "Channel " << i + 1 << ": " << _channels[i]->getName() << std::endl;
-	// }
 	return (0);
 }
 
@@ -523,83 +530,92 @@ int		Server::mode(Client &client, std::vector<std::string> command, size_t cmdNu
 	return (0);
 }
 
+
+std::string	Server::convertCodeToString(size_t number)
+{
+	std::string	numberString = "000";
+	size_t		numberLength = 0;
+
+	if (number > 999)
+		return ("999");
+	for (size_t i = number; i > 0; i /= 10)
+		numberLength++;
+	for (size_t i = 0; i < numberLength; number /= 10, i++)
+		numberString[numberString.length() - 1 - i] = ((number % 10) + '0');
+	return (numberString);
+}
+
 std::string Server::createReplyToClient(int messageCode, Client &client)
 {
-	std::string	returnMessage = "";
+	//std::string	returnMessage = ":" + client.getFullIdentifier() + " " + convertCodeToString(messageCode) + " " + client.getNickname();
+	std::string	returnMessage = ":localhost " + convertCodeToString(messageCode) + " " + client.getNickname();
 
 	if (messageCode == RPL_WELCOME)
-		returnMessage += ":" + client.getFullIdentifier() + " 001 " + client.getNickname() + " :Welcome to the Internet Relay Chat Network, " + client.getFullIdentifier();
+		returnMessage += " :Welcome to the Internet Relay Chat Network, " + client.getFullIdentifier();
 	else if (messageCode == ERR_ALREADYREGISTERED)
-	//":" + client.getFullIdentifier() + " 001 " + client.getNickname() + " :Welcome to the Internet Relay Chat Network, " + client.getFullIdentifier();
-		returnMessage += ":" + client.getFullIdentifier() + " 462 " + client.getNickname() + " :You may not reregister";
+		returnMessage += " :You may not reregister";
 	else if (messageCode == ERR_PASSWDMISMATCH)
-	{
-		//returnMessage += ":" + client.getFullIdentifier() + " 464 " + client.getNickname() + " :Password incorrect" + client.getFullIdentifier();
-		if (client.getState() < REGISTERED)
-			returnMessage = "Password incorrect. Please try again.";
-		else
-			returnMessage = client.getNickname() + " :Password incorrect"; //SHPUlD THEpreTicAlly Never APpeaR
-	}
+		returnMessage += " :Password incorrect";
 	return (returnMessage);
 }
 
 std::string Server::createReplyToClient(int messageCode, Client &client, std::string argument)
 {
-	std::string	returnMessage = "";
+	std::string	returnMessage = ":" + client.getFullIdentifier() + " " + convertCodeToString(messageCode); //+ " " + client.getNickname();
 
 	if (messageCode == RPL_NOTOPIC)
-		returnMessage = client.getNickname() + " " + argument + " :No topic is set";
+		returnMessage += " " + argument + " :No topic is set";
 	else if (messageCode == RPL_ENDOFNAMES)
-		returnMessage = client.getNickname() + " " + argument + " :End of /NAMES list";
+		returnMessage += " " + argument + " :End of /NAMES list";
 	else if (messageCode == ERR_NOSUCHNICK)
-		returnMessage = client.getNickname() + " " + argument + " :No such nick/channel";
+		returnMessage += " " + argument + " :No such nick/channel";
 	else if (messageCode == ERR_NOSUCHCHANNEL)
-		returnMessage = client.getNickname() + " " + argument + " :No such channel";
+		returnMessage += " " + argument + " :No such channel";
 	else if (messageCode == ERR_TOOMANYCHANNELS)
-		returnMessage = client.getNickname() + " " + argument + " :You have joined too many channels";
+		returnMessage += " " + argument + " :You have joined too many channels";
 	else if (messageCode == ERR_UNKNOWNCOMMAND)
-		returnMessage = client.getNickname() + " " + argument + " :Unknown command";
+		returnMessage += " " + argument + " :Unknown command";
 	else if (messageCode == ERR_NOTONCHANNEL)
-		returnMessage = client.getNickname() + " " + argument + " :You're not on that channel";
+		returnMessage += " " + argument + " :You're not on that channel";
 	else if (messageCode == ERR_NEEDMOREPARAMS)
-		returnMessage = client.getNickname() + " " + argument + " :Not enough parameters";
+		returnMessage += " " + argument + " :Not enough parameters";
 	else if (messageCode == ERR_CHANNELISFULL)
-		returnMessage = client.getNickname() + " " + argument + " :Cannot join channel (+l)";
+		returnMessage += " " + argument + " :Cannot join channel (+l)";
 	else if (messageCode == ERR_INVITEONLYCHAN)
-		returnMessage = client.getNickname() + " " + argument + " :Cannot join channel (+i)";
+		returnMessage += " " + argument + " :Cannot join channel (+i)";
 	else if (messageCode == ERR_BANNEDFROMCHAN)
-		returnMessage = client.getNickname() + " " + argument + " :Cannot join channel (+b)";
+		returnMessage += " " + argument + " :Cannot join channel (+b)";
 	else if (messageCode == ERR_BADCHANNELKEY)
-		returnMessage = client.getNickname() + " " + argument + " :Cannot join channel (+k)";
+		returnMessage += " " + argument + " :Cannot join channel (+k)";
 	else if (messageCode == ERR_BADCHANMASK)
-		returnMessage = client.getNickname() + " " + argument + " :Bad Channel Mask";
+		returnMessage += " " + argument + " :Bad Channel Mask";
 	else if (messageCode == ERR_CHANOPRIVSNEEDED)
-		returnMessage = client.getNickname() + " " + argument + " :You're not channel operator";
+		returnMessage += " " + argument + " :You're not channel operator";
 	return (returnMessage);
 }
 
 std::string Server::createReplyToClient(int messageCode, Client &client, std::string arg1, std::string arg2)
 {
-	std::string	returnMessage = "";
+	std::string	returnMessage = ":" + client.getFullIdentifier() + " " + convertCodeToString(messageCode) + " " + client.getNickname();
 
 	if (messageCode == RPL_TOPIC)
-		returnMessage = client.getNickname() + " " + arg1 + " :" + arg2;
+		returnMessage += " " + arg1 + " :" + arg2;
 	else if (messageCode == RPL_INVITING)
-		returnMessage = client.getNickname() + " " + arg1 + " " + arg2;
+		returnMessage += " " + arg1 + " " + arg2;
 	else if (messageCode == RPL_NAMREPLY)
-		returnMessage = client.getNickname() + " = " + arg1 + " :" + arg2;
+		returnMessage += " = " + arg1 + " :" + arg2;
 	else if (messageCode == ERR_USERNOTINCHANNEL)
-		returnMessage = client.getNickname() + " " + arg1 + " " + arg2 + " :They aren't on that channel";
+		returnMessage += " " + arg1 + " " + arg2 + " :They aren't on that channel";
 	else if (messageCode == ERR_USERONCHANNEL)
-		returnMessage = client.getNickname() + " " + arg1 + " " + arg2 + " :is already on channel";
+		returnMessage += " " + arg1 + " " + arg2 + " :is already on channel";
 	return (returnMessage);
 }
 
 std::string Server::createReplyToClient(int messageCode, Client &client, std::string arg1, std::string arg2, std::string arg3)
 {
-	std::string	returnMessage = "";
+	std::string	returnMessage = ":" + client.getFullIdentifier() + " " + convertCodeToString(messageCode) + " " + client.getNickname();
                                                         
 	if (messageCode == RPL_CHANNELMODEIS)
-		returnMessage += client.getNickname() + " " + arg1 + " " + arg2 + " " + arg3;
+		returnMessage += " " + arg1 + " " + arg2 + " " + arg3;
 	return (returnMessage);
 }
