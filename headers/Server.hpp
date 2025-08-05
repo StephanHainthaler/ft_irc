@@ -78,8 +78,7 @@ class Server
 		void 					removeChannel(Channel *channel);
 
 		// Nickname availability checks
-		bool 					isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const;
-		bool 					isNicknameAvailable(const std::string& nickname) const;
+		bool 					isNicknameAvailable(const std::string& nickname, const Client* targetClient) const;
 		void 					handleNickCommand(Client* client, const std::string& newNickname);
 
 		// PARSER

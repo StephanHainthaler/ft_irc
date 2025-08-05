@@ -149,7 +149,7 @@ int	Server::nick(Client &client, std::vector<std::string> command, size_t cmdNum
 	if (command.size() <= cmdNumber)
         return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NEEDMOREPARAMS, client, "NICK")), 1);
 
-	if (client.isNickValid(command[cmdNumber]) != 0)
+	if (client.isNickValid(command[cmdNumber]) != 0 || !isNicknameAvailable(command[cmdNumber], &client))
 		 return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_ERRONEUSNICKNAME, client)), 1);
     
 	std::string oldNick = client.getNickname().empty() ? "*" : client.getNickname();
