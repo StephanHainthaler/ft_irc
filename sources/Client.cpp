@@ -6,7 +6,7 @@
 /*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/08/05 17:45:24 by marvin           ###   ########.fr       */
+/*   Updated: 2025/08/05 23:00:17 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,19 +47,16 @@ void Client::disconnect()
 
 // NICK/USER/REALNAME CHECKS
 
-int	Client::isNickValid(const std::string& nickname) const
+bool    Client::isNickValid(const std::string& nickname) const
 {
-	if (nickname.size() > 9 || nickname.size() == 0)
-			return (std::cerr << "Error: Nickname must be at least 1 character and can only be max 9 characters long." << std::endl, ERR_ERRONEUSNICKNAME2);
+    if (nickname.size() > 9 || nickname.size() == 0)
+		return (false);
 	if (nickname[0] == '$' || nickname[0] == ':' || nickname[0] == '#' || nickname[0] == '~' || nickname[0] == '&' || nickname[0] == '+')
-			return (std::cerr << "Error: Nickname invalid." << std::endl, ERR_ERRONEUSNICKNAME2);
-
+		return (false);
 	for (size_t i = 0; i < nickname.size(); i++)
-	{
 		if (nickname[i] == ' ' || nickname[i] == ',' || nickname[i] == '*' || nickname[i] == '?' || nickname[i] == '!' || nickname[i] == '@')
-			return (std::cerr << "Error: Nickname invalid." << std::endl, ERR_ERRONEUSNICKNAME2);
-	}
-	return (0);
+			return (false);
+	return (true);
 }
 
 
@@ -73,8 +70,9 @@ std::string Client::truncName(const std::string& name)
 
 void	Client::setNick(const std::string& nickName)
 {
-	if (isNickValid(nickName) == 0)
-		_nickname = nickName;
+	// if (isNickValid(nickName) == 0)
+	// 	_nickname = nickName;
+    _nickname = nickName;    
 }
 
 int		Client::isUserValid(std::string& userName)
@@ -250,6 +248,25 @@ std::string Client::getHostname() const
 std::vector<std::string> Client::getChannels() const
 {
     return (_channels);
+}
+
+
+//ADDED BY STEPHAN
+std::string	Client::getClientName(void) const
+{
+    std::string clientName = "*";
+    
+    if (getNickname() != "*")
+    {
+        clientName = getNickname();
+        if (getUsername() != "*")
+        {
+            clientName += "!" + getUsername();
+            if (getHostname().empty() == false)
+                 clientName += "@" + getHostname();
+        }
+    }
+    return (clientName);
 }
 
 

@@ -17,12 +17,22 @@
 
 //COMMAND REPLIES
 
-//<client> JOIN :<channel>
-# define MSG_JOIN(client, channel)				":" + client + " JOIN :" + channel						
+//":<client>/<oldNick>!<user>@<host> NICK :<newNick>"
+# define MSG_NICK(client, newNick)		":" + client + " NICK :" + newNick
+
+//":<client>/<oldNick>!<user>@<host> JOIN :<channel>"
+# define MSG_JOIN(client, channel)		":" + client + " JOIN :" + channel
+
+//":<source> MODE " + channel + " " + mode + " " + param"
+# define MSG_MODE(source, channel, modeString, modeArguments)	":" + source +  " MODE " + channel + " " + modeString + " " + modeArguments
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//NUMERIC REPLIES
+//NUMERIC REPLIES 
+
+//Distinct from a normal message, a numeric reply MUST contain a <source> and use a three-digit numeric as the command. 
+//A numeric reply SHOULD contain the target of the reply as the first parameter of the message.
+//A numeric reply is not allowed to originate from a client.
 
 //":<source> 001 <client> :Welcome to the <networkname> Network, <nick>[!<user>@<host>]"
 # define RPL_WELCOME(source, client, nick, user, host)  						":" + source + " 001 " + client + " :Welcome to the Internet Relay Chat Network, " + nick + "!" + user + "@" + host

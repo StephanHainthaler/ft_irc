@@ -89,9 +89,9 @@ class Server
 		void 					handleNickCommand(Client* client, const std::string& newNickname);
 
 		// PARSER
-		void					handleInput(Client *client, std::string input);
+		void					handleInput(Client &client, std::string input);
 		void					parseStringToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters);
-		void					executeCommand(Client *client, std::vector<std::string> command);
+		void					executeCommand(Client &client, std::vector<std::string> command);
 		void					printVector(std::vector<std::string> vector);
 		int						pass(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						nick(Client &client, std::vector<std::string> command, size_t cmdNumber);
@@ -106,6 +106,7 @@ class Server
 		std::string				createReplyToClient(int messageCode, Client &client, std::string argument);
 		std::string				createReplyToClient(int messageCode, Client &client, std::string arg1, std::string arg2);
 		std::string				createReplyToClient(int messageCode, Client &client, std::string arg1, std::string arg2, std::string arg3);
+		void					testAllNumericReplies(int clientFD, Client &client);
 
 		// Cleanup
 		void					gracefulShutdown();

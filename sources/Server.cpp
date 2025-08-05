@@ -255,7 +255,8 @@ void	Server::handleClientMessage(int clientFd)
     {
 		std::cout << GRAY << "Client: " << buffer << DEFAULT << std::endl; // first one is IRC client
 		std::map<int, Client *>::iterator it = _clients.find(clientFd);
-		handleInput(it->second, buffer);
+		Client	*client = it->second;
+		handleInput(*client, buffer);
 	}
 }
 

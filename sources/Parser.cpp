@@ -12,127 +12,92 @@
 
 #include "../headers/Server.hpp"
 
-void	Server::handleInput(Client *client, std::string input)
+void	Server::handleInput(Client &client, std::string input)
 {
 	std::vector<std::string>	command;
 
 	parseStringToVector(input, &command, " \f\n\r\t\v");
-	executeCommand(client, command);
+	if (command.empty() == true)
+		return ;
+	else if (client.getState() < AUTHENTICATED && command[0] != "PASS")
+		sendMessageToClient(client.getSocketFD(), "Authentication required! Please enter the server password with command PASS.");
+	else if (client.getState() == AUTHENTICATED && command[0] != "PASS" && command[0] != "NICK" && command[0] != "USER")
+		sendMessageToClient(client.getSocketFD(), ERR_NOTREGISTERED(getName(), client.getClientName()));
+	else
+		executeCommand(client, command);
+	if (client.getState() < REGISTERED && client.getNickname() != "*" && client.getUsername() != "*")
+	{
+		client.setState(REGISTERED);
+		sendMessageToClient(client.getSocketFD(), RPL_WELCOME(getName(), client.getNickname(), client.getNickname(), client.getUsername(), client.getHostname()));
+	}
 }
 
 void    Server::parseStringToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters)
 {
-	// char *copy = NULL;
-	// input.copy(copy, input.length(), 0);
-
 	for (char* token = std::strtok((char *)input.c_str(), delimiters); token; token = std::strtok(NULL, delimiters))
-	{
-		// if (token[0] == ':')
-		// {
-		// 	std::cout << "Found a : in " << token << std::endl;
-		// 	std::cout << "Hackstack: " << copy << ", Needle: " << token << std::endl;
-		// 	std::cout << std::strstr((char *)copy, token) << std::endl;
-		// 	token = std::strstr((char *)copy, token);
-		// 	vector->push_back(token);
-		// 	return ;
-		// }
 		vector->push_back(token);
-	}
-		
 }
 
-void	Server::executeCommand(Client *client, std::vector<std::string> command)
+void	Server::executeCommand(Client &client, std::vector<std::string> command)
 {
-	if (client->getState() < AUTHENTICATED && !(command[0].compare("PASS") == 0))
-	{
-		sendMessageToClient(client->getSocketFD(), "Authentication required! Please enter the server password with command PASS.");
-		return ;
-	}
-	else if (client->getState() == AUTHENTICATED && (command[0] != "PASS" && command[0] != "NICK" && command[0] != "USER"))
-	{
-		sendMessageToClient(client->getSocketFD(), "Registration required! Please enter the a nickname and a username with NICK and USER respectively.");
-		return ;
-	}
-	else if (command[0].compare("PASS") == 0)
-		pass(*client, command, 1);
+	if (command[0].compare("PASS") == 0)
+		pass(client, command, 1);
 	else if (command[0].compare("NICK") == 0)
-		nick(*client, command, 1);
+		nick(client, command, 1);
 	else if (command[0].compare("USER") == 0)
-		user(*client, command, 1);
+		user(client, command, 1);
 	else if (command[0].compare("JOIN") == 0)
-		join(*client, command, 1);
+		join(client, command, 1);
 	else if (command[0].compare("PRIVMSG") == 0)
 		std::cout << "PRIVMSG" << std::endl;
 	else if (command[0].compare("KICK") == 0)
-		kick(*client, command, 1);
+		kick(client, command, 1);
 	else if (command[0].compare("INVITE") == 0)
-		invite(*client, command, 1);
+		invite(client, command, 1);
 	else if (command[0].compare("TOPIC") == 0)
-		topic(*client, command, 1);
+		topic(client, command, 1);
 	else if (command[0].compare("MODE") == 0)
-		std::cout << "MODE" << std::endl;
+		mode(client, command, 1);
+	else if (command[0].compare("TEST") == 0)
+		testAllNumericReplies(client.getSocketFD(), client);
 	else
-		sendMessageToClient(client->getSocketFD(), createReplyToClient(ERR_UNKNOWNCOMMAND2, *client, command[0]));
-}
-
-void Server::printVector(std::vector<std::string> vector)
-{
-	if (vector.size() == 0)
-	{
-		std::cout << "EMPTY VECTOR!!" << std::endl;
-		return ;
-	}
-	for (size_t i = 0; i < vector.size(); i++)
-	{			
-		std::cout << vector[i] << std::endl;
-	}
+		sendMessageToClient(client.getSocketFD(), ERR_UNKNOWNCOMMAND(getName(), client.getClientName(), command[0]));
 }
 
 int		Server::pass(Client &client, std::vector<std::string> command, size_t cmdNumber)
 {
 	if (command.size() < 2)
-		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NEEDMOREPARAMS2, client, "PASS")), 1);
+		return (sendMessageToClient(client.getSocketFD(), ERR_NEEDMOREPARAMS(getName(), client.getNickname(), "PASS")), 1);
 	else if (client.getState() >= AUTHENTICATED)
-		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_ALREADYREGISTERED2, client)), 1);
-	else if (command[cmdNumber].compare(_password) == 0)
-	{
-		client.setState(AUTHENTICATED);
-		sendMessageToClient(client.getSocketFD(), "You are now authenticated! Please input your nickname and username with the NICK and USER command respectively!");
-	}
-	else
-		sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_PASSWDMISMATCH2, client));
-	return (0);
+		return (sendMessageToClient(client.getSocketFD(), ERR_ALREADYREGISTERED(getName(), client.getNickname())), 1);
+	else if (command[cmdNumber].compare(_password) != 0)
+		return (sendMessageToClient(client.getSocketFD(), ERR_PASSWDMISMATCH(getName(), client.getNickname())), 1);
+	client.setState(AUTHENTICATED);
+	return (sendMessageToClient(client.getSocketFD(), "Authentication complete! Please input your nickname & username with NICK/USER."), 0);
 }
 
 int	Server::nick(Client &client, std::vector<std::string> command, size_t cmdNumber)
 {
-	if (client.isNickValid(command[cmdNumber]) != 0)
-		return (1);
+	if (command.size() <= cmdNumber)
+		return (sendMessageToClient(client.getSocketFD(), ERR_NONICKNAMEGIVEN(getName(), client.getClientName())), 1);
+	else if (client.isNickValid(command[cmdNumber]) == false)
+		return (sendMessageToClient(client.getSocketFD(), ERR_ERRONEUSNICKNAME(getName(), client.getClientName(), command[cmdNumber])), 1);
+	else if (isNicknameAvailable(command[cmdNumber], &client) == false)
+		return (sendMessageToClient(client.getSocketFD(), ERR_NICKNAMEINUSE(getName(), client.getClientName(), command[cmdNumber])), 1);
+	sendMessageToClient(client.getSocketFD(), MSG_NICK(client.getNickname(), command[cmdNumber]));
 	client.setNick(command[cmdNumber]);
-	sendMessageToClient(client.getSocketFD(), "You are now known as " + client.getNickname());
-	if (client.getNickname().empty() == false && client.getUsername().empty() == false && client.getRealname().empty() == false)
-	{
-		client.setState(REGISTERED);
-		sendMessageToClient(client.getSocketFD(), RPL_WELCOME(getName(), client.getNickname(), client.getNickname(), client.getUsername(), client.getHostname()));
-	}
 	return (0);
 }
 
 int	Server::user(Client &client, std::vector<std::string> command, size_t cmdNumber)
 {
-	if (!(client.getState() < REGISTERED))
-		return (1);
-
 	if (command.size() < 5)
-		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NEEDMOREPARAMS2, client, "USER")), 1);
-	
+		return (sendMessageToClient(client.getSocketFD(), ERR_NEEDMOREPARAMS(getName(), client.getClientName(), "USER")), 1);
+	else if (client.getState() >= REGISTERED)
+		return (sendMessageToClient(client.getSocketFD(), ERR_ALREADYREGISTERED(getName(), client.getClientName())), 1);
+
 	//  DO CHECKS FOR 0 an *
 	client.setUser(command[cmdNumber], 0, '*', command[cmdNumber + 3]);
-	if (client.getNickname().empty() == false && client.getUsername().empty() == false && client.getRealname().empty() == false)
-	{
-		client.setState(REGISTERED);
-		sendMessageToClient(client.getSocketFD(), RPL_WELCOME(getName(), client.getNickname(), client.getNickname(), client.getUsername(), client.getHostname()));
-	}
 	return (0);
 }
 
@@ -142,13 +107,13 @@ int	Server::join(Client &client, std::vector<std::string> command, size_t cmdNum
 	Channel						*toJoinTo;
 
 	if (command.size() < 2)
-		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NEEDMOREPARAMS2, client, "JOIN")), 1);
+		return (sendMessageToClient(client.getSocketFD(), ERR_NEEDMOREPARAMS(getName(), client.getClientName(), "JOIN")), 1);
 	
 	//Parsing the command argument into channel name(s) stored in a vector
 	if (command[cmdNumber].find(","))
 		parseStringToVector(command[cmdNumber++], &channelNames, ",");
 	if (channelNames.size() == 0)
-		return (sendMessageToClient(client.getSocketFD(), ("No Channels given!")), 1);
+		return (1);
 
 	//Parsing the command argument into user name(s) stored in a vector
 	if (cmdNumber < command.size())
@@ -168,7 +133,7 @@ int	Server::join(Client &client, std::vector<std::string> command, size_t cmdNum
 		// }
 		if (channelNames[i][0] != '#')
 		{
-			sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_BADCHANMASK2, client, channelNames[i]));
+			sendMessageToClient(client.getSocketFD(), ERR_BADCHANMASK(getName(), client.getClientName(), channelNames[i]));
 			continue ;
 		}
 		toJoinTo = getChannel(channelNames[i]);
@@ -184,71 +149,63 @@ int	Server::join(Client &client, std::vector<std::string> command, size_t cmdNum
 			newChannel->addUser(&client);
 			std::string temp = client.getNickname();
 			newChannel->setOperator(temp, true);
-			// std::cout << ":" << client.getFullIdentifier() << " JOIN :" << newChannel->getName() << std::endl;
-			sendMessageToClient(client.getSocketFD(), ":" + client.getFullIdentifier() + " JOIN :" + newChannel->getName());
-			
-			sendMessageToClient(client.getSocketFD(),  ":" + client.getNickname() + "!" + client.getUsername() + " MODE :" + newChannel->getName() + " +o " + client.getNickname());
 
-			if (newChannel->getTopic().empty() == true)
-				sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_NOTOPIC2, client, newChannel->getName()));
-			else
-				sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_TOPIC2, client, newChannel->getName(), newChannel->getTopic()));
-			sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_NAMREPLY2, client, newChannel->getName(), newChannel->getNamesOfChannelMembers()));
-			sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_ENDOFNAMES2, client, newChannel->getName()));
+			sendMessageToClient(client.getSocketFD(), MSG_JOIN(client.getNickname(), channelNames[i]));
+			sendMessageToClient(client.getSocketFD(), MSG_MODE(getName(), channelNames[i], "+o", client.getNickname()));
+			sendMessageToClient(client.getSocketFD(), RPL_NOTOPIC(getName(), client.getNickname(), channelNames[i]));
+			sendMessageToClient(client.getSocketFD(), RPL_NAMREPLY(getName(), client.getNickname(), "=", channelNames[i], "@" + client.getNickname()));
+			sendMessageToClient(client.getSocketFD(), RPL_ENDOFNAMES(getName(), client.getNickname(), channelNames[i]));
 		}
 		else
 		{
 			if (toJoinTo->getUser(client.getNickname()) != NULL)
-			{
-				sendMessageToClient(client.getSocketFD(), "You are already on that Channel");
 				continue ;
-			}
 			else if (toJoinTo->hasMode('k') == true)
 			{
 				if (keyNames.size() == 0 || i != keyNames.size() - 1 || keyNames[i].compare(toJoinTo->getChannelKey()) != 0)
 				{
-					sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_BADCHANNELKEY2, client, channelNames[i]));
+					sendMessageToClient(client.getSocketFD(), ERR_BADCHANNELKEY(getName(), client.getNickname(), channelNames[i]));
 					continue ;
 				}
 			}
-			else if (toJoinTo->hasMode('b') == true)
-			{
-				//CHECK IF BANNED ON CHANNELLSIT
-				// if (????)
-				// {
-				// 	sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_BANNEDFROMCHAN, client, channelNames[i]));
-				// 	continue ;
-				// }
-			}
+			// else if (toJoinTo->hasMode('b') == true)
+			// {
+			// 	//CHECK IF BANNED ON CHANNELLSIT
+			// 	if (????)
+			// 	{
+			// 		sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_BANNEDFROMCHAN, client, channelNames[i]));
+			// 		continue ;
+			// 	}
+			// }
 			else if (toJoinTo->hasMode('l') == true)
 			{
 				if (toJoinTo->getChannelUsers().size() >= toJoinTo->getUserLimit())
 				{
-					sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_CHANNELISFULL2, client, channelNames[i]));
+					sendMessageToClient(client.getSocketFD(), ERR_CHANNELISFULL(getName(), client.getNickname(), channelNames[i]));
 					continue ;
 				}
 			}
 			else if (toJoinTo->hasMode('i') == true)
 			{
-				sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_INVITEONLYCHAN2, client, channelNames[i]));
+				sendMessageToClient(client.getSocketFD(), ERR_INVITEONLYCHAN(getName(), client.getNickname(), channelNames[i]));
 				continue ;
 			}
 			toJoinTo->addUser(&client);
 			//	1. actually to all in the channel
-			sendMessageToClient(client.getSocketFD(), ":" + client.getFullIdentifier() + " JOIN :" + toJoinTo->getName());
+			sendMessageToClient(client.getSocketFD(), MSG_JOIN(client.getNickname(), channelNames[i]));
+
 
 			//	2. Send topic of channel
 			if (toJoinTo->getTopic().empty() == true)
-				sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_NOTOPIC2, client, toJoinTo->getName()));
+				sendMessageToClient(client.getSocketFD(), RPL_NOTOPIC(getName(), client.getNickname(), channelNames[i]));
 			else
-				sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_TOPIC2, client, toJoinTo->getName(), toJoinTo->getTopic()));
+				sendMessageToClient(client.getSocketFD(), RPL_TOPIC(getName(), client.getNickname(), channelNames[i], toJoinTo->getTopic()));
 
 			// 3. 
-			sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_NAMREPLY2, client, toJoinTo->getName(), toJoinTo->getNamesOfChannelMembers()));
-			sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_ENDOFNAMES2, client, toJoinTo->getName()));
-			sendMessageToChannel(&client, toJoinTo, createReplyToClient(RPL_NAMREPLY2, client, toJoinTo->getName(), toJoinTo->getNamesOfChannelMembers()));
-			sendMessageToChannel(&client, toJoinTo, createReplyToClient(RPL_ENDOFNAMES2, client, toJoinTo->getName()));
-
+			sendMessageToClient(client.getSocketFD(), RPL_NAMREPLY(getName(), client.getNickname(), "=", channelNames[i], toJoinTo->getNamesOfChannelMembers()));
+			sendMessageToClient(client.getSocketFD(), RPL_ENDOFNAMES(getName(), client.getNickname(), channelNames[i]));
+			sendMessageToChannel(&client, toJoinTo, RPL_NAMREPLY(getName(), client.getNickname(), "=", channelNames[i], toJoinTo->getNamesOfChannelMembers()));
+			sendMessageToChannel(&client, toJoinTo, RPL_ENDOFNAMES(getName(), client.getNickname(), channelNames[i]));
 		}
 	}
 	return (0);
@@ -266,22 +223,22 @@ int	Server::kick(Client &client, std::vector<std::string> command, size_t cmdNum
 
 	//CHECK NUMBER OF NECESSARY PARAMETERS
 	if (command.size() < 3)
-		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NEEDMOREPARAMS2, client, "KICK")), 1);
+		return (sendMessageToClient(client.getSocketFD(), ERR_NEEDMOREPARAMS(getName(), client.getClientName(), "KICK")), 1);
 
 	//CHECK THE NAME FORMAT FOR CHANNELS
 	channelName = command[cmdNumber++];
 	if (channelName[0] != '#')
-		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_BADCHANMASK2, client, channelName)), 1);
+		return (sendMessageToClient(client.getSocketFD(), ERR_BADCHANMASK(getName(), client.getClientName(), channelName)), 1);
 	//CHECK IF CHANNEL EXISTS
 	toKickFrom = getChannel(channelName);
 	if (toKickFrom == NULL)
-		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NOSUCHCHANNEL2, client, channelName)), 1);
+		return (sendMessageToClient(client.getSocketFD(), ERR_NOSUCHCHANNEL(getName(), client.getClientName(), channelName)), 1);
 
 	//Parsing the command argument into user name(s) stored in a vector
 	if (command[cmdNumber].find(","))
 		parseStringToVector(command[cmdNumber++], &users, ",");
 	if (users.size() == 0)
-		return (sendMessageToClient(client.getSocketFD(), ("No Channels given!")), 1);
+		return (1);
 
 	//Check for a KICK message (that starts with ':')
 	if (cmdNumber < command.size())
@@ -300,7 +257,7 @@ int	Server::kick(Client &client, std::vector<std::string> command, size_t cmdNum
 		toBeKicked = toKickFrom->getUser(users[i]);
 		if (toBeKicked == NULL)
 		{
-			sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_USERNOTINCHANNEL2, client, users[i], channelName));
+			sendMessageToClient(client.getSocketFD(), ERR_USERNOTINCHANNEL(getName(), client.getClientName(), users[i], channelName));
 			continue ;
 		}
 			
@@ -321,26 +278,25 @@ int	Server::invite(Client &client, std::vector<std::string> command, size_t cmdN
 	//CHECK CLIENT AUTHORITY
 	//	"<channel> :You're not channel operator" --> ERR_CHANOPRIVSNEEDED (482)	
 
-	
 
 	//CHECK NUMBER OF NECESSARY PARAMETERS
 	if (command.size() < 3)
-		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NEEDMOREPARAMS2, client, "INVITE")), 1);
+		return (sendMessageToClient(client.getSocketFD(), ERR_NEEDMOREPARAMS(getName(), client.getClientName(), "INVITE")), 1);
 
 	nickname = command[cmdNumber++];
 	//CHECK IF CHANNEL EXISTS
 	channelName = command[cmdNumber++];
 	toInviteTo = getChannel(channelName);
 	if (toInviteTo == NULL)
-		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NOSUCHCHANNEL2, client, channelName)), 1);
+		return (sendMessageToClient(client.getSocketFD(), ERR_NOSUCHCHANNEL(getName(), client.getClientName(), channelName)), 1);
 
 	//CHECK IF COMMAND ISSUER PART OF THAT CHANNEL
 	if (toInviteTo->getUser(client.getNickname()) == NULL)
-		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NOTONCHANNEL2, client, channelName)), 1);
+		return (sendMessageToClient(client.getSocketFD(), ERR_NOTONCHANNEL(getName(), client.getClientName(), channelName)), 1);
 
 	//CHECK IF CLIENT IS PART OF THAT CHANNEL
 	if (toInviteTo->getUser(nickname) != NULL)
-		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_USERONCHANNEL2, client, nickname, channelName)), 1);
+		return (sendMessageToClient(client.getSocketFD(), ERR_USERONCHANNEL(getName(), client.getClientName(), nickname, channelName)), 1);
 
 	if (cmdNumber < command.size())
 		return (std::cerr << "TOO MANY PARAMETERS" << std::endl, 1);
@@ -349,16 +305,19 @@ int	Server::invite(Client &client, std::vector<std::string> command, size_t cmdN
 
 	toBeInvited = getClient(nickname);
 	if (toBeInvited == NULL)
-		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NOSUCHNICK2, client, nickname)), 1);
+		return (sendMessageToClient(client.getSocketFD(), ERR_NOSUCHNICK(getName(), client.getClientName(), nickname)), 1);
 
 
 	// RPL_INVITING (341)
 	// When the invite is successful, the server MUST send a RPL_INVITING numeric to the command issuer,
 	// and an INVITE message, with the issuer as <source>?????????, to the target user. Other channel members SHOULD NOT be notified.
 
-	sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_INVITING2, client, nickname, channelName));
+	sendMessageToClient(client.getSocketFD(), RPL_INVITING(getName(), client.getClientName(), nickname, channelName));
 	//toBeInvited needs to get reassigend by pais function Server::getUser(nickname);
-	sendMessageToClient(toBeInvited->getSocketFD(), createReplyToClient(RPL_TOPIC2, *toBeInvited, channelName, toInviteTo->getTopic()));
+	//MSG_INVITE
+
+	//CHECK IF TOPIC OR NOT
+	sendMessageToClient(toBeInvited->getSocketFD(), RPL_TOPIC(getName(), client.getClientName(), channelName, toInviteTo->getTopic()));
 
 	//WAIT FOR JOIN FUNCTION
 	//toInviteTo->addUser();
@@ -384,21 +343,21 @@ int	Server::topic(Client &client, std::vector<std::string> command, size_t cmdNu
 
 	//CHECK NUMBER OF NECESSARY PARAMETERS
 	if (command.size() < 2)
-		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NEEDMOREPARAMS2, client, "INVITE")), 1);
+		return (sendMessageToClient(client.getSocketFD(), ERR_NEEDMOREPARAMS(getName(), client.getClientName(), "TOPIC")), 1);
 	
 	//CHECK IF CHANNEL EXISTS
 	channelName = command[cmdNumber++];
 	toTakeTopicFrom = getChannel(channelName);
 	if (toTakeTopicFrom == NULL)
-		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NOSUCHCHANNEL2, client, channelName)), 1);
+		return (sendMessageToClient(client.getSocketFD(), ERR_NOSUCHCHANNEL(getName(), client.getClientName(), channelName)), 1);
 
 	//CHECK THE TOPIC
 	if (command.size() == 2)
 	{
 		if (toTakeTopicFrom->getTopic().empty() == true)
-			sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_NOTOPIC2, client, channelName));
+			sendMessageToClient(client.getSocketFD(), RPL_NOTOPIC(getName(), client.getNickname(), channelName));
 		else
-			sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_TOPIC2, client, channelName, toTakeTopicFrom->getTopic()));
+			sendMessageToClient(client.getSocketFD(), RPL_TOPIC(getName(), client.getClientName(), channelName, toTakeTopicFrom->getTopic()));
 	}
 	else if (command.size() == 3)
 	{
@@ -406,13 +365,13 @@ int	Server::topic(Client &client, std::vector<std::string> command, size_t cmdNu
 		{
 			toTakeTopicFrom->setTopic("");
 			for (size_t i = 0; i < toTakeTopicFrom->getChannelUsers().size(); i++)
-				sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_NOTOPIC2, client, channelName));
+				sendMessageToClient(client.getSocketFD(), RPL_NOTOPIC(getName(), client.getNickname(), channelName));
 		}
 		else
 		{
 			toTakeTopicFrom->setTopic(command[cmdNumber].substr(1, command[cmdNumber].length() -1));
 			for (size_t i = 0; i < toTakeTopicFrom->getChannelUsers().size(); i++)
-				sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_TOPIC2, client, channelName, toTakeTopicFrom->getTopic()));
+				sendMessageToClient(client.getSocketFD(), RPL_TOPIC(getName(), client.getClientName(), channelName, toTakeTopicFrom->getTopic()));
 		}
 	}
 	else
@@ -428,23 +387,23 @@ int		Server::mode(Client &client, std::vector<std::string> command, size_t cmdNu
 
 	//CHECK NUMBER OF NECESSARY PARAMETERS
 	if (command.size() < 2)
-		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NEEDMOREPARAMS2, client, "MODE")), 1);
+		return (sendMessageToClient(client.getSocketFD(), ERR_NEEDMOREPARAMS(getName(), client.getClientName(), "MODE")), 1);
 
 	//CHECK IF CHANNEL EXISTS
 	channelName = command[cmdNumber++];
 	toChangeMode = getChannel(channelName);
 	if (toChangeMode == NULL)
-		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NOSUCHCHANNEL2, client, channelName)), 1);
+		return (sendMessageToClient(client.getSocketFD(), ERR_NOSUCHCHANNEL(getName(), client.getClientName(), channelName)), 1);
 	if (command.size() == 2)
 	{
 		//RPL_CREATIONTIME (329)
-		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(RPL_CHANNELMODEIS2, client, channelName, toChangeMode->getModes(), toChangeMode->getModeArguments())), 1);
+		return (sendMessageToClient(client.getSocketFD(), RPL_CHANNELMODEIS(getName(), client.getNickname(), channelName, toChangeMode->getModes(), toChangeMode->getModeArguments())), 1);
 	}
 	else
 	{
 		//CHECK FOR CHANNEL PERMISSIONS
 		if (toChangeMode->isOperator(&client) == false)
-			return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_CHANOPRIVSNEEDED2, client, channelName)), 1);
+			return (sendMessageToClient(client.getSocketFD(), ERR_CHANOPRIVSNEEDED(getName(), client.getNickname(), channelName)), 1);
 
 		modeString = command[cmdNumber++];
 		for (size_t i = 0; i < modeString.length(); i++)
@@ -480,16 +439,59 @@ int		Server::mode(Client &client, std::vector<std::string> command, size_t cmdNu
 			{
 				// ERR_UNKNOWNMODE (472)
 			}
-			sendMessageToChannel(&client, toChangeMode, createReplyToClient(RPL_CHANNELMODEIS2, client, channelName, toChangeMode->getModes(), toChangeMode->getModeArguments()));
+			sendMessageToChannel(&client, toChangeMode, RPL_CHANNELMODEIS(getName(), client.getNickname(), channelName, toChangeMode->getModes(), toChangeMode->getModeArguments()));
 		}
 	}
-		
-
+	
 	// ERR_NOTONCHANNEL (442)
 
 	return (0);
 }
 
+
+void	Server::testAllNumericReplies(int clientFD, Client &client)
+{
+	
+	//sendMessageToClient(clientFD, MSG_NICK(client.getFullIdentifier(), "shaintha2"));
+	sendMessageToClient(clientFD, MSG_NICK(client.getNickname(), "shaintha3"));
+	//sendMessageToClient(clientFD, MSG_NICK(client.getFullIdentifier(), "shaintha4"));
+	// sendMessageToClient(clientFD, RPL_WELCOME(getName(), client.getNickname(), "shaintha", "admin", "localhost")); //WORKS
+	// sendMessageToClient(clientFD, RPL_CHANNELMODEIS(getName(), client.getNickname(), "#test", "tkl", "hello_World 10")); //WORKS
+	// sendMessageToClient(clientFD, RPL_NOTOPIC(getName(), client.getNickname(), "#test"));
+	// sendMessageToClient(clientFD, RPL_TOPIC(getName(), client.getNickname(), "#test", "HOW TO PASS FT_IRC")); //WORKS
+	// sendMessageToClient(clientFD, RPL_INVITING(getName(), client.getNickname(), "juitz", "#test")); //WORKS
+	// sendMessageToClient(clientFD, RPL_NAMREPLY(getName(), client.getNickname(), "=", "#test", "shaintha juitz")); //WORKS
+	// sendMessageToClient(clientFD, RPL_ENDOFNAMES(getName(), client.getNickname(), "#test"));
+	// sendMessageToClient(clientFD, ERR_NOSUCHNICK(getName(), client.getNickname(), "juitz"));
+	// sendMessageToClient(clientFD, ERR_NOSUCHCHANNEL(getName(), client.getNickname(), "#test"));
+	// sendMessageToClient(clientFD, ERR_CANNOTSENDTOCHAN(getName(), client.getNickname(), "#test"));
+	// sendMessageToClient(clientFD, ERR_TOOMANYCHANNELS(getName(), client.getNickname(), "#test"));
+	// sendMessageToClient(clientFD, ERR_NORECIPIENT(getName(), client.getNickname(), "PRIVMSG")); //WORKS
+	// sendMessageToClient(clientFD, ERR_NOTEXTTOSEND(getName(), client.getNickname())); //WORKS
+	// sendMessageToClient(clientFD, ERR_INPUTTOOLONG(getName(), client.getNickname())); //WORKS
+	// sendMessageToClient(clientFD, ERR_UNKNOWNCOMMAND(getName(), client.getNickname(), "LOL"));
+	// sendMessageToClient(clientFD, ERR_NONICKNAMEGIVEN(getName(), client.getNickname()));
+	// sendMessageToClient(clientFD, ERR_ERRONEUSNICKNAME(getName(), client.getNickname(), "juitz")); //WORKS
+	// sendMessageToClient(clientFD, ERR_NICKNAMEINUSE(getName(), client.getNickname(), "juitz")); //WORKS
+	// sendMessageToClient(clientFD, ERR_NICKCOLLISION(getName(), client.getNickname(), "juitz", "user", "host"));
+	// sendMessageToClient(clientFD, ERR_USERNOTINCHANNEL(getName(), client.getNickname(), "juitz", "#test"));
+	// sendMessageToClient(clientFD, ERR_NOTONCHANNEL(getName(), client.getNickname(), "#test"));
+	// sendMessageToClient(clientFD, ERR_USERONCHANNEL(getName(), client.getNickname(), "juitz", "#test"));
+	// sendMessageToClient(clientFD, ERR_NOTREGISTERED(getName(), client.getNickname())); //WORKS
+	// sendMessageToClient(clientFD, ERR_NEEDMOREPARAMS(getName(), client.getNickname(), "PASS"));
+	// sendMessageToClient(clientFD, ERR_ALREADYREGISTERED(getName(), client.getNickname())); //WORKS
+	// sendMessageToClient(clientFD, ERR_PASSWDMISMATCH(getName(), client.getNickname())); //WORKS
+	// sendMessageToClient(clientFD, ERR_YOUREBANNEDCREEP(getName(), client.getNickname())); //WORKS
+	// sendMessageToClient(clientFD, ERR_CHANNELISFULL(getName(), client.getNickname(), "#test")); //WORKS
+	// sendMessageToClient(clientFD, ERR_UNKNOWNMODE(getName(), client.getNickname(), "p"));
+	// sendMessageToClient(clientFD, ERR_INVITEONLYCHAN(getName(), client.getNickname(), "#test")); //WORKS
+	// sendMessageToClient(clientFD, ERR_BANNEDFROMCHAN(getName(), client.getNickname(), "#test")); //WORKS
+	// sendMessageToClient(clientFD, ERR_BADCHANNELKEY(getName(), client.getNickname(), "#test")); //WORKS
+	// sendMessageToClient(clientFD, ERR_BADCHANMASK(getName(), client.getNickname(), "test"));
+	// sendMessageToClient(clientFD, ERR_CHANOPRIVSNEEDED(getName(), client.getNickname(), "#test"));
+	// sendMessageToClient(clientFD, ERR_INVALIDKEY(getName(), client.getNickname(), "#test"));
+	// sendMessageToClient(clientFD, ERR_INVALIDMODEPARAM(getName(), client.getNickname(), "#test", "l", "abc", "NO numbees"));
+}
 
 std::string	Server::convertCodeToString(size_t number)
 {
@@ -505,80 +507,15 @@ std::string	Server::convertCodeToString(size_t number)
 	return (numberString);
 }
 
-std::string Server::createReplyToClient(int messageCode, Client &client)
+void Server::printVector(std::vector<std::string> vector)
 {
-	//std::string	returnMessage = ":" + client.getFullIdentifier() + " " + convertCodeToString(messageCode) + " " + client.getNickname();
-	//std::string	returnMessage = ":localhost " + convertCodeToString(messageCode) + " " + client.getNickname();
-	std::string	returnMessage = ":localhost " + convertCodeToString(messageCode) + " " + client.getNickname();
-
-	if (messageCode == RPL_WELCOME2)
-		returnMessage += " :Welcome to the Internet Relay Chat Network, " + client.getFullIdentifier();
-	else if (messageCode == ERR_ALREADYREGISTERED2)
-		returnMessage += " :You may not reregister";
-	else if (messageCode == ERR_PASSWDMISMATCH2)
-		returnMessage += " :Password incorrect";
-	return (returnMessage);
-}
-
-std::string Server::createReplyToClient(int messageCode, Client &client, std::string argument)
-{
-	//std::string	returnMessage = ":" + client.getFullIdentifier() + " " + convertCodeToString(messageCode); //+ " " + client.getNickname();
-	std::string	returnMessage = ": " + convertCodeToString(messageCode) + " " + client.getNickname();
-
-	if (messageCode == RPL_NOTOPIC2)
-		returnMessage += " " + argument + " :No topic is set";
-	else if (messageCode == RPL_ENDOFNAMES2)
-		returnMessage += " " + argument + " :End of /NAMES list";
-	else if (messageCode == ERR_NOSUCHNICK2)
-		returnMessage += " " + argument + " :No such nick/channel";
-	else if (messageCode == ERR_NOSUCHCHANNEL2)
-		returnMessage += " " + argument + " :No such channel";
-	else if (messageCode == ERR_TOOMANYCHANNELS2)
-		returnMessage += " " + argument + " :You have joined too many channels";
-	else if (messageCode == ERR_UNKNOWNCOMMAND2)
-		returnMessage += " " + argument + " :Unknown command";
-	else if (messageCode == ERR_NOTONCHANNEL2)
-		returnMessage += " " + argument + " :You're not on that channel";
-	else if (messageCode == ERR_NEEDMOREPARAMS2)
-		returnMessage += " " + argument + " :Not enough parameters";
-	else if (messageCode == ERR_CHANNELISFULL2)
-		returnMessage += " " + argument + " :Cannot join channel (+l)";
-	else if (messageCode == ERR_INVITEONLYCHAN2)
-		returnMessage += " " + argument + " :Cannot join channel (+i)";
-	else if (messageCode == ERR_BANNEDFROMCHAN2)
-		returnMessage += " " + argument + " :Cannot join channel (+b)";
-	else if (messageCode == ERR_BADCHANNELKEY2)
-		returnMessage += " " + argument + " :Cannot join channel (+k)";
-	else if (messageCode == ERR_BADCHANMASK2)
-		returnMessage += " " + argument + " :Bad Channel Mask";
-	else if (messageCode == ERR_CHANOPRIVSNEEDED2)
-		returnMessage += " " + argument + " :You're not channel operator";
-	return (returnMessage);
-}
-
-std::string Server::createReplyToClient(int messageCode, Client &client, std::string arg1, std::string arg2)
-{
-	//std::string	returnMessage = ":" + client.getFullIdentifier() + " " + convertCodeToString(messageCode) + " " + client.getNickname();
-	std::string	returnMessage = ": " + convertCodeToString(messageCode) + " " + client.getNickname();
-
-	if (messageCode == RPL_TOPIC2)
-		returnMessage += " " + arg1 + " :" + arg2;
-	else if (messageCode == RPL_INVITING2)
-		returnMessage += " " + arg1 + " " + arg2;
-	else if (messageCode == RPL_NAMREPLY2)
-		returnMessage += " @ " + arg1 + " :" + arg2;
-	else if (messageCode == ERR_USERNOTINCHANNEL2)
-		returnMessage += " " + arg1 + " " + arg2 + " :They aren't on that channel";
-	else if (messageCode == ERR_USERONCHANNEL2)
-		returnMessage += " " + arg1 + " " + arg2 + " :is already on channel";
-	return (returnMessage);
-}
-
-std::string Server::createReplyToClient(int messageCode, Client &client, std::string arg1, std::string arg2, std::string arg3)
-{
-	std::string	returnMessage = ":" + client.getFullIdentifier() + " " + convertCodeToString(messageCode) + " " + client.getNickname();
-                                                        
-	if (messageCode == RPL_CHANNELMODEIS2)
-		returnMessage += " " + arg1 + " " + arg2 + " " + arg3;
-	return (returnMessage);
+	if (vector.size() == 0)
+	{
+		std::cout << "EMPTY VECTOR!!" << std::endl;
+		return ;
+	}
+	for (size_t i = 0; i < vector.size(); i++)
+	{			
+		std::cout << vector[i] << std::endl;
+	}
 }
