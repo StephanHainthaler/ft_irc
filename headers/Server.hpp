@@ -95,6 +95,7 @@ class Server
 		int						invite(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						topic(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						mode(Client &client, std::vector<std::string> command, size_t cmdNumber);
+		std::string				convertCodeToString(size_t number);
 		std::string 			createReplyToClient(int messageCode, Client &client);
 		std::string				createReplyToClient(int messageCode, Client &client, std::string argument);
 		std::string				createReplyToClient(int messageCode, Client &client, std::string arg1, std::string arg2);
