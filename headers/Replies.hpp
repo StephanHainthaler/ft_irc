@@ -25,116 +25,116 @@
 //NUMERIC REPLIES
 
 //":<source> 001 <client> :Welcome to the <networkname> Network, <nick>[!<user>@<host>]"
-# define RPL_WELCOME(source, client, nick, user, host)  				":" + source + " 001 " + client + " :Welcome to the Internet Relay Chat Network, " + nick + "!" + user + "@" + host
+# define RPL_WELCOME(source, client, nick, user, host)  						":" + source + " 001 " + client + " :Welcome to the Internet Relay Chat Network, " + nick + "!" + user + "@" + host
 
-//"<client> <channel> <modestring> <mode arguments>..."
-# define RPL_CHANNELMODEIS(client, channel, modeString, modeArguments)	":" + source + " 324 " + client + " " + channel + " " + modeString + " " + modeArguments
+//":<source> 324 <client> <channel> <modestring> <mode arguments>..."
+# define RPL_CHANNELMODEIS(source, client, channel, modeString, modeArguments)	":" + source + " 324 " + client + " " + channel + " " + modeString + " " + modeArguments
 
-//"<client> <channel> :No topic is set"
-# define RPL_NOTOPIC(client, channel)									": 331 " + client + " " + channel + " :No topic is set"
+//":<source> 331 <client> <channel> :No topic is set"
+# define RPL_NOTOPIC(source, client, channel)									":" + source + " 331 " + client + " " + channel + " :No topic is set"
 
-//"<client> <channel> :<topic>"
-# define RPL_TOPIC(client, channel, topic)								": 332 " + client + " " + channel + " :" + topic
+//":<source> 332 <client> <channel> :<topic>"
+# define RPL_TOPIC(source, client, channel, topic)								":" + source + " 332 " + client + " " + channel + " :" + topic
 
-//"<client> <nick> <channel>"
-# define RPL_INVITING(client, nick, channel)							": 341 " + client + " " + nick + " " + channel
+//":<source> 341 <client> <nick> <channel>"
+# define RPL_INVITING(source, client, nick, channel)							":" + source + " 341 " + client + " " + nick + " " + channel
 
-//"<client> <symbol> <channel> :[prefix]<nick>{ [prefix]<nick>}"
-# define RPL_NAMREPLY(client, symbol, channel, channelMembers)			": 353 " + client + " " + symbol + " " + channel + " :" + channelMembers
+//":<source> 353 <client> <symbol> <channel> :[prefix]<nick>{ [prefix]<nick>}"
+# define RPL_NAMREPLY(source, client, symbol, channel, channelMembers)			":" + source + " 353 " + client + " " + symbol + " " + channel + " :" + channelMembers
 
-//"<client> <channel> :End of /NAMES list"
-# define RPL_ENDOFNAMES(client, channel)								": 366 " + client + " " + channel + " :End of /NAMES list"
+//":<source> 366 <client> <channel> :End of /NAMES list"
+# define RPL_ENDOFNAMES(source, client, channel)								":" + source + " 366 " + client + " " + channel + " :End of /NAMES list"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //NUMERIC ERRORS
 
-//"<client> <nickname> :No such nick/channel"
-# define ERR_NOSUCHNICK(client, nick)					": 401 " + client + " " + nick + " :No such nick/channel"
+//":<source> 401 <client> <nickname> :No such nick/channel"
+# define ERR_NOSUCHNICK(source, client, nick)					":" + source + " 401 " + client + " " + nick + " :No such nick/channel"
 
-//"<client> <channel> :No such channel"
-# define ERR_NOSUCHCHANNEL(client, channel)				": 403 " + client + " " + channel + " :No such channel"
+//":<source> 403 <client> <channel> :No such channel"
+# define ERR_NOSUCHCHANNEL(source, client, channel)				":" + source + " 403 " + client + " " + channel + " :No such channel"
 
-//"<client> <channel> :Cannot send to channel"
-# define ERR_CANNOTSENDTOCHAN(client, channel)			": 404 " + client + " " + channel + " :Cannot send to channel"
+//":<source> 404 <client> <channel> :Cannot send to channel"
+# define ERR_CANNOTSENDTOCHAN(source, client, channel)			":" + source + " 404 " + client + " " + channel + " :Cannot send to channel"
 
-//"<client> <channel> :You have joined too many channels"
-# define ERR_TOOMANYCHANNELS(client, channel)			": 405 " + client + " " + channel + " :You have joined too many channels"
+//":<source> 405 <client> <channel> :You have joined too many channels"
+# define ERR_TOOMANYCHANNELS(source, client, channel)			":" + source + " 405 " + client + " " + channel + " :You have joined too many channels"
 
-//"<client> :No recipient given (<command>)"
-# define ERR_NORECIPIENT(client, command) 				": 411 " + client + " :No recipient given (" + command + ")"			
+//":<source> 411 <client> :No recipient given (<command>)"
+# define ERR_NORECIPIENT(source, client, command) 				":" + source + " 411 " + client + " :No recipient given (" + command + ")"			
 
-//"<client> :No text to send"
-# define ERR_NOTEXTTOSEND(client) 						": 412 " + client + " :No text to send"
+//":<source> 412 <client> :No text to send"
+# define ERR_NOTEXTTOSEND(source, client) 						":" + source + " 412 " + client + " :No text to send"
 
-//"<client> :Input line was too long"
-# define ERR_INPUTTOOLONG(client)						": 417 " + client + " :Input line was too long"
+//":<source> 417 <client> :Input line was too long"
+# define ERR_INPUTTOOLONG(source, client)						":" + source + " 417 " + client + " :Input line was too long"
 
-//"<client> <command> :Unknown command"
-# define ERR_UNKNOWNCOMMAND(client, command)			": 421 " + client + " " + command + " :Unknown command"
+//":<source> 421 <client> <command> :Unknown command"
+# define ERR_UNKNOWNCOMMAND(source, client, command)			":" + source + " 421 " + client + " " + command + " :Unknown command"
 
-//"<client> :No nickname given"
-# define ERR_NONICKNAMEGIVEN(client)					": 431 " + client + " :No nickname given"
+//":<source> 431 <client> :No nickname given"
+# define ERR_NONICKNAMEGIVEN(source, client)					":" + source + " 431 " + client + " :No nickname given"
 
-//"<client> <nick> :Erroneus nickname"
-# define ERR_ERRONEUSNICKNAME(client, nick)				": 432 " + client + " " + nick + " :Erroneus nickname"
+//":<source> 432 <client> <nick> :Erroneus nickname"
+# define ERR_ERRONEUSNICKNAME(source, client, nick)				":" + source + " 432 " + client + " " + nick + " :Erroneus nickname"
 
-//"<client> <nick> :Nickname is already in use"
-# define ERR_NICKNAMEINUSE(client, nick)				": 433 " + client + " " + nick + " :Nickname is already in use"
+//":<source> 433 <client> <nick> :Nickname is already in use"
+# define ERR_NICKNAMEINUSE(source, client, nick)				":" + source + " 433 " + client + " " + nick + " :Nickname is already in use"
 
-//"<client> <nick> :Nickname collision KILL from <user>@<host>"
-# define ERR_NICKCOLLISION(client, nick, user, host)	": 436 " + client + " " + nick + " :Nickname collision KILL from " + user + "@" + host
+//":<source> 436 <client> <nick> :Nickname collision KILL from <user>@<host>"
+# define ERR_NICKCOLLISION(source, client, nick, user, host)	":" + source + " 436 " + client + " " + nick + " :Nickname collision KILL from " + user + "@" + host
 
-//"<client> <nick> <channel> :They aren't on that channel"
-# define ERR_USERNOTINCHANNEL(client, nick, channel)	": 441 " + client + " " + nick + " " + channel + " :They aren't on that channel"
+//":<source> 441 <client> <nick> <channel> :They aren't on that channel"
+# define ERR_USERNOTINCHANNEL(source, client, nick, channel)	":" + source + " 441 " + client + " " + nick + " " + channel + " :They aren't on that channel"
 
-//"<client> <channel> :You're not on that channel"
-# define ERR_NOTONCHANNEL(client, channel)				": 442 " + client + " " + channel + " :You're not on that channel"
+//":<source> 442 <client> <channel> :You're not on that channel"
+# define ERR_NOTONCHANNEL(source, client, channel)				":" + source + " 442 " + client + " " + channel + " :You're not on that channel"
 
-//"<client> <nick> <channel> :is already on channel"
-# define ERR_USERONCHANNEL(client, nick, channel)		": 443 " + client + " " + nick + " " + channel + " :is already on channel"
+//":<source> 443 <client> <nick> <channel> :is already on channel"
+# define ERR_USERONCHANNEL(source, client, nick, channel)		":" + source + " 443 " + client + " " + nick + " " + channel + " :is already on channel"
 
-//"<client> :You have not registered"
-# define ERR_NOTREGISTERED(client)						": 451 " + client + " :You have not registered"
+//":<source> 451 <client> :You have not registered"
+# define ERR_NOTREGISTERED(source, client)						":" + source + " 451 " + client + " :You have not registered"
 
-//"<client> <command> :Not enough parameters"
-# define ERR_NEEDMOREPARAMS(client, command)			": 461 " + client + " " + command + " :Not enough parameters"
+//":<source> 461 <client> <command> :Not enough parameters"
+# define ERR_NEEDMOREPARAMS(source, client, command)			":" + source + " 461 " + client + " " + command + " :Not enough parameters"
 
-//"<client> :You may not reregister"
-# define ERR_ALREADYREGISTERED(client)					": 462 " + client + " :You may not reregister"
+//":<source> 462 <client> :You may not reregister"
+# define ERR_ALREADYREGISTERED(source, client)					":" + source + " 462 " + client + " :You may not reregister"
 
-//"<client> :Password incorrect"
-# define ERR_PASSWDMISMATCH(client)						": 464 " + client + " :Password incorrect"
+//":<source> 464 <client> :Password incorrect"
+# define ERR_PASSWDMISMATCH(source, client)						":" + source + " 464 " + client + " :Password incorrect"
 
-//"<client> :You are banned from this server."
-# define ERR_YOUREBANNEDCREEP(client)					": 465 " + client + " :You are banned from this server."
+//":<source> 465 <client> :You are banned from this server."
+# define ERR_YOUREBANNEDCREEP(source, client)					":" + source + " 465 " + client + " :You are banned from this server."
 
-//"<client> <channel> :Cannot join channel (+l)"
-# define ERR_CHANNELISFULL(client, channel)				": 471 " + client + " " + channel + " :Cannot join channel (+l)"
+//":<source> 471 <client> <channel> :Cannot join channel (+l)"
+# define ERR_CHANNELISFULL(source, client, channel)				":" + source + " 471 " + client + " " + channel + " :Cannot join channel (+l)"
 
-//"<client> <modechar> :is unknown mode char to me"
-# define ERR_UNKNOWNMODE(client, modeChar)				": 472 " + client + " " + modeChar + " :is unknown mode char to me"
+//":<source> 472 <client> <modechar> :is unknown mode char to me"
+# define ERR_UNKNOWNMODE(source, client, modeChar)				":" + source + " 472 " + client + " " + modeChar + " :is unknown mode char to me"
 
-//"<client> <channel> :Cannot join channel (+i)"
-# define ERR_INVITEONLYCHAN(client, channel)			": 473 " + client + " " + channel + " :Cannot join channel (+i)"
+//":<source> 473 <client> <channel> :Cannot join channel (+i)"
+# define ERR_INVITEONLYCHAN(source, client, channel)			":" + source + " 473 " + client + " " + channel + " :Cannot join channel (+i)"
 
-//"<client> <channel> :Cannot join channel (+b)"
-# define ERR_BANNEDFROMCHAN(client, channel)			": 474 " + client + " " + channel + " :Cannot join channel (+b)"
+//":<source> 474 <client> <channel> :Cannot join channel (+b)"
+# define ERR_BANNEDFROMCHAN(source, client, channel)			":" + source + " 474 " + client + " " + channel + " :Cannot join channel (+b)"
 
-//"<client> <channel> :Cannot join channel (+k)"
-# define ERR_BADCHANNELKEY(client, channel)				": 475 " + client + " " + channel + " :Cannot join channel (+k)"
+//":<source> 475 <client> <channel> :Cannot join channel (+k)"
+# define ERR_BADCHANNELKEY(source, client, channel)				":" + source + " 475 " + client + " " + channel + " :Cannot join channel (+k)"
 
-//"<client> <channel> :Bad Channel Mask"
-# define ERR_BADCHANMASK(client, channel)				": 476 " + client + " " + channel + " :Bad Channel Mask"
+//":<source> 476 <client> <channel> :Bad Channel Mask"
+# define ERR_BADCHANMASK(source, client, channel)				":" + source + " 476 " + client + " " + channel + " :Bad Channel Mask"
 
-//"<client> <channel> :You're not channel operator"
-# define ERR_CHANOPRIVSNEEDED(client, channel)			": 482 " + client + " " + channel + " :You're not channel operator"
+//":<source> 482 <client> <channel> :You're not channel operator"
+# define ERR_CHANOPRIVSNEEDED(source, client, channel)			":" + source + " 482 " + client + " " + channel + " :You're not channel operator"
 
-//"<client> <target chan> :Key is not well-formed"
-# define ERR_INVALIDKEY(client, channel)				": 525 " + client + " " + channel + " :Key is not well-formed"
+//":<source> 525 <client> <target chan> :Key is not well-formed"
+# define ERR_INVALIDKEY(source, client, channel)				":" + source + " 525 " + client + " " + channel + " :Key is not well-formed"
 
-//"<client> <target chan/user> <mode char> <parameter> :<description>"
-# define ERR_INVALIDMODEPARAM(client, channel, modeChar, parameter, notes)	": 696 " + client + " " + channel + " " + modeChar + " " + parameter + " :" + notes 
+//":<source> 696 <client> <target chan/user> <mode char> <parameter> :<description>"
+# define ERR_INVALIDMODEPARAM(source, client, channel, modeChar, parameter, notes)	":" + source + " 696 " + client + " " + channel + " " + modeChar + " " + parameter + " :" + notes 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
