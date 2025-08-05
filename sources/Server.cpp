@@ -437,61 +437,22 @@ void Server::setupSignals()
 }
 
 // For nickname changes within the same Client -- this will allow lower/upper case changes, for example: pia to Pia
-bool Server::isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const
+bool Server::isNicknameAvailable(const std::string& nickname, const Client* targetClient) const
 {
-    std::string lowerNick = nickname;
-    toLowercase(lowerNick);
-    
+    std::string targetNickNew = nickname;
+    toLowercase(targetNickNew);
+
     for (std::map<int, Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
     {
-        const Client* client = it->second;
-        if (client && client != excludeClient)
-        {
-            std::string clientNick = client->getNickname();
-            toLowercase(clientNick);
-            if (clientNick == lowerNick)
-                return (false);
-        }
+		const Client* client = it->second;
+		std::string clientNick = client->getNickname();
+		toLowercase(clientNick);
+
+		// if the nickname or any case-variation of it is already taken by another client
+        if (client && client != targetClient && clientNick == targetNickNew)
+                return (false);		
     }
     return (true);
-}
-
-// For new nicknames
-bool Server::isNicknameAvailable(const std::string& nickname) const
-{
-    return (isNicknameAvailable(nickname, NULL));
-}
-
-void Server::handleNickCommand(Client* client, const std::string& newNickname)
-{
-	int clientFd = client->getSocketFD();
-    
-	// First check format using Client's validation
-    if (client->isNickValid(newNickname) != 0)
-    {
-		// ERR_ERRONEUSNICKNAME (432) message, see https://modern.ircdocs.horse/#errnicknameinuse-433
-		// std::string msg = client;
-		std::string msg = newNickname;
-		msg += " :Erroneus nickname";
-
-		sendMessageToClient(clientFd, msg.c_str());
-        return ;
-    }
-    
-    // Then check uniqueness using Server's validation
-    if (!isNicknameAvailable(newNickname, client))
-    {
-        // ERR_NICKNAMEINUSE (433) message, see https://modern.ircdocs.horse/#errnicknameinuse-433
-		// std::string msg = client;
-		std::string msg = newNickname;
-		msg += " :Nickname is already in use";
-
-		sendMessageToClient(clientFd, msg.c_str());
-        return ;
-    }
-    
-    // Nickname is valid and available
-    client->setNick(newNickname);
 }
 
 // Exception

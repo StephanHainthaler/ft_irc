@@ -101,7 +101,7 @@ int		Server::pass(Client &client, std::vector<std::string> command, size_t cmdNu
 
 int	Server::nick(Client &client, std::vector<std::string> command, size_t cmdNumber)
 {
-	if (client.isNickValid(command[cmdNumber]) != 0)
+	if (client.isNickValid(command[cmdNumber]) != 0 || !isNicknameAvailable(command[cmdNumber], &client))
 		return (1);
 	client.setNick(command[cmdNumber]);
 	sendMessageToClient(client.getSocketFD(), "You are now known as " + client.getNickname());
