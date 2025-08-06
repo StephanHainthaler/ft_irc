@@ -158,7 +158,10 @@ void Channel::setOperator(std::string &nickname, bool enable)
 		return ;
 
 	if (enable && std::find(_operators.begin(), _operators.end(), client) == _operators.end())
+	{
+		client->setNick("@" + client->getNickname());
 		_operators.push_back(client);
+	}
 	else if (!enable)
 	{
 		std::vector<Client *>::iterator it = std::find(_operators.begin(), _operators.end(), client);

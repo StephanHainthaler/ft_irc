@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: shaintha <shaintha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/08/04 11:02:18 by shaintha         ###   ########.fr       */
+/*   Updated: 2025/08/06 00:28:32 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,40 +29,40 @@
 #define CHANLIMIT 10
 #define USERLEN 15
 
-//Numerics
-#define RPL_WELCOME 001
+// //Numerics
+// #define RPL_WELCOME2 001
 
-// Numeric Errors
-#define ERR_NOSUCHNICK 401
-#define ERR_NOSUCHCHANNEL 403
-#define ERR_TOOMANYCHANNELS 405
-#define ERR_INPUTTOOLONG 417
-#define ERR_NONICKNAMEGIVEN 431
-#define ERR_ERRONEUSNICKNAME 432
-#define ERR_NICKNAMEINUSE 433
-#define ERR_NEEDMOREPARAMS 461
-#define ERR_ALREADYREGISTERED 462
-#define ERR_UNKNOWNMODE 472
+// // Numeric Errors
+// #define ERR_NOSUCHNICK2 401
+// #define ERR_NOSUCHCHANNEL2 403
+// #define ERR_TOOMANYCHANNELS2 405
+// #define ERR_INPUTTOOLONG2 417
+// #define ERR_NONICKNAMEGIVEN2 431
+// #define ERR_ERRONEUSNICKNAME2 432
+// #define ERR_NICKNAMEINUSE2 433
+// #define ERR_NEEDMOREPARAMS2 461
+// #define ERR_ALREADYREGISTERED2 462
+// #define ERR_UNKNOWNMODE2 472
 
-//ADDED BY STEPHAN
-#define RPL_CHANNELMODEIS 324
-#define RPL_NOTOPIC 331
-#define RPL_TOPIC 332
-#define RPL_INVITING 341
-#define RPL_NAMREPLY 353
-#define RPL_ENDOFNAMES 366
-#define ERR_UNKNOWNCOMMAND 421
-#define ERR_USERNOTINCHANNEL 441
-#define ERR_NOTONCHANNEL 442
-#define ERR_USERONCHANNEL 443
-#define ERR_ALREADYREGISTERED 462
-#define ERR_PASSWDMISMATCH 464
-#define ERR_CHANNELISFULL 471
-#define ERR_INVITEONLYCHAN 473
-#define ERR_BANNEDFROMCHAN 474
-#define ERR_BADCHANNELKEY 475
-#define ERR_BADCHANMASK 476
-#define ERR_CHANOPRIVSNEEDED 482
+// //ADDED BY STEPHAN
+// #define RPL_CHANNELMODEIS2 324
+// #define RPL_NOTOPIC2 331
+// #define RPL_TOPIC2 332
+// #define RPL_INVITING2 341
+// #define RPL_NAMREPLY2 353
+// #define RPL_ENDOFNAMES2 366
+// #define ERR_UNKNOWNCOMMAND2 421
+// #define ERR_USERNOTINCHANNEL2 441
+// #define ERR_NOTONCHANNEL2 442
+// #define ERR_USERONCHANNEL2 443
+// #define ERR_ALREADYREGISTERED2 462
+// #define ERR_PASSWDMISMATCH2 464
+// #define ERR_CHANNELISFULL2 471
+// #define ERR_INVITEONLYCHAN2 473
+// #define ERR_BANNEDFROMCHAN2 474
+// #define ERR_BADCHANNELKEY2 475
+// #define ERR_BADCHANMASK2 476
+// #define ERR_CHANOPRIVSNEEDED2 482
 
 
 
@@ -94,7 +94,7 @@ class Client
 	public:
 
 		// Format checks
-		int		isNickValid(const std::string& nickname) const;
+		bool	isNickValid(const std::string& nickname) const;
 		bool	isRealNameValid(const std::string& realName) const;
 		int		isUserValid(std::string& userName);
 		std::string getFullIdentifier() const;
@@ -140,6 +140,9 @@ class Client
 		std::vector<std::string> 	getChannels() const;
 		std::string 				getModes() const;
 		
+
+		//ADDED BY STEPHAN
+		std::string					getClientName(void) const;
 	
 		//USER_function
 		//NICK_function
