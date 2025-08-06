@@ -379,7 +379,7 @@ int	Server::topic(Client &client, std::vector<std::string> command, size_t cmdNu
 	return (0);
 }
 
-int		Server::mode(Client &client, std::vector<std::string> command, size_t cmdNumber)
+int	Server::mode(Client &client, std::vector<std::string> command, size_t cmdNumber)
 {
 	std::string	channelName, modeString;
 	Channel		*toChangeMode;
@@ -416,29 +416,20 @@ int		Server::mode(Client &client, std::vector<std::string> command, size_t cmdNu
 					doEnable = true;
 				continue ;
 			}
+			else if ((modeString[i] == 'k' || modeString[i] == 'o' || modeString[i] == 'l') && !(cmdNumber < command.size()))
+				continue ;
 			else if (modeString[i] == 'i')
 				toChangeMode->setMode('i', "", doEnable);
 			else if (modeString[i] == 'o')
-			{
-				if (i < command.size())
-					toChangeMode->setOperator(command[i++], doEnable);
-			}
+					toChangeMode->setOperator(command[cmdNumber++], doEnable);
 			else if (modeString[i] == 't')
 				toChangeMode->setMode('t', "", doEnable);
 			else if (modeString[i] == 'l')
-			{
-				if (i < command.size())
-					toChangeMode->setMode('l', command[i++], doEnable);
-			}
+					toChangeMode->setMode('l', command[cmdNumber++], doEnable);
 			else if (modeString[i] == 'k')
-			{
-				if (i < command.size())
-					toChangeMode->setMode('k', command[i++], doEnable);
-			}
+					toChangeMode->setMode('k', command[cmdNumber++], doEnable);
 			else
-			{
-				// ERR_UNKNOWNMODE (472)
-			}
+				sendMessageToClient(client.getSocketFD(), ERR_UNKNOWNMODE(getName(), client.getClientName(), modeString[i]));
 			sendMessageToChannel(&client, toChangeMode, RPL_CHANNELMODEIS(getName(), client.getNickname(), channelName, toChangeMode->getModes(), toChangeMode->getModeArguments()));
 		}
 	}

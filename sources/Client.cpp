@@ -6,7 +6,7 @@
 /*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/08/05 23:00:17 by marvin           ###   ########.fr       */
+/*   Updated: 2025/08/06 10:24:56 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,7 +78,7 @@ void	Client::setNick(const std::string& nickName)
 int		Client::isUserValid(std::string& userName)
 {
 	if (userName.size() == 0)
-		return (/* std::cerr << <client> "<USER> :Not enough parameters" << std::endl, */ ERR_NEEDMOREPARAMS2);
+		return (/* std::cerr << <client> "<USER> :Not enough parameters" << std::endl, */ 1);
 	if (userName.size() > USERLEN)
 		userName = truncName(userName);
 	return (0);
@@ -154,8 +154,9 @@ int Client::setMode(char mode, bool enable)
 {
 	if (!isValidUserMode(mode))
 	{
+        
 		std::cerr << "Error: Invalid user mode '" << mode << "'" << std::endl;
-		return (ERR_UNKNOWNMODE2) ;
+		return (1) ;
 	}
     if (enable)
     {
