@@ -49,7 +49,7 @@ void	Server::executeCommand(Client &client, std::vector<std::string> command)
 	else if (command[0].compare("JOIN") == 0)
 		join(client, command, 1);
 	else if (command[0].compare("PRIVMSG") == 0)
-		privMsg(*client, command, 1);
+		privMsg(client, command, 1);
 	else if (command[0].compare("KICK") == 0)
 		kick(client, command, 1);
 	else if (command[0].compare("INVITE") == 0)
@@ -214,7 +214,7 @@ int	Server::join(Client &client, std::vector<std::string> command, size_t cmdNum
 int		Server::privMsg(Client &client, std::vector<std::string> command, size_t cmdNumber)
 {
 	if (command.size() < 2)
-		return (sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NEEDMOREPARAMS, client, "PRIVMSG")), 1);
+		return (sendMessageToClient(client.getSocketFD(), ERR_NEEDMOREPARAMS(getName(), client.getNickname(), "PRIVMSG")), 1);
 
 	std::vector<std::string> targets;
 	std::string message;
@@ -231,7 +231,7 @@ int		Server::privMsg(Client &client, std::vector<std::string> command, size_t cm
 			Channel *channel = getChannel(targets[i]);
 			if (channel == NULL)
 			{
-				sendMessageToClient(client.getSocketFD(), createReplyToClient (ERR_NOSUCHCHANNEL, client, targets[i]));
+				sendMessageToClient(client.getSocketFD(), ERR_NOSUCHCHANNEL(getName(), client.getClientName(), targets[i]));
 				continue ;
 			}
 			sendMessageToChannel(&client, channel, ":" + client.getFullIdentifier() + " PRIVMSG " + targets[i] + " :" + message);
@@ -241,7 +241,7 @@ int		Server::privMsg(Client &client, std::vector<std::string> command, size_t cm
 			Client *targetUser = getClient(targets[i]);
 			if (targetUser == NULL)
 			{
-				sendMessageToClient(client.getSocketFD(), createReplyToClient(ERR_NOSUCHNICK, client, targets[i]));
+				sendMessageToClient(client.getSocketFD(), ERR_NOSUCHNICK(getName(), client.getClientName(), targets[i]));
 				continue ;
 			}
 			sendMessageToClient(targetUser->getSocketFD(), ":" + client.getFullIdentifier() + " PRIVMSG " + targets[i] + " :" + message);
