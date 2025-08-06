@@ -180,11 +180,6 @@ void Server::handleSendingToClient(int i)
 		if (sent > 0)
 			buffer.erase(0, sent); // remove sent bytes
 	}
-
-	// if everything was sent, remove POLLOUT from events, 
-	// so that we don't keep checking for write events (efficiency and best practice)
-	if (buffer.empty())
-		_pollfds[i].events = POLLIN;
 }
 
 void Server::sendMessageToChannel(Client* client, Channel* channel, const std::string& message)
@@ -228,7 +223,7 @@ void Server::handleClientConnections(void)
 	*/
 	pollfd pfd = {};
 	pfd.fd = clientFd;
-	pfd.events = POLLIN; // at the beginning, we only care about POLLIN (ready to read), because writing is only necessary as a response to a client's message
+	pfd.events = POLLIN | POLLOUT;
 	pfd.revents = 0; // initially no events
 
 	_pollfds.push_back(pfd);
@@ -253,7 +248,7 @@ void	Server::handleClientMessage(int clientFd)
     int bytesReceived = recv(clientFd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT); // Flag which makes the call non-blocking
     if (bytesReceived > 0)
     {
-		std::cout << GRAY << "Client: " << buffer << DEFAULT << std::endl; // first one is IRC client
+		std::cout << GRAY << "Client (fd = " << clientFd << "): " << buffer << DEFAULT << std::endl; // first one is IRC client
 		std::map<int, Client *>::iterator it = _clients.find(clientFd);
 		Client	*client = it->second;
 		handleInput(*client, buffer);
@@ -305,8 +300,7 @@ void Server::handleEvents(void)
 		// Check for events on each client socket
 		for (int i = 0; i <= poll_count; ++i)
 		{
-			//std::cout << "Checking pollfd[" << i << "] with fd: " << _pollfds[i].fd << " revents: " << _pollfds[i].revents << std::endl;
-			std::cout << GRAY << "Checking pollfd[" << i << "] with fd: " << _pollfds[i].fd << " revents: " << _pollfds[i].revents <<  DEFAULT << std::endl;
+			//std::cout << GRAY << "Checking pollfd[" << i << "] with fd: " << _pollfds[i].fd << " revents: " << _pollfds[i].revents <<  DEFAULT << std::endl;
 
 			// Case 1: there was no event with that fd
 			if (_pollfds[i].revents == 0)
