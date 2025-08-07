@@ -293,15 +293,18 @@ int Server::part(Client &client, std::vector<std::string> command, size_t cmdNum
             continue;
         }
         toPartFrom->removeUser(&client);
-		if (toPartFrom->getChannelUsers().size() == 0)
-			removeChannel(toPartFrom);
-
+	
         if (comment.empty())
             sendMessageToClient(client.getSocketFD(), MSG_PART(client.getClientName(), channelName));
         else
             sendMessageToClient(client.getSocketFD(), MSG_PART_WITH_COMMENT(client.getClientName(), channelName, comment));
         
         sendMessageToChannel(&client, toPartFrom, MSG_PART(client.getClientName(), channelName));
+		if (toPartFrom->getChannelUsers().size() == 0)
+		{
+			removeChannel(toPartFrom);
+			delete toPartFrom;
+		}
     }
     return (0);
 }
