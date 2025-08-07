@@ -22,12 +22,3 @@
 # define RED "\x1b[31m" // for errors
 # define YELLOW "\x1b[33m" // for warnings
 # define GRAY "\x1b[90m" // for general information
-
-enum ClientState
-{
-	CONNECTING,
-	AUTHENTICATED,
-	//UNREGISTERED,
-	REGISTERED,
-	DISCONNECTED
-};

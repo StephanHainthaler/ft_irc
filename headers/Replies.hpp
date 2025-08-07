@@ -17,14 +17,18 @@
 
 //COMMAND REPLIES
 
-//":<client>/<oldNick>!<user>@<host> NICK :<newNick>"
-# define MSG_NICK(client, newNick)		":" + client + " NICK :" + newNick
+//":<source>/<oldNick>!<user>@<host> NICK :<newNick>"
+# define MSG_NICK(source, newNick)		                        ":" + source + " NICK :" + newNick
 
-//":<client>/<oldNick>!<user>@<host> JOIN :<channel>"
-# define MSG_JOIN(client, channel)		":" + client + " JOIN :" + channel
+//":<source>/<oldNick>!<user>@<host> JOIN :<channel>"
+# define MSG_JOIN(source, channel)								":" + source + " JOIN :" + channel
 
-//":<source> MODE " + channel + " " + mode + " " + param"
-# define MSG_MODE(source, channel, modeString, modeArguments)	":" + source +  " MODE " + channel + " " + modeString + " " + modeArguments
+//":<source> KICK <channel> <nick> [:<comment>]
+# define MSG_KICK(source, channel, nick)						":" + source + " KICK " + channel
+# define MSG_KICK_WITH_COMMENT(source, channel, nick, comment)	":" + source + " KICK " + channel + " " + comment
+
+//":<source> MODE <channel> <modeString> <modeArguments>"
+# define MSG_MODE(source, channel, modeString, modeArguments)	":" + source + " MODE " + channel + " " + modeString + " " + modeArguments
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

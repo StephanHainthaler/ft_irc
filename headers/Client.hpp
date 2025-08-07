@@ -6,7 +6,7 @@
 /*   By: shaintha <shaintha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/08/07 09:47:46 by shaintha         ###   ########.fr       */
+/*   Updated: 2025/08/07 10:01:25 by shaintha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,23 +29,29 @@
 #define CHANLIMIT 10
 #define USERLEN 15
 
+enum ClientState
+{
+	CONNECTING,
+	AUTHENTICATED,
+	REGISTERED,
+	DISCONNECTED
+};
+
 class Channel;
 
 class Client
 {
 	private:
-		int			_socketFD;
-		int			_port;
-		std::string	_IP;
-		std::string _nickname;
-		std::string _userName;
-		std::string _hostname;
-		std::string _realName;
-		
-		//std::string _messageBuffer;
-		std::string _modes;
-		ClientState _state;
-		std::vector<std::string> _channels;
+		int							_socketFD;
+		int							_port;
+		std::string					_IP;
+		std::string					_nickname;
+		std::string					_userName;
+		std::string 				_hostname;
+		std::string					_realName;
+		std::string					_modes;
+		ClientState 				_state;
+		std::vector<std::string>	_channels;
 
 		static	std::string toLowercase(const std::string& str);
         static	std::string truncName(const std::string& name);
@@ -56,20 +62,20 @@ class Client
 		bool	isNickValid(const std::string& nickname) const;
 		bool	isRealNameValid(const std::string& realName) const;
 		int		isUserValid(std::string& userName);
-		std::string getFullIdentifier() const;
+		std::string getFullIdentifier(void) const;
 		//bool	isNicknameAvailable(const std::string& nickname) const;
         //bool	isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const;
 
 		// Connection
 		int 						connectToServer(const std::string& serverIP, int serverPort);
 		int							sendMessageToChannel(Channel* channel, std::string message);
-		std::vector<std::string> 	receiveCompleteMessages();
-		void 						disconnect();
+		std::vector<std::string> 	receiveCompleteMessages(void);
+		void 						disconnect(void);
 
 		// Channels
 		void	joinChannel(const std::string& channelName);
 		void	leaveChannel(const std::string& channelName);
-		void 	clearChannels();
+		void 	clearChannels(void);
 		
 		// Modes
 		bool	isValidUserMode(char mode) const;
@@ -89,27 +95,24 @@ class Client
 		int 	setMode(char mode, bool enable);
 
 		// Getters
-		std::string 				getNickname() const;
-		std::string 				getUsername() const;
-		std::string 				getRealname() const;
-		ClientState 				getState() const;
+		std::string 				getNickname(void) const;
+		std::string 				getUsername(void) const;
+		std::string 				getRealname(void) const;
+		ClientState 				getState(void) const;
 		int							getSocketFD() const;
-		std::string 				getIP() const;
-		std::string					getHostname() const;
-		std::vector<std::string>	getChannels() const;
-		std::string 				getModes() const;
+		std::string 				getIP(void) const;
+		std::string					getHostname(void) const;
+		std::vector<std::string>	getChannels(void) const;
+		std::string 				getModes(void) const;
 		
 
 		//ADDED BY STEPHAN
 		std::string					getClientName(void) const;
 	
-		//USER_function
-		//NICK_function
-		//JOIN_function
 		
 		Client(int socketFD, int port);
-		Client();
-		~Client();
+		Client(void);
+		~Client(void);
 		
 		// Client(const Client &other);
 		// Client& operator=(const Client &copy);

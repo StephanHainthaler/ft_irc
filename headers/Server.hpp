@@ -83,6 +83,9 @@ class Server
 		void 					addChannel(Channel *channel);
 		void 					removeChannel(Channel *channel);
 
+		// ADDED BY STEPHAN - maybe let the Server be the ONLY one to have these functions
+		void					createChannel(std::string &newChannelName, Client &founder);
+
 		// Nickname availability checks
 		bool 					isNicknameAvailable(const std::string& nickname, const Client* targetClient) const;
 		void 					handleNickCommand(Client* client, const std::string& newNickname);
