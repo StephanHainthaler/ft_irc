@@ -84,8 +84,7 @@ class Server
 		void 					removeChannel(Channel *channel);
 
 		// Nickname availability checks
-		bool 					isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const;
-		bool 					isNicknameAvailable(const std::string& nickname) const;
+		bool 					isNicknameAvailable(const std::string& nickname, const Client* targetClient) const;
 		void 					handleNickCommand(Client* client, const std::string& newNickname);
 
 		// PARSER
@@ -101,6 +100,7 @@ class Server
 		int						invite(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						topic(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						mode(Client &client, std::vector<std::string> command, size_t cmdNumber);
+		int						privMsg(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		void					testAllNumericReplies(int clientFD, Client &client);
 
 		// Cleanup

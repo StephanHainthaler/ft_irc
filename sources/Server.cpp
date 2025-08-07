@@ -180,11 +180,6 @@ void Server::handleSendingToClient(int i)
 		if (sent > 0)
 			buffer.erase(0, sent); // remove sent bytes
 	}
-
-	// if everything was sent, remove POLLOUT from events, 
-	// so that we don't keep checking for write events (efficiency and best practice)
-	if (buffer.empty())
-		_pollfds[i].events = POLLIN;
 }
 
 void Server::sendMessageToChannel(Client* client, Channel* channel, const std::string& message)
@@ -228,7 +223,7 @@ void Server::handleClientConnections(void)
 	*/
 	pollfd pfd = {};
 	pfd.fd = clientFd;
-	pfd.events = POLLIN; // at the beginning, we only care about POLLIN (ready to read), because writing is only necessary as a response to a client's message
+	pfd.events = POLLIN | POLLOUT;
 	pfd.revents = 0; // initially no events
 
 	_pollfds.push_back(pfd);
@@ -253,7 +248,7 @@ void	Server::handleClientMessage(int clientFd)
     int bytesReceived = recv(clientFd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT); // Flag which makes the call non-blocking
     if (bytesReceived > 0)
     {
-		std::cout << GRAY << "Client: " << buffer << DEFAULT << std::endl; // first one is IRC client
+		std::cout << GRAY << "Client (fd = " << clientFd << "): " << buffer << DEFAULT << std::endl; // first one is IRC client
 		std::map<int, Client *>::iterator it = _clients.find(clientFd);
 		Client	*client = it->second;
 		handleInput(*client, buffer);
@@ -305,7 +300,7 @@ void Server::handleEvents(void)
 		// Check for events on each client socket
 		for (int i = 0; i <= poll_count; ++i)
 		{
-			std::cout << GRAY << "Checking pollfd[" << i << "] with fd: " << _pollfds[i].fd << " revents: " << _pollfds[i].revents <<  DEFAULT << std::endl;
+			//std::cout << GRAY << "Checking pollfd[" << i << "] with fd: " << _pollfds[i].fd << " revents: " << _pollfds[i].revents <<  DEFAULT << std::endl;
 
 			// Case 1: there was no event with that fd
 			if (_pollfds[i].revents == 0)
@@ -430,7 +425,6 @@ void signalHandler(int sig)
 {
     if (sig == SIGINT || sig == SIGTERM)
 	{
-		
         g_shutdown = 1;
     }
 }
@@ -443,61 +437,22 @@ void Server::setupSignals()
 }
 
 // For nickname changes within the same Client -- this will allow lower/upper case changes, for example: pia to Pia
-bool Server::isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const
+bool Server::isNicknameAvailable(const std::string& nickname, const Client* targetClient) const
 {
-    std::string lowerNick = nickname;
-    toLowercase(lowerNick);
-    
+    std::string targetNickNew = nickname;
+    toLowercase(targetNickNew);
+
     for (std::map<int, Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
     {
-        const Client* client = it->second;
-        if (client && client != excludeClient)
-        {
-            std::string clientNick = client->getNickname();
-            toLowercase(clientNick);
-            if (clientNick == lowerNick)
-                return (false);
-        }
+		const Client* client = it->second;
+		std::string clientNick = client->getNickname();
+		toLowercase(clientNick);
+
+		// if the nickname or any case-variation of it is already taken by another client
+        if (client && client != targetClient && clientNick == targetNickNew)
+                return (false);		
     }
     return (true);
-}
-
-// For new nicknames
-bool Server::isNicknameAvailable(const std::string& nickname) const
-{
-    return (isNicknameAvailable(nickname, NULL));
-}
-
-void Server::handleNickCommand(Client* client, const std::string& newNickname)
-{
-	int clientFd = client->getSocketFD();
-    
-	// First check format using Client's validation
-    if (client->isNickValid(newNickname) != 0)
-    {
-		// ERR_ERRONEUSNICKNAME (432) message, see https://modern.ircdocs.horse/#errnicknameinuse-433
-		// std::string msg = client;
-		std::string msg = newNickname;
-		msg += " :Erroneus nickname";
-
-		sendMessageToClient(clientFd, msg.c_str());
-        return ;
-    }
-    
-    // Then check uniqueness using Server's validation
-    if (!isNicknameAvailable(newNickname, client))
-    {
-        // ERR_NICKNAMEINUSE (433) message, see https://modern.ircdocs.horse/#errnicknameinuse-433
-		// std::string msg = client;
-		std::string msg = newNickname;
-		msg += " :Nickname is already in use";
-
-		sendMessageToClient(clientFd, msg.c_str());
-        return ;
-    }
-    
-    // Nickname is valid and available
-    client->setNick(newNickname);
 }
 
 // Exception

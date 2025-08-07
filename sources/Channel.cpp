@@ -68,7 +68,7 @@ void Channel::setMode(char mode, std::string modearg, bool enable)
 			_userLimit = std::atoi(modearg.c_str());
 	}
 	else if (!enable)
-	{ // Disable/remove mode if "false" passed as boolean
+	{
 		std::string::size_type pos = _modes.find(mode);
 		if (pos != std::string::npos)
 			_modes.erase(pos, 1);

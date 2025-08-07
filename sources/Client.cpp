@@ -6,7 +6,7 @@
 /*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/08/06 10:24:56 by marvin           ###   ########.fr       */
+/*   Updated: 2025/08/06 11:28:01 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,8 @@ void Client::disconnect()
 
 bool    Client::isNickValid(const std::string& nickname) const
 {
-    if (nickname.size() > 9 || nickname.size() == 0)
+    
+	if (nickname.size() > 9 || nickname.size() == 0)
 		return (false);
 	if (nickname[0] == '$' || nickname[0] == ':' || nickname[0] == '#' || nickname[0] == '~' || nickname[0] == '&' || nickname[0] == '+')
 		return (false);
