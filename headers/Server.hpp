@@ -101,11 +101,6 @@ class Server
 		int						invite(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						topic(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						mode(Client &client, std::vector<std::string> command, size_t cmdNumber);
-		std::string				convertCodeToString(size_t number);
-		std::string 			createReplyToClient(int messageCode, Client &client);
-		std::string				createReplyToClient(int messageCode, Client &client, std::string argument);
-		std::string				createReplyToClient(int messageCode, Client &client, std::string arg1, std::string arg2);
-		std::string				createReplyToClient(int messageCode, Client &client, std::string arg1, std::string arg2, std::string arg3);
 		void					testAllNumericReplies(int clientFD, Client &client);
 
 		// Cleanup
@@ -137,11 +132,11 @@ class Server
 		client takes this sockaddr_in "serverAddress" to specify the server's IP address and port to connect to
 		*/
 		
-		const std::string		_password;
-		std::map<int, Client *>	_clients;	// List of connected clients (ClientClass objs)
-		std::vector<pollfd>		_pollfds; // +1 for the server socket
-		std::map<int, std::string> _outgoingMessages; // Buffer for outgoing messages
-		std::vector<Channel *>	_channels;	// List of channels (ChannelClass objs)
+		const std::string			_password;
+		std::map<int, Client *>		_clients;	// List of connected clients (ClientClass objs)
+		std::vector<pollfd>			_pollfds; // +1 for the server socket
+		std::map<int, std::string>	_outgoingMessages; // Buffer for outgoing messages
+		std::vector<Channel *>		_channels;	// List of channels (ChannelClass objs)
 		//std::vector<std::string>	_users; // auf 10 users limitieren
 
 		// clients must be unique within a channel
@@ -153,7 +148,7 @@ class Server
 		std::string				_name;
 };
 
-/* 
+/*/
 ***USED FUNCTIONS:
 socket(AF_INET, SOCK_STREAM, 0)
 close(fd)

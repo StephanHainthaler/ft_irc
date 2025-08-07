@@ -484,20 +484,6 @@ void	Server::testAllNumericReplies(int clientFD, Client &client)
 	// sendMessageToClient(clientFD, ERR_INVALIDMODEPARAM(getName(), client.getNickname(), "#test", "l", "abc", "NO numbees"));
 }
 
-std::string	Server::convertCodeToString(size_t number)
-{
-	std::string	numberString = "000";
-	size_t		numberLength = 0;
-
-	if (number > 999)
-		return ("999");
-	for (size_t i = number; i > 0; i /= 10)
-		numberLength++;
-	for (size_t i = 0; i < numberLength; number /= 10, i++)
-		numberString[numberString.length() - 1 - i] = ((number % 10) + '0');
-	return (numberString);
-}
-
 void Server::printVector(std::vector<std::string> vector)
 {
 	if (vector.size() == 0)
