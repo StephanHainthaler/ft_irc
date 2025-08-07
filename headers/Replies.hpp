@@ -23,9 +23,12 @@
 //":<source>/<oldNick>!<user>@<host> JOIN :<channel>"
 # define MSG_JOIN(source, channel)								":" + source + " JOIN :" + channel
 
+//":<source> PRIVMSG <channel/user> :<message>
+# define MSG_PRIVMSG(source, target, messsage)                  ":" + source + " PRIVMSG " + target + " :" + message
+
 //":<source> KICK <channel> <nick> [:<comment>]
-# define MSG_KICK(source, channel, nick)						":" + source + " KICK " + channel
-# define MSG_KICK_WITH_COMMENT(source, channel, nick, comment)	":" + source + " KICK " + channel + " " + comment
+# define MSG_KICK(source, channel, nick)						":" + source + " KICK " + channel + " " + nick
+# define MSG_KICK_WITH_COMMENT(source, channel, nick, comment)	":" + source + " KICK " + channel + " " + nick + " " + comment
 
 //":<source> MODE <channel> <modeString> <modeArguments>"
 # define MSG_MODE(source, channel, modeString, modeArguments)	":" + source + " MODE " + channel + " " + modeString + " " + modeArguments

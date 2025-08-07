@@ -420,16 +420,16 @@ void Server::removeChannel(Channel *channel)
 void	Server::createChannel(std::string &newChannelName, Client &founder)
 {
 	Channel *newChannel = new Channel(newChannelName, founder);
-			addChannel(newChannel);
-			newChannel->addUser(&founder);
-			std::string temp = founder.getNickname();
-			newChannel->setOperator(temp, true);
+	addChannel(newChannel);
+	newChannel->addUser(&founder);
+	std::string temp = founder.getNickname();
+	newChannel->setOperator(temp, true);
 
-			sendMessageToClient(founder.getSocketFD(), MSG_JOIN(founder.getNickname(), newChannelName));
-			sendMessageToClient(founder.getSocketFD(), MSG_MODE(getName(), newChannelName, "+o", founder.getNickname()));
-			sendMessageToClient(founder.getSocketFD(), RPL_NOTOPIC(getName(), founder.getNickname(), newChannelName));
-			sendMessageToClient(founder.getSocketFD(), RPL_NAMREPLY(getName(), founder.getNickname(), "=", newChannelName, "@" + founder.getNickname()));
-			sendMessageToClient(founder.getSocketFD(), RPL_ENDOFNAMES(getName(), founder.getNickname(), newChannelName));
+	sendMessageToClient(founder.getSocketFD(), MSG_JOIN(founder.getNickname(), newChannelName));
+	sendMessageToClient(founder.getSocketFD(), MSG_MODE(getName(), newChannelName, "+o", founder.getNickname()));
+	sendMessageToClient(founder.getSocketFD(), RPL_NOTOPIC(getName(), founder.getNickname(), newChannelName));
+	sendMessageToClient(founder.getSocketFD(), RPL_NAMREPLY(getName(), founder.getNickname(), "=", newChannelName, "@" + founder.getNickname()));
+	sendMessageToClient(founder.getSocketFD(), RPL_ENDOFNAMES(getName(), founder.getNickname(), newChannelName));
 }
 
 
