@@ -30,6 +30,9 @@
 # define MSG_KICK(source, channel, nick)						":" + source + " KICK " + channel + " " + nick
 # define MSG_KICK_WITH_COMMENT(source, channel, nick, comment)	":" + source + " KICK " + channel + " " + nick + " " + comment
 
+//:<source> INVITE <nick> <channel>
+# define MSG_INVITE(source, nick, channel)                      ":" + source + " INVITE " + nick + " " + channel
+
 //":<source> MODE <channel> <modeString> <modeArguments>"
 # define MSG_MODE(source, channel, modeString, modeArguments)	":" + source + " MODE " + channel + " " + modeString + " " + modeArguments
 

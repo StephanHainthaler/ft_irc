@@ -287,10 +287,6 @@ int	Server::invite(Client &client, std::vector<std::string> command, size_t cmdN
 	Channel		*toInviteTo;
 	Client		*toBeInvited = NULL;
 
-	//CHECK CLIENT AUTHORITY
-	//	"<channel> :You're not channel operator" --> ERR_CHANOPRIVSNEEDED (482)	
-
-
 	//CHECK NUMBER OF NECESSARY PARAMETERS
 	if (command.size() < 3)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NEEDMOREPARAMS(getName(), client.getClientName(), "INVITE")), 1);
@@ -303,42 +299,35 @@ int	Server::invite(Client &client, std::vector<std::string> command, size_t cmdN
 		return (sendMessageToClient(client.getSocketFD(), ERR_NOSUCHCHANNEL(getName(), client.getClientName(), channelName)), 1);
 
 	//CHECK IF COMMAND ISSUER PART OF THAT CHANNEL
-	if (toInviteTo->getUser(client.getNickname()) == NULL)
+	else if (toInviteTo->getUser(client.getNickname()) == NULL)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NOTONCHANNEL(getName(), client.getClientName(), channelName)), 1);
 
+	//CHECK CHANNEL MODE (INVITE ONLY) & PERMISSIONS
+	else if (toInviteTo->hasMode('i') == true && toInviteTo->isOperator(&client) == false)
+		return (sendMessageToClient(client.getSocketFD(), ERR_CHANOPRIVSNEEDED(getName(), client.getClientName(), channelName)), 1);
+	
 	//CHECK IF CLIENT IS PART OF THAT CHANNEL
-	if (toInviteTo->getUser(nickname) != NULL)
+	else if (toInviteTo->getUser(nickname) != NULL)
 		return (sendMessageToClient(client.getSocketFD(), ERR_USERONCHANNEL(getName(), client.getClientName(), nickname, channelName)), 1);
 
-	if (cmdNumber < command.size())
-		return (std::cerr << "TOO MANY PARAMETERS" << std::endl, 1);
-
-	//CHECK CHANNEL MODE (INVITE ONLY)	// ERR_CHANOPRIVSNEEDED (482)
-
+	//CHECK CHANNEL MODE (INVITE ONLY) & PERMISSIONS
 	toBeInvited = getClient(nickname);
 	if (toBeInvited == NULL)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NOSUCHNICK(getName(), client.getClientName(), nickname)), 1);
-
-
-	// RPL_INVITING (341)
-	// When the invite is successful, the server MUST send a RPL_INVITING numeric to the command issuer,
-	// and an INVITE message, with the issuer as <source>?????????, to the target user. Other channel members SHOULD NOT be notified.
-
 	sendMessageToClient(client.getSocketFD(), RPL_INVITING(getName(), client.getClientName(), nickname, channelName));
-	//toBeInvited needs to get reassigend by pais function Server::getUser(nickname);
-	//MSG_INVITE
+	sendMessageToClient(client.getSocketFD(), MSG_INVITE(client.getClientName(), nickname, channelName));
 
-	//CHECK IF TOPIC OR NOT
-	sendMessageToClient(toBeInvited->getSocketFD(), RPL_TOPIC(getName(), client.getClientName(), channelName, toInviteTo->getTopic()));
-
-	//WAIT FOR JOIN FUNCTION
-	//toInviteTo->addUser();
-
-	// if (operatorName.size() != 0)
-	// 	std::cout << operatorName << " invited the user " << nickname << " has been invited to Channel '" << channelName << "'." << std::endl;
-	// else
-	// 	std::cout << "The user " << nickname << " has been invited to Channel '" << channelName << "'." << std::endl;
-
+	//SAME AS IN JOIN
+	toInviteTo->addUser(toBeInvited);
+	sendMessageToClient(toBeInvited->getSocketFD(), MSG_JOIN(toBeInvited->getNickname(), channelName));
+	if (toInviteTo->getTopic().empty() == true)
+		sendMessageToClient(toBeInvited->getSocketFD(), RPL_NOTOPIC(getName(), toBeInvited->getNickname(), channelName));
+	else
+		sendMessageToClient(toBeInvited->getSocketFD(), RPL_TOPIC(getName(), toBeInvited->getNickname(), channelName, toInviteTo->getTopic()));
+	sendMessageToClient(toBeInvited->getSocketFD(), RPL_NAMREPLY(getName(), toBeInvited->getNickname(), "=", channelName, toInviteTo->getNamesOfChannelMembers()));
+	sendMessageToClient(toBeInvited->getSocketFD(), RPL_ENDOFNAMES(getName(), toBeInvited->getNickname(), channelName));
+	sendMessageToChannel(toBeInvited, toInviteTo, RPL_NAMREPLY(getName(), toBeInvited->getNickname(), "=", channelName, toInviteTo->getNamesOfChannelMembers()));
+	sendMessageToChannel(toBeInvited, toInviteTo, RPL_ENDOFNAMES(getName(), toBeInvited->getNickname(), channelName));
 	return (0);
 }
 
@@ -386,8 +375,6 @@ int	Server::topic(Client &client, std::vector<std::string> command, size_t cmdNu
 				sendMessageToClient(client.getSocketFD(), RPL_TOPIC(getName(), client.getClientName(), channelName, toTakeTopicFrom->getTopic()));
 		}
 	}
-	else
-		return (std::cerr << "TOO MANY PARAMETERS" << std::endl, -1);
 	return (0);
 }
 
