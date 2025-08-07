@@ -252,50 +252,58 @@ int		Server::privMsg(Client &client, std::vector<std::string> command, size_t cm
 	return (0);
 }
 
-int	Server::part(Client &client, std::vector<std::string> command, size_t cmdNumber)
+int Server::part(Client &client, std::vector<std::string> command, size_t cmdNumber)
 {
-	std::vector<std::string> channels;
-	std::string channelName, comment = "";
-	Channel *toPartFrom;
+    std::vector<std::string> channels;
+    std::string comment = "";
+    
+    if (command.size() < 2)
+        return (sendMessageToClient(client.getSocketFD(), ERR_NEEDMOREPARAMS(getName(), client.getClientName(), "PART")), 1);
+    
+    parseStringToVector(command[cmdNumber++], &channels, ",");
+    if (channels.size() == 0)
+        return (1);
+    
+    if (cmdNumber < command.size())
+    {
+        if (command[cmdNumber][0] == ':')
+            comment = command[cmdNumber].substr(1); // Remove the ':'
+        cmdNumber++;
+    }
+    for (size_t i = 0; i < channels.size(); i++)
+    {
+        std::string channelName = channels[i];
+        
+        if (channelName[0] != '#')
+        {
+            sendMessageToClient(client.getSocketFD(), ERR_BADCHANMASK(getName(), client.getClientName(), channelName));
+            continue;
+        }
 
-	if (command.size() == 1)
-		sendMessageToClient(client.getSocketFD(), MSG_PART(client.getClientName(), channelName));
+        Channel* toPartFrom = getChannel(channelName);
+        if (toPartFrom == NULL)
+        {
+            sendMessageToClient(client.getSocketFD(), ERR_NOSUCHCHANNEL(getName(), client.getClientName(), channelName));
+            continue;
+        }
+        
+        if (toPartFrom->getUser(client.getNickname()) == NULL)
+        {
+            sendMessageToClient(client.getSocketFD(), ERR_NOTONCHANNEL(getName(), client.getNickname(), channelName));
+            continue;
+        }
+        toPartFrom->removeUser(&client);
+		if (toPartFrom->getChannelUsers().size() == 0)
+			removeChannel(toPartFrom);
 
-	channelName = command[cmdNumber++];
-	if (channelName[0] != '#')
-		return (sendMessageToClient(client.getSocketFD(), ERR_BADCHANMASK(getName(), client.getClientName(), channelName)), 1);
-
-	toPartFrom = getChannel(channelName);
-	if (toPartFrom == NULL)
-		return (sendMessageToClient(client.getSocketFD(), ERR_NOSUCHCHANNEL(getName(), client.getClientName(), channelName)), 1);
-
-	parseStringToVector(command[cmdNumber++], &channels, ",");
-	if (channels.size() == 0)
-		return (1);
-
-	if (cmdNumber < command.size())
-	{
-		if (command[cmdNumber][0] == ':')
-			comment = command[cmdNumber];
-		cmdNumber++;
-	}
-	if (cmdNumber < command.size())
-		return (std::cerr << "TOO MANY PARAMETERS" << std::endl, 1);
-	for (size_t i = 0; i < channels.size(); i++)
-	{
-		//CHECK IF USER IST ON THAT CHANNEL
-		toPartFrom = getChannel(channels[i]);
-		if (toPartFrom == NULL)
-		{
-			sendMessageToClient(client.getSocketFD(), ERR_NOTONCHANNEL(getName(), client.getClientName(), channelName));
-			continue ;
-		}
-		if (comment.size() == 0)
-			sendMessageToClient(client.getSocketFD(), MSG_PART(client.getClientName(), channelName));
-		else
-			sendMessageToClient(client.getSocketFD(), MSG_PART_WITH_COMMENT(client.getClientName(), channelName, comment));
-	}
-	return (0);
+        if (comment.empty())
+            sendMessageToClient(client.getSocketFD(), MSG_PART(client.getClientName(), channelName));
+        else
+            sendMessageToClient(client.getSocketFD(), MSG_PART_WITH_COMMENT(client.getClientName(), channelName, comment));
+        
+        sendMessageToChannel(&client, toPartFrom, MSG_PART(client.getClientName(), channelName));
+    }
+    return (0);
 }
 
 int	Server::kick(Client &client, std::vector<std::string> command, size_t cmdNumber) //KICK <channel> <user>[,<user>,...] [:<comment>]
