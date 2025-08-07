@@ -250,10 +250,45 @@ int		Server::privMsg(Client &client, std::vector<std::string> command, size_t cm
 	return (0);
 }
 
+int	Server::part(Client &client, std::vector<std::string> command, size_t cmdNumber)
+{
+	std::vector<std::string> channels;
+	std::string channelName, comment = "";
+	Channel *toPartFrom;
+
+	if (command.size() < 2)
+		return (sendMessageToClient(client.getSocketFD(), ERR_NEEDMOREPARAMS(getName(), client.getClientName(), "PART")), 1);
+
+	channelName = command[cmdNumber++];
+	if (channelName[0] != '#')
+		return (sendMessageToClient(client.getSocketFD(), ERR_BADCHANMASK(getName(), client.getClientName(), channelName)), 1);
+
+	toPartFrom = getChannel(channelName);
+	if (toPartFrom == NULL)
+		return (sendMessageToClient(client.getSocketFD(), ERR_NOSUCHCHANNEL(getName(), client.getClientName(), channelName)), 1);
+
+	parseStringToVector(command[cmdNumber++], &channels, ",");
+	if (channels.size() == 0)
+		return (1);
+
+	if (cmdNumber < command.size())
+	{
+		if (command[cmdNumber][0] == ':')
+			comment = command[cmdNumber];
+		cmdNumber++;
+	}
+	if (cmdNumber < command.size())
+		return (std::cerr << "TOO MANY PARAMETERS" << std::endl, 1);
+	for (size_t i = 0; i < channels.size(); i++)
+	{
+		//CHECK IF USER IST ON THAT CHANNEL
+		toPartFrom = getChannel(channels[i])
+}
+
 int	Server::kick(Client &client, std::vector<std::string> command, size_t cmdNumber) //KICK <channel> <user>[,<user>,...] [:<comment>]
 {
 	std::vector<std::string>	users;
-	std::string					channelName, comment = "for NO Reason";
+	std::string					channelName, comment = "";
 	Channel						*toKickFrom;
 	Client						*toBeKicked;
 
@@ -274,8 +309,7 @@ int	Server::kick(Client &client, std::vector<std::string> command, size_t cmdNum
 		return (sendMessageToClient(client.getSocketFD(), ERR_NOSUCHCHANNEL(getName(), client.getClientName(), channelName)), 1);
 
 	//Parsing the command argument into user name(s) stored in a vector
-	if (command[cmdNumber].find(","))
-		parseStringToVector(command[cmdNumber++], &users, ",");
+	parseStringToVector(command[cmdNumber++], &users, ",");
 	if (users.size() == 0)
 		return (1);
 

@@ -96,6 +96,7 @@ class Server
 		int						nick(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						user(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						join(Client &client, std::vector<std::string> command, size_t cmdNumber);
+		int						part(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						kick(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						invite(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						topic(Client &client, std::vector<std::string> command, size_t cmdNumber);
