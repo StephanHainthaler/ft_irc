@@ -271,31 +271,7 @@ std::string	Client::getClientName(void) const
     return (clientName);
 }
 
-
-/* bool Server::isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const
-{
-    std::string lowerNick = nickname;
-    toLowercase(lowerNick);
-    
-    for (std::vector<Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
-    {
-        const Client* client = *it;
-        if (client && client != excludeClient)
-        {
-            std::string clientNick = client->getNickname();
-            toLowercase(clientNick);
-            if (clientNick == lowerNick)
-                return (false);
-        }
-    }
-    return (true);
-}
-
-bool Server::isNicknameAvailable(const std::string& nickname) const
-{
-    return (isNicknameAvailable(nickname, NULL));
-}
-
+/*
 void Server::handleNickCommand(Client* client, const std::string& newNickname)
 {
     // First check format using Client's validation
@@ -423,12 +399,4 @@ std::vector<std::string> Client::receiveCompleteMessages()
     }
     
     return (completeMessages);
-} */
-
-
-/* std::string Client::toLowercase(const std::string& str)
-{
-	std::string result = str;
-	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
-	return (result);
 } */

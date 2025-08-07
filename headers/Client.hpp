@@ -88,8 +88,7 @@ class Client
 		ClientState _state;
 		std::vector<std::string> _channels;
 
-		static	std::string toLowercase(const std::string& str);
-        static	std::string truncName(const std::string& name);
+		static	std::string truncName(const std::string& name);
 		
 	public:
 
@@ -98,9 +97,7 @@ class Client
 		bool	isRealNameValid(const std::string& realName) const;
 		int		isUserValid(std::string& userName);
 		std::string getFullIdentifier() const;
-		//bool	isNicknameAvailable(const std::string& nickname) const;
-        //bool	isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const;
-
+		
 		// Connection
 		int 						connectToServer(const std::string& serverIP, int serverPort);
 		int							sendMessageToChannel(Channel* channel, std::string message);
@@ -154,16 +151,4 @@ class Client
 		
 		// Client(const Client &other);
 		// Client& operator=(const Client &copy);
-
-		class NickNameTooLong : public std::exception
-		{
-			public:
-				virtual const char* what() const throw();
-		};
-		class NickNameInvalid: public std::exception
-		{
-			public:
-				virtual const char* what() const throw();
-		};
-
 };
