@@ -262,12 +262,12 @@ void Server::handleClientDisconnections(int i)
 	{
 		client->setState(DISCONNECTED);
 		client->disconnect();
+		std::cout << YELLOW << "Client disconnected: " << _pollfds[i].fd << DEFAULT << std::endl;
 		close(_pollfds[i].fd); // close hotel room (socket)
 		_clients.erase(_pollfds[i].fd); // remove client from the map
 		_pollfds.erase(_pollfds.begin() + i); // remove client from pollfds
 		_outgoingMessages.erase(_pollfds[i].fd); // remove client's outgoing buffer
 		delete client; // delete Client object
-		std::cout << YELLOW << "Client disconnected: " << _pollfds[i].fd << DEFAULT << std::endl;
 	}
 }
 
@@ -432,11 +432,11 @@ void	Server::createChannel(std::string &newChannelName, Client &founder)
 	sendMessageToClient(founder.getSocketFD(), RPL_ENDOFNAMES(getName(), founder.getNickname(), newChannelName));
 }
 
-
-void toLowercase(const std::string& str)
+std::string toLowercase(const std::string& str)
 {
 	std::string result = str;
 	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+	return (result);
 }
 
 void signalHandler(int sig)
@@ -457,14 +457,12 @@ void Server::setupSignals()
 // For nickname changes within the same Client -- this will allow lower/upper case changes, for example: pia to Pia
 bool Server::isNicknameAvailable(const std::string& nickname, const Client* targetClient) const
 {
-    std::string targetNickNew = nickname;
-    toLowercase(targetNickNew);
+    std::string targetNickNew = toLowercase(nickname);
 
     for (std::map<int, Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
     {
 		const Client* client = it->second;
-		std::string clientNick = client->getNickname();
-		toLowercase(clientNick);
+		std::string clientNick = toLowercase(client->getNickname());
 
 		// if the nickname or any case-variation of it is already taken by another client
         if (client && client != targetClient && clientNick == targetNickNew)

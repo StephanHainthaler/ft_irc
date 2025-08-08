@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: shaintha <shaintha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: pgober <pgober@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/08/07 10:01:25 by shaintha         ###   ########.fr       */
+/*   Updated: 2025/08/08 15:16:55 by pgober           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,8 +53,7 @@ class Client
 		ClientState 				_state;
 		std::vector<std::string>	_channels;
 
-		static	std::string toLowercase(const std::string& str);
-        static	std::string truncName(const std::string& name);
+		static	std::string truncName(const std::string& name);
 		
 	public:
 
@@ -62,10 +61,8 @@ class Client
 		bool	isNickValid(const std::string& nickname) const;
 		bool	isRealNameValid(const std::string& realName) const;
 		int		isUserValid(std::string& userName);
-		std::string getFullIdentifier(void) const;
-		//bool	isNicknameAvailable(const std::string& nickname) const;
-        //bool	isNicknameAvailable(const std::string& nickname, const Client* excludeClient) const;
-
+		std::string getFullIdentifier() const;
+		
 		// Connection
 		int 						connectToServer(const std::string& serverIP, int serverPort);
 		int							sendMessageToChannel(Channel* channel, std::string message);
@@ -116,16 +113,4 @@ class Client
 		
 		// Client(const Client &other);
 		// Client& operator=(const Client &copy);
-
-		class NickNameTooLong : public std::exception
-		{
-			public:
-				virtual const char* what() const throw();
-		};
-		class NickNameInvalid: public std::exception
-		{
-			public:
-				virtual const char* what() const throw();
-		};
-
 };

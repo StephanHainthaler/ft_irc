@@ -41,7 +41,7 @@
 # define ERROR -1
 
 void signalHandler(int sig);
-void toLowercase(const std::string& str);
+std::string toLowercase(const std::string& str);
 
 class Client;
 class Channel;
