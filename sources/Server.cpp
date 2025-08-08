@@ -157,16 +157,6 @@ void Server::sendMessageToClient(int clientFD, std::string message)
 
     // Add message to the outgoing buffer for this client
     _outgoingMessages[clientFD] += message + "\r\n";
-
-    // tell events to also start checking for POLLOUT, since we have data to send
-    for (size_t i = 0; i < _pollfds.size(); ++i)
-    {
-        if (_pollfds[i].fd == clientFD)
-        {
-            _pollfds[i].events = POLLIN | POLLOUT;
-            break;
-        }
-    }
 }
 
 void Server::handleSendingToClient(int i)
@@ -260,10 +250,8 @@ void Server::handleClientDisconnections(int i)
 	Client *client = _clients[_pollfds[i].fd];
 	if (client)
 	{
-		client->setState(DISCONNECTED);
-		client->disconnect();
+		client->disconnect(); // also closes the "hotel room" (socket)
 		std::cout << YELLOW << "Client disconnected: " << _pollfds[i].fd << DEFAULT << std::endl;
-		close(_pollfds[i].fd); // close hotel room (socket)
 		_clients.erase(_pollfds[i].fd); // remove client from the map
 		_pollfds.erase(_pollfds.begin() + i); // remove client from pollfds
 		_outgoingMessages.erase(_pollfds[i].fd); // remove client's outgoing buffer
