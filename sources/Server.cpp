@@ -174,17 +174,15 @@ void Server::handleSendingToClient(int i)
 
 void Server::sendMessageToChannel(Client* client, Channel* channel, const std::string& message)
 {
-	std::vector<Client*> usersInChannel = channel->getChannelUsers();
-	
+	std::vector<Client*> usersInChannel = channel->getOperators();
 	for (size_t i = 0; i < usersInChannel.size(); i++)
-	{
-		Client* targetClient = usersInChannel[i];
-		
-		if (targetClient != client)
-		{
-			sendMessageToClient(targetClient->getSocketFD(), message);
-		}
-	}
+		sendMessageToClient(usersInChannel[i]->getSocketFD(), message);
+
+	(void)client;
+
+	usersInChannel = channel->getChannelUsers();
+	for (size_t i = 0; i < usersInChannel.size(); i++)
+		sendMessageToClient(usersInChannel[i]->getSocketFD(), message);
 }
 
 void Server::handleClientConnections(void)
