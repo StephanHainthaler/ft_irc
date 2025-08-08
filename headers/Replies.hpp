@@ -23,6 +23,11 @@
 //":<source>/<oldNick>!<user>@<host> JOIN :<channel>"
 # define MSG_JOIN(source, channel)								":" + source + " JOIN :" + channel
 
+//":<client>/<Nick>!<user>@<host> PART :<channel>"
+# define MSG_PART(source, channel)								":" + source + " PART " + channel
+
+# define MSG_PART_WITH_COMMENT(source, channel, comment)		":" + source + " PART " + channel + " " + comment
+
 //":<source> PRIVMSG <channel/user> :<message>
 # define MSG_PRIVMSG(source, target, messsage)                  ":" + source + " PRIVMSG " + target + " :" + message
 
