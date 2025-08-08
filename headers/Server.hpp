@@ -94,7 +94,7 @@ class Server
 		void					handleInput(Client &client, std::string input);
 		void					parseStringToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters);
 		void					parseVectorToString(std::vector<std::string> &vector, std::string &input, size_t startIndex);
-		void					executeCommand(Client &client, std::vector<std::string> command);
+		void					executeCommand(Client &client, std::vector<std::string> command, std::string input);
 		void					printVector(std::vector<std::string> vector);
 		int						pass(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						nick(Client &client, std::vector<std::string> command, size_t cmdNumber);
@@ -105,7 +105,7 @@ class Server
 		int						invite(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						topic(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						mode(Client &client, std::vector<std::string> command, size_t cmdNumber);
-		int						privMsg(Client &client, std::vector<std::string> command, size_t cmdNumber);
+		int						privMsg(Client &client, std::vector<std::string> command, std::string input, size_t cmdNumber);
 		void					testAllNumericReplies(int clientFD, Client &client);
 
 		// Cleanup

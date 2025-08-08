@@ -25,7 +25,7 @@ void	Server::handleInput(Client &client, std::string input)
 	else if (client.getState() == AUTHENTICATED && command[0] != "PASS" && command[0] != "NICK" && command[0] != "USER")
 		sendMessageToClient(client.getSocketFD(), ERR_NOTREGISTERED(getName(), client.getClientName()));
 	else
-		executeCommand(client, command);
+		executeCommand(client, command, input);
 	if (client.getState() < REGISTERED && client.getNickname() != "*" && client.getUsername() != "*")
 	{
 		client.setState(REGISTERED);
@@ -51,7 +51,7 @@ void    Server::parseVectorToString(std::vector<std::string> &vector, std::strin
 	}
 }
 
-void	Server::executeCommand(Client &client, std::vector<std::string> command)
+void	Server::executeCommand(Client &client, std::vector<std::string> command, std::string input)
 {
 	if (command[0].compare("PASS") == 0)
 		pass(client, command, 1);
@@ -62,7 +62,7 @@ void	Server::executeCommand(Client &client, std::vector<std::string> command)
 	else if (command[0].compare("JOIN") == 0)
 		join(client, command, 1);
 	else if (command[0].compare("PRIVMSG") == 0)
-		privMsg(client, command, 1);
+		privMsg(client, command, input, 1);
 	else if (command[0].compare("PART") == 0)
 		part(client, command, 1);
 	else if (command[0].compare("KICK") == 0)
@@ -200,18 +200,31 @@ int	Server::join(Client &client, std::vector<std::string> command, size_t cmdNum
 	return (0);
 }
 
-int	Server::privMsg(Client &client, std::vector<std::string> command, size_t cmdNumber)
+int	Server::privMsg(Client &client, std::vector<std::string> command, std::string input, size_t cmdNumber)
 {
+	std::vector<std::string> targets;
+	std::string message = "";
+
 	if (command.size() < 2)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NEEDMOREPARAMS(getName(), client.getNickname(), "PRIVMSG")), 1);
 
-	std::vector<std::string> targets;
-	std::string message;
+	parseStringToVector(command[cmdNumber++], &targets, ",");
+	if (targets.size() == 0)
+		return (1);
 
-	if (command[cmdNumber].find(","))
-		parseStringToVector(command[cmdNumber++], &targets, ",");
+	if (cmdNumber >= command.size())
+		return (sendMessageToClient(client.getSocketFD(), ERR_NOTEXTTOSEND(getName(), client.getClientName())), 1);
+	
+	if (command[cmdNumber][0] != ':')
+		message = command[cmdNumber];
 	else
-		targets.push_back(command[cmdNumber++]);
+	{
+		size_t colonPos = input.find(':');
+		if (colonPos != std::string::npos && colonPos + 1 < input.size())
+		{
+			message += input.substr(colonPos + 1);
+		}
+	}
 
 	for (size_t i = 0; i < targets.size(); i++)
 	{
