@@ -19,7 +19,6 @@ Channel::Channel(const std::string &name, Client &creator): _name(name)
 	_topic = "";
 	_modes = "";
 	_operators.push_back(&creator);
-	_channelUsers.push_back(&creator);
 	creator.joinChannel(_name);
 }
 
@@ -120,19 +119,29 @@ void Channel::removeUser(Client *client)
 {
 	if (client)
 	{
-		std::vector<Client *>::iterator it = std::find(_channelUsers.begin(), _channelUsers.end(), client);
-		if (it != _channelUsers.end())
-			_channelUsers.erase(it);
+		if (isOperator(client) == true)
+		{
+			std::vector<Client *>::iterator it = std::find(_operators.begin(), _operators.end(), client);
+			if (it != _operators.end())
+				_operators.erase(it);
+		}
+		else
+		{
+			std::vector<Client *>::iterator it = std::find(_channelUsers.begin(), _channelUsers.end(), client);
+			if (it != _channelUsers.end())
+				_channelUsers.erase(it);
+		}
 	}
 }
 
 Client *Channel::getUser(const std::string &nickname) const
 {
-	for (std::vector<Client *>::const_iterator it = _channelUsers.begin(); it != _channelUsers.end(); ++it)
-	{
+	for (std::vector<Client *>::const_iterator it =_operators.begin(); it !=_operators.end(); ++it)
 		if ((*it)->getNickname() == nickname)
 			return *it;
-	}
+	for (std::vector<Client *>::const_iterator it = _channelUsers.begin(); it != _channelUsers.end(); ++it)
+		if ((*it)->getNickname() == nickname)
+			return *it;
 	return NULL;
 }
 
@@ -159,11 +168,14 @@ void Channel::setOperator(std::string &nickname, bool enable)
 
 	if (enable && std::find(_operators.begin(), _operators.end(), client) == _operators.end())
 	{
-		client->setNick("@" + client->getNickname());
 		_operators.push_back(client);
+		std::vector<Client *>::iterator it = std::find(_channelUsers.begin(), _channelUsers.end(), client);
+		if (it != _channelUsers.end())
+			_channelUsers.erase(it);
 	}
 	else if (!enable)
 	{
+		_channelUsers.push_back(client);
 		std::vector<Client *>::iterator it = std::find(_operators.begin(), _operators.end(), client);
 		if (it != _operators.end())
 			_operators.erase(it);
@@ -191,10 +203,18 @@ void Channel::setUserLimit(unsigned int limit)
 }
 
 //ADDED BY STEPHAN
-std::string					Channel::getNamesOfChannelMembers(void) const
+std::string	Channel::getNamesOfChannelMembers(void) const
 {
 	std::string namesOfUsers = "";
 
+	for (size_t i = 0; i < _operators.size(); i++)
+	{
+		namesOfUsers += "@" + _operators[i]->getNickname();
+		if ((i + 1) != _operators.size())
+			namesOfUsers += " ";
+	}
+	if (_channelUsers.size() > 0)
+		namesOfUsers += " ";
 	for (size_t i = 0; i < _channelUsers.size(); i++)
 	{
 		namesOfUsers += _channelUsers[i]->getNickname();

@@ -64,9 +64,9 @@ class Channel
 		std::string					_topic;
 		std::string					_modes;
 		std::vector<Client *>		_channelUsers;
+		std::vector<Client *>		_operators; // (ClientClass objs with operator status)
 
 		std::string					_channelKey; // Channel key (password)
-		std::vector<Client *>		_operators; // (ClientClass objs with operator status)
 		unsigned int 				_userLimit; // User limit to channel
 
 		/* Mode flags
