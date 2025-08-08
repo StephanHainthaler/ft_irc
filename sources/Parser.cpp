@@ -39,6 +39,18 @@ void    Server::parseStringToVector(std::string &input, std::vector<std::string>
 		vector->push_back(token);
 }
 
+void    Server::parseVectorToString(std::vector<std::string> &vector, std::string &input, size_t startIndex)
+{
+	input = "";
+	for (size_t i = startIndex; i < vector.size(); i++)
+	{
+		if (i + 1 < vector.size())
+			input += vector[i] + " ";
+		else
+			input += vector[i];
+	}
+}
+
 void	Server::executeCommand(Client &client, std::vector<std::string> command)
 {
 	if (command[0].compare("PASS") == 0)
@@ -180,6 +192,8 @@ int	Server::join(Client &client, std::vector<std::string> command, size_t cmdNum
 			sendMessageToClient(client.getSocketFD(), RPL_ENDOFNAMES(getName(), client.getNickname(), channelNames[i]));
 			sendMessageToChannel(&client, toJoinTo, RPL_NAMREPLY(getName(), client.getNickname(), "=", channelNames[i], toJoinTo->getNamesOfChannelMembers()));
 			sendMessageToChannel(&client, toJoinTo, RPL_ENDOFNAMES(getName(), client.getNickname(), channelNames[i]));
+
+			
 		}
 	}
 	return (0);
@@ -285,7 +299,7 @@ int	Server::invite(Client &client, std::vector<std::string> command, size_t cmdN
 {
 	std::string	nickname, channelName;
 	Channel		*toInviteTo;
-	Client		*toBeInvited = NULL;
+	Client		*toBeInvited;
 
 	//CHECK NUMBER OF NECESSARY PARAMETERS
 	if (command.size() < 3)
@@ -336,12 +350,6 @@ int	Server::topic(Client &client, std::vector<std::string> command, size_t cmdNu
 	std::string	channelName, topic;
 	Channel		*toTakeTopicFrom;
 
-	//CHECK CLIENT AUTHORITY
-	//	"<channel> :You're not channel operator" --> ERR_CHANOPRIVSNEEDED (482)
-
-	//CHECK CLIENT AVAILABILITY
-	//	" "<client> <channel> :You're not on that channel"" --> ERR_NOTONCHANNEL (442)
-
 	//CHECK NUMBER OF NECESSARY PARAMETERS
 	if (command.size() < 2)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NEEDMOREPARAMS(getName(), client.getClientName(), "TOPIC")), 1);
@@ -351,6 +359,9 @@ int	Server::topic(Client &client, std::vector<std::string> command, size_t cmdNu
 	toTakeTopicFrom = getChannel(channelName);
 	if (toTakeTopicFrom == NULL)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NOSUCHCHANNEL(getName(), client.getClientName(), channelName)), 1);
+	
+	if (toTakeTopicFrom->getUser(client.getNickname()) == NULL)
+		return (sendMessageToClient(client.getSocketFD(), ERR_NOTONCHANNEL(getName(), client.getClientName(), channelName)), 1);
 
 	//CHECK THE TOPIC
 	if (command.size() == 2)
@@ -360,20 +371,24 @@ int	Server::topic(Client &client, std::vector<std::string> command, size_t cmdNu
 		else
 			sendMessageToClient(client.getSocketFD(), RPL_TOPIC(getName(), client.getClientName(), channelName, toTakeTopicFrom->getTopic()));
 	}
-	else if (command.size() == 3)
+	else
 	{
-		if (command[cmdNumber][0] == ':' && command[cmdNumber].size() == 1)
-		{
+		parseVectorToString(command, topic, cmdNumber);
+		//CHECK CLIENT AUTHORITY
+		if (toTakeTopicFrom->isOperator(&client) == false)
+			return (sendMessageToClient(client.getSocketFD(), ERR_CHANOPRIVSNEEDED(getName(), client.getClientName(), channelName)), 1);
+		// else if (topic[0] != ':')
+		// 	return (1);
+		else if (topic[0] == ':' && topic.size() == 1)
 			toTakeTopicFrom->setTopic("");
-			for (size_t i = 0; i < toTakeTopicFrom->getChannelUsers().size(); i++)
-				sendMessageToClient(client.getSocketFD(), RPL_NOTOPIC(getName(), client.getNickname(), channelName));
-		}
+		else if (topic[0] == ':')
+			toTakeTopicFrom->setTopic(topic.substr(1, topic.length() - 1));
 		else
-		{
-			toTakeTopicFrom->setTopic(command[cmdNumber].substr(1, command[cmdNumber].length() -1));
-			for (size_t i = 0; i < toTakeTopicFrom->getChannelUsers().size(); i++)
-				sendMessageToClient(client.getSocketFD(), RPL_TOPIC(getName(), client.getClientName(), channelName, toTakeTopicFrom->getTopic()));
-		}
+			toTakeTopicFrom->setTopic(topic);
+		if (toTakeTopicFrom->getTopic().empty() == true)
+			sendMessageToChannel(&client, toTakeTopicFrom, RPL_NOTOPIC(getName(), client.getNickname(), channelName));
+		else
+			sendMessageToChannel(&client, toTakeTopicFrom, RPL_TOPIC(getName(), client.getClientName(), channelName, toTakeTopicFrom->getTopic()));
 	}
 	return (0);
 }
@@ -419,14 +434,14 @@ int	Server::mode(Client &client, std::vector<std::string> command, size_t cmdNum
 				continue ;
 			else if (modeString[i] == 'i')
 				toChangeMode->setMode('i', "", doEnable);
-			else if (modeString[i] == 'o')
-					toChangeMode->setOperator(command[cmdNumber++], doEnable);
 			else if (modeString[i] == 't')
 				toChangeMode->setMode('t', "", doEnable);
 			else if (modeString[i] == 'l')
-					toChangeMode->setMode('l', command[cmdNumber++], doEnable);
+				toChangeMode->setMode('l', command[cmdNumber++], doEnable);
 			else if (modeString[i] == 'k')
-					toChangeMode->setMode('k', command[cmdNumber++], doEnable);
+				toChangeMode->setMode('k', command[cmdNumber++], doEnable);
+			else if (modeString[i] == 'o')
+				toChangeMode->setOperator(command[cmdNumber++], doEnable);
 			else
 				sendMessageToClient(client.getSocketFD(), ERR_UNKNOWNMODE(getName(), client.getClientName(), modeString[i]));
 			sendMessageToChannel(&client, toChangeMode, RPL_CHANNELMODEIS(getName(), client.getNickname(), channelName, toChangeMode->getModes(), toChangeMode->getModeArguments()));

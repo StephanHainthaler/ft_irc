@@ -184,8 +184,18 @@ void Server::handleSendingToClient(int i)
 
 void Server::sendMessageToChannel(Client* client, Channel* channel, const std::string& message)
 {
-	std::vector<Client*> usersInChannel = channel->getChannelUsers();
-	
+	std::vector<Client*> usersInChannel = channel->getOperators();
+
+	for (size_t i = 0; i < usersInChannel.size(); i++)
+	{
+		Client* targetClient = usersInChannel[i];
+		
+		if (targetClient != client)
+		{
+			sendMessageToClient(targetClient->getSocketFD(), message);
+		}
+	}
+	usersInChannel = channel->getChannelUsers();
 	for (size_t i = 0; i < usersInChannel.size(); i++)
 	{
 		Client* targetClient = usersInChannel[i];
@@ -387,18 +397,15 @@ void Server::run(void)
 }
 
 // Member functions - user triggered actions
-void Server::addChannel(Channel *channel)
-{
-	if (channel == NULL)
-		return;
-
-	for (std::vector<Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
-	{
-		if (*it == channel)
-			return; 
-	}
-	_channels.push_back(channel);
-}
+// void Server::addChannel(Channel *channel, Client &founder)
+// {
+// 	if (channel == NULL)
+// 		return;
+// 	for (std::vector<Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+// 		if (*it == channel)
+// 			return; 
+// 	_channels.push_back(channel);
+// }
 
 void Server::removeChannel(Channel *channel)
 {
@@ -420,17 +427,15 @@ void Server::removeChannel(Channel *channel)
 void	Server::createChannel(std::string &newChannelName, Client &founder)
 {
 	Channel *newChannel = new Channel(newChannelName, founder);
-	addChannel(newChannel);
-	newChannel->addUser(&founder);
-	std::string temp = founder.getNickname();
-	newChannel->setOperator(temp, true);
+	_channels.push_back(newChannel);
 
 	sendMessageToClient(founder.getSocketFD(), MSG_JOIN(founder.getNickname(), newChannelName));
 	sendMessageToClient(founder.getSocketFD(), MSG_MODE(getName(), newChannelName, "+o", founder.getNickname()));
 	sendMessageToClient(founder.getSocketFD(), RPL_NOTOPIC(getName(), founder.getNickname(), newChannelName));
-	sendMessageToClient(founder.getSocketFD(), RPL_NAMREPLY(getName(), founder.getNickname(), "=", newChannelName, "@" + founder.getNickname()));
+	sendMessageToClient(founder.getSocketFD(), RPL_NAMREPLY(getName(), founder.getNickname(), "=", newChannelName, newChannel->getNamesOfChannelMembers()));
 	sendMessageToClient(founder.getSocketFD(), RPL_ENDOFNAMES(getName(), founder.getNickname(), newChannelName));
 }
+
 
 
 void toLowercase(const std::string& str)
