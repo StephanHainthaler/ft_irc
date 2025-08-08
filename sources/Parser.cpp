@@ -99,7 +99,8 @@ int	Server::nick(Client &client, std::vector<std::string> command, size_t cmdNum
 		return (sendMessageToClient(client.getSocketFD(), ERR_ERRONEUSNICKNAME(getName(), client.getClientName(), command[cmdNumber])), 1);
 	else if (isNicknameAvailable(command[cmdNumber], &client) == false)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NICKNAMEINUSE(getName(), client.getClientName(), command[cmdNumber])), 1);
-	sendMessageToClient(client.getSocketFD(), MSG_NICK(client.getNickname(), command[cmdNumber]));
+	for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); it++)
+		sendMessageToClient(it->second->getSocketFD(), MSG_NICK(client.getNickname(), command[cmdNumber]));
 	client.setNick(command[cmdNumber]);
 	return (0);
 }

@@ -20,12 +20,11 @@
 //":<source>/<oldNick>!<user>@<host> NICK :<newNick>"
 # define MSG_NICK(source, newNick)		                        ":" + source + " NICK :" + newNick
 
-//":<source>/<oldNick>!<user>@<host> JOIN :<channel>"
+//":<source>/<nick>!<user>@<host> JOIN :<channel>"
 # define MSG_JOIN(source, channel)								":" + source + " JOIN :" + channel
 
-//":<client>/<Nick>!<user>@<host> PART :<channel>"
+//":<client>/<nick>!<user>@<host> PART :<channel>"
 # define MSG_PART(source, channel)								":" + source + " PART " + channel
-
 # define MSG_PART_WITH_COMMENT(source, channel, comment)		":" + source + " PART " + channel + " " + comment
 
 //":<source> PRIVMSG <channel/user> :<message>
