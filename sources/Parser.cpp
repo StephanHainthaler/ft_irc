@@ -193,7 +193,10 @@ int	Server::privMsg(Client &client, std::vector<std::string> command, size_t cmd
 		return (sendMessageToClient(client.getSocketFD(), ERR_NEEDMOREPARAMS(getName(), client.getNickname(), "PRIVMSG")), 1);
 
 	std::vector<std::string> targets;
-	std::string message = command[command.size() -1];
+	std::string message;
+
+	if (message[0] == ':')
+            message = message.substr(1);
 
 	if (command[cmdNumber].find(","))
 		parseStringToVector(command[cmdNumber++], &targets, ",");
