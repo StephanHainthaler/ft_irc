@@ -6,7 +6,7 @@
 /*   By: pgober <pgober@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/08/08 15:16:55 by pgober           ###   ########.fr       */
+/*   Updated: 2025/08/08 15:24:36 by pgober           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,9 +58,9 @@ class Client
 	public:
 
 		// Format checks
-		bool	isNickValid(const std::string& nickname) const;
-		bool	isRealNameValid(const std::string& realName) const;
-		int		isUserValid(std::string& userName);
+		bool		isNickValid(const std::string& nickname) const;
+		bool		isRealNameValid(const std::string& realName) const;
+		int			isUserValid(std::string& userName);
 		std::string getFullIdentifier() const;
 		
 		// Connection
