@@ -211,20 +211,39 @@ int	Server::privMsg(Client &client, std::vector<std::string> command, std::strin
 	parseStringToVector(command[cmdNumber++], &targets, ",");
 	if (targets.size() == 0)
 		return (1);
-
+		
 	if (cmdNumber >= command.size())
-		return (sendMessageToClient(client.getSocketFD(), ERR_NOTEXTTOSEND(getName(), client.getClientName())), 1);
+	return (sendMessageToClient(client.getSocketFD(), ERR_NOTEXTTOSEND(getName(), client.getClientName())), 1);
 	
-	if (command[cmdNumber][0] != ':')
-		message = command[cmdNumber];
-	else
+	// PRIVMSG <target> :<message>, where <message> can contain a :
+	// PRIVMSG <target> <message> (received when sending a message in hexchat
+	while (cmdNumber < command.size())
 	{
-		size_t colonPos = input.find(':');
-		if (colonPos != std::string::npos && colonPos + 1 < input.size())
+		if (command[cmdNumber][0] == ':')
 		{
-			message += input.substr(colonPos + 1);
+			size_t colonPos = input.find(':');
+			if (colonPos != std::string::npos)
+			{
+				message += input.substr(colonPos + 1); // Get everything after the first ':'
+				cmdNumber = command.size(); // Exit the loop
+			}
+		}
+		else
+		{
+			size_t msgStart = input.find(command[cmdNumber]);
+			if (msgStart != std::string::npos)
+			{
+				message += input.substr(msgStart); // Get everything after the command
+				cmdNumber++;
+			}
+			else
+			{
+				message += command[cmdNumber];
+				cmdNumber++;
+			}
 		}
 	}
+
 
 	for (size_t i = 0; i < targets.size(); i++)
 	{
