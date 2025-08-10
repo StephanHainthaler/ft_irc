@@ -92,9 +92,9 @@ class Server
 
 		// PARSER
 		void					handleInput(Client &client, std::string input);
-		void					parseStringToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters);
+		void					parseStringToVector(std::string input, std::vector<std::string> *vector, const char *delimiters);
 		void					parseVectorToString(std::vector<std::string> &vector, std::string &input, size_t startIndex);
-		void					executeCommand(Client &client, std::vector<std::string> command, std::string input);
+		void					executeCommand(Client &client, std::vector<std::string> command, std::string &input);
 		void					printVector(std::vector<std::string> vector);
 		int						pass(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						nick(Client &client, std::vector<std::string> command, size_t cmdNumber);

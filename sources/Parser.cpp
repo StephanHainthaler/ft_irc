@@ -16,7 +16,6 @@ void	Server::handleInput(Client &client, std::string input)
 {
 	std::vector<std::string>	command;
 
-	std::cout << input << std::endl;
 	parseStringToVector(input, &command, " \f\n\r\t\v");
 	if (command.empty() == true)
 		return ;
@@ -33,7 +32,7 @@ void	Server::handleInput(Client &client, std::string input)
 	}
 }
 
-void    Server::parseStringToVector(std::string &input, std::vector<std::string> *vector, const char *delimiters)
+void    Server::parseStringToVector(std::string input, std::vector<std::string> *vector, const char *delimiters)
 {
 	for (char* token = std::strtok((char *)input.c_str(), delimiters); token; token = std::strtok(NULL, delimiters))
 		vector->push_back(token);
@@ -51,7 +50,7 @@ void    Server::parseVectorToString(std::vector<std::string> &vector, std::strin
 	}
 }
 
-void	Server::executeCommand(Client &client, std::vector<std::string> command, std::string input)
+void	Server::executeCommand(Client &client, std::vector<std::string> command, std::string &input)
 {
 	if (command[0].compare("PASS") == 0)
 		pass(client, command, 1);
@@ -126,18 +125,13 @@ int	Server::join(Client &client, std::vector<std::string> command, size_t cmdNum
 		return (sendMessageToClient(client.getSocketFD(), ERR_NEEDMOREPARAMS(getName(), client.getClientName(), "JOIN")), 1);
 	
 	//Parsing the command argument into channel name(s) stored in a vector
-	if (command[cmdNumber].find(","))
-		parseStringToVector(command[cmdNumber++], &channelNames, ",");
+	parseStringToVector(command[cmdNumber++], &channelNames, ",");
 	if (channelNames.size() == 0)
 		return (1);
 
 	//Parsing the command argument into user name(s) stored in a vector
 	if (cmdNumber < command.size())
-		if (command[cmdNumber].find(","))
-			parseStringToVector(command[cmdNumber++], &keyNames, ",");
-
-	if (cmdNumber < command.size()) 
-		return (std::cerr << "TOO MANY PARAMETERS" << std::endl, 1);
+		parseStringToVector(command[cmdNumber++], &keyNames, ",");
 
 	//CHECK IN HOW MANY CHANNELS THE USER IS CURRENTLY IN -->TOOMANYCHANNELS
 
@@ -219,11 +213,25 @@ int	Server::privMsg(Client &client, std::vector<std::string> command, std::strin
 		message = command[cmdNumber];
 	else
 	{
-		size_t colonPos = input.find(':');
-		if (colonPos != std::string::npos && colonPos + 1 < input.size())
-		{
-			message += input.substr(colonPos + 1);
-		}
+		size_t pos = 0;
+		while (input[pos] == ' ')
+			std::cout << input[pos++] << std::endl;
+		//START of PRIVMSG
+		while (input[pos] != ' ')
+			std::cout << input[pos++] << std::endl;
+		//END of PRIVMSG
+
+		while (input[pos] == ' ')
+			std::cout << input[pos++] << std::endl;
+		//START of <target>
+		while (input[pos] != ' ')
+			std::cout << input[pos++] << std::endl;
+		//END of <target>
+
+		while (input[pos] == ' ')
+			std::cout << input[pos++] << std::endl;
+		//START of <message> == :
+		message = input.substr(pos + 1);
 	}
 
 	for (size_t i = 0; i < targets.size(); i++)
