@@ -28,7 +28,7 @@
 # define MSG_PART_WITH_COMMENT(source, channel, comment)		":" + source + " PART " + channel + " " + comment
 
 //":<source> PRIVMSG <channel/user> :<message>
-# define MSG_PRIVMSG(source, target, messsage)                  ":" + source + " PRIVMSG " + target + " :" + message
+# define MSG_PRIVMSG(source, target, messsage)                  ":" + source + " PRIVMSG " + target + " " + message
 
 //":<source> KICK <channel> <nick> [:<comment>]
 # define MSG_KICK(source, channel, nick)						":" + source + " KICK " + channel + " " + nick
