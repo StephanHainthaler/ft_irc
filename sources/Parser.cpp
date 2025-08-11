@@ -215,22 +215,15 @@ int	Server::privMsg(Client &client, std::vector<std::string> command, std::strin
 	{
 		size_t pos = 0;
 		while (input[pos] == ' ')
-			std::cout << input[pos++] << std::endl;
-		//START of PRIVMSG
+			input[pos++];
 		while (input[pos] != ' ')
-			std::cout << input[pos++] << std::endl;
-		//END of PRIVMSG
-
+			input[pos++];
 		while (input[pos] == ' ')
-			std::cout << input[pos++] << std::endl;
-		//START of <target>
+			input[pos++];
 		while (input[pos] != ' ')
-			std::cout << input[pos++] << std::endl;
-		//END of <target>
-
+			input[pos++];
 		while (input[pos] == ' ')
-			std::cout << input[pos++] << std::endl;
-		//START of <message> == :
+			input[pos++];
 		message = input.substr(pos + 1);
 	}
 

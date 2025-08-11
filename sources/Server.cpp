@@ -176,14 +176,13 @@ void Server::sendMessageToChannel(Client* client, Channel* channel, const std::s
 {
 	std::vector<Client*> usersInChannel = channel->getOperators();
 
+	(void)client;
 	for (size_t i = 0; i < usersInChannel.size(); i++)
 	{
 		Client* targetClient = usersInChannel[i];
 		
 		if (targetClient != client)
-		{
 			sendMessageToClient(targetClient->getSocketFD(), message);
-		}
 	}
 	usersInChannel = channel->getChannelUsers();
 	for (size_t i = 0; i < usersInChannel.size(); i++)
@@ -191,9 +190,7 @@ void Server::sendMessageToChannel(Client* client, Channel* channel, const std::s
 		Client* targetClient = usersInChannel[i];
 		
 		if (targetClient != client)
-		{
 			sendMessageToClient(targetClient->getSocketFD(), message);
-		}
 	}
 }
 
