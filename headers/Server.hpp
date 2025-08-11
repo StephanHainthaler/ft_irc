@@ -108,9 +108,6 @@ class Server
 		int						privMsg(Client &client, std::vector<std::string> command, std::string input, size_t cmdNumber);
 		void					testAllNumericReplies(int clientFD, Client &client);
 
-		// Cleanup
-		void					gracefulShutdown();
-
 		// Exception
 		class ServerException: public std::exception
 		{

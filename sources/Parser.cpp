@@ -72,6 +72,14 @@ void	Server::executeCommand(Client &client, std::vector<std::string> command, st
 		topic(client, command, 1);
 	else if (command[0].compare("MODE") == 0)
 		mode(client, command, 1);
+	else if (command[0].compare("QUIT") == 0)
+	{
+		int i = 0;
+		while (_pollfds[i].fd != client.getSocketFD())
+			i++;
+		std::cout << GRAY << "Disconnect client with fd: " << client.getSocketFD() << DEFAULT << std::endl;
+		handleClientDisconnections(i);
+	}
 	else if (command[0].compare("TEST") == 0)
 		testAllNumericReplies(client.getSocketFD(), client);
 	else

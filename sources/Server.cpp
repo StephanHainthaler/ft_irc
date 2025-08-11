@@ -49,39 +49,6 @@ Server::Server(const unsigned int &port, const std::string &password): _port(por
 
 Server::~Server(void)
 {
-	if (_serverFd != -1)
-		close(_serverFd);
-
-	if (!_clients.empty())
-	{
-		for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
-			delete it->second;
-
-		_clients.clear();
-	}
-
-	if (!_outgoingMessages.empty())
-		_outgoingMessages.clear();
-
-
-	if (!_channels.empty())
-	{
-		for (std::vector<Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
-			delete *it;
-
-		_channels.clear();
-	}
-	
-	// close all in pollfds
-	for (std::vector<pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it)
-	{
-		if (it->fd != -1)
-			close(it->fd);
-	} 
-}
-
-void Server::gracefulShutdown()
-{
 	std::cout << YELLOW << "\n[SERVER] Starting graceful shutdown..." << DEFAULT << std::endl;
 	
 	// Notify all connected clients about server shutdown
@@ -95,19 +62,43 @@ void Server::gracefulShutdown()
 	// Give clients a moment to receive the message
 	usleep(100000); // 100ms
 	
+	// Close the server socket
+	if (_serverFd != -1)
+		close(_serverFd);
+
 	// Close all client connections
-	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+	if (!_clients.empty())
 	{
-		close(it->first);
+		for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+		{
+			close(it->first); // close the socket
+			delete it->second;
+		}
+		_clients.clear();
 	}
-	_clients.clear();
+
+	// Clear outgoing messages
+	_outgoingMessages.clear();
+
+	// Clear channels
+	if (!_channels.empty())
+	{
+		for (std::vector<Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+			delete *it;
+
+		_channels.clear();
+	}
 	
-	// Clean up channels
-	for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+	// close all in pollfds
+	if (!_pollfds.empty())
 	{
-		delete *it;
+		for (size_t i = 0; i < _pollfds.size(); ++i)
+		{
+			if (_pollfds[i].fd != -1)
+				close(_pollfds[i].fd);
+		}
+		_pollfds.clear();
 	}
-	_channels.clear();
 }
 
 // Getters
@@ -220,7 +211,7 @@ void Server::handleClientConnections(void)
 	*/
 	pollfd pfd = {};
 	pfd.fd = clientFd;
-	pfd.events = POLLIN | POLLOUT;
+	pfd.events = POLLIN | POLLOUT | POLLHUP;
 	pfd.revents = 0; // initially no events
 
 	_pollfds.push_back(pfd);
@@ -259,10 +250,10 @@ void Server::handleClientDisconnections(int i)
 	{
 		client->disconnect(); // also closes the "hotel room" (socket)
 		std::cout << YELLOW << "Client disconnected: " << _pollfds[i].fd << DEFAULT << std::endl;
+		delete client; // delete Client object
 		_clients.erase(_pollfds[i].fd); // remove client from the map
 		_pollfds.erase(_pollfds.begin() + i); // remove client from pollfds
 		_outgoingMessages.erase(_pollfds[i].fd); // remove client's outgoing buffer
-		delete client; // delete Client object
 	}
 }
 
@@ -377,8 +368,7 @@ void Server::run(void)
 	setupSignals();
 	while (g_shutdown == 0)
 		handleEvents();
-    throw ServerException("Server shutdown requested.");
-	gracefulShutdown();
+	throw ServerException("Server shutdown complete.");
 }
 
 // Member functions - user triggered actions
