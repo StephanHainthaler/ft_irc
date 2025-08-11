@@ -3,16 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: pgober <pgober@student.42.fr>              +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:53:54 by juitz             #+#    #+#             */
-/*   Updated: 2025/08/08 15:24:36 by pgober           ###   ########.fr       */
+/*   Updated: 2025/08/11 23:36:23 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include "main.hpp"
 #include "Server.hpp"
 #include <cstddef>
 #include <iostream>
@@ -51,7 +50,7 @@ class Client
 		std::string					_realName;
 		std::string					_modes;
 		ClientState 				_state;
-		std::vector<std::string>	_channels;
+		size_t						_numberOfChannels;
 
 		static	std::string truncName(const std::string& name);
 		
@@ -69,11 +68,6 @@ class Client
 		std::vector<std::string> 	receiveCompleteMessages(void);
 		void 						disconnect(void);
 
-		// Channels
-		void	joinChannel(const std::string& channelName);
-		void	leaveChannel(const std::string& channelName);
-		void 	clearChannels(void);
-		
 		// Modes
 		bool	isValidUserMode(char mode) const;
 		bool 	hasMode(char mode) const;
@@ -90,6 +84,8 @@ class Client
 		void	setIP(const std::string& ip);
 		void	setHostname(const std::string& hostname);
 		int 	setMode(char mode, bool enable);
+		void	setChannelNumber(int number);
+	
 
 		// Getters
 		std::string 				getNickname(void) const;
@@ -99,7 +95,7 @@ class Client
 		int							getSocketFD() const;
 		std::string 				getIP(void) const;
 		std::string					getHostname(void) const;
-		std::vector<std::string>	getChannels(void) const;
+		size_t						getChannelNumber() const;
 		std::string 				getModes(void) const;
 		
 
