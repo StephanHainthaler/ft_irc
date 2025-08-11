@@ -250,10 +250,10 @@ void Server::handleClientDisconnections(int i)
 	{
 		client->disconnect(); // also closes the "hotel room" (socket)
 		std::cout << YELLOW << "Client disconnected: " << _pollfds[i].fd << DEFAULT << std::endl;
-		delete client; // delete Client object
 		_clients.erase(_pollfds[i].fd); // remove client from the map
 		_pollfds.erase(_pollfds.begin() + i); // remove client from pollfds
 		_outgoingMessages.erase(_pollfds[i].fd); // remove client's outgoing buffer
+		delete client; // delete Client object
 	}
 }
 

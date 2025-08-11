@@ -25,7 +25,7 @@ void	Server::handleInput(Client &client, std::string input)
 		sendMessageToClient(client.getSocketFD(), ERR_NOTREGISTERED(getName(), client.getClientName()));
 	else
 		executeCommand(client, command, input);
-	if (client.getState() < REGISTERED && client.getNickname() != "*" && client.getUsername() != "*")
+	if (command[0].compare("QUIT") != 0 && client.getState() < REGISTERED && client.getNickname() != "*" && client.getUsername() != "*")
 	{
 		client.setState(REGISTERED);
 		sendMessageToClient(client.getSocketFD(), RPL_WELCOME(getName(), client.getNickname(), client.getNickname(), client.getUsername(), client.getHostname()));
