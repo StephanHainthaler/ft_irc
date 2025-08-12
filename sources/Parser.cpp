@@ -512,14 +512,16 @@ int	Server::mode(Client &client, std::vector<std::string> command, size_t cmdNum
 					doEnable = true;
 				continue ;
 			}
-			else if ((modeString[i] == 'k' || modeString[i] == 'o' || modeString[i] == 'l') && !(cmdNumber < command.size()))
+			else if ((modeString[i] == 'k' || modeString[i] == 'o' || (modeString[i] == 'l' && doEnable == true)) && !(cmdNumber < command.size()))
 				continue ;
 			else if (modeString[i] == 'i')
 				toChangeMode->setMode('i', "", doEnable);
 			else if (modeString[i] == 't')
 				toChangeMode->setMode('t', "", doEnable);
-			else if (modeString[i] == 'l')
+			else if (modeString[i] == 'l' && doEnable == true)
 				toChangeMode->setMode('l', command[cmdNumber++], doEnable);
+			else if (modeString[i] == 'l' && doEnable == false)
+				toChangeMode->setMode('l', "", doEnable);
 			else if (modeString[i] == 'k')
 				toChangeMode->setMode('k', command[cmdNumber++], doEnable);
 			else if (modeString[i] == 'o')
