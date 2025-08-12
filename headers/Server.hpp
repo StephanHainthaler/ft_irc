@@ -106,6 +106,7 @@ class Server
 		int						topic(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						mode(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						privMsg(Client &client, std::vector<std::string> command, std::string input, size_t cmdNumber);
+		int 					quit(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		void					testAllNumericReplies(int clientFD, Client &client);
 
 		// Exception

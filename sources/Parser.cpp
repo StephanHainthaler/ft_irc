@@ -73,13 +73,7 @@ void	Server::executeCommand(Client &client, std::vector<std::string> command, st
 	else if (command[0].compare("MODE") == 0)
 		mode(client, command, 1);
 	else if (command[0].compare("QUIT") == 0)
-	{
-		int i = 0;
-		while (_pollfds[i].fd != client.getSocketFD())
-			i++;
-		std::cout << GRAY << "Disconnect client with fd: " << client.getSocketFD() << DEFAULT << std::endl;
-		handleClientDisconnections(i);
-	}
+		quit(client, command, 1);
 	else if (command[0].compare("TEST") == 0)
 		testAllNumericReplies(client.getSocketFD(), client);
 	else
@@ -531,6 +525,17 @@ int	Server::mode(Client &client, std::vector<std::string> command, size_t cmdNum
 	// ERR_NOTONCHANNEL (442)
 
 	return (0);
+}
+
+int Server::quit(Client &client, std::vector<std::string> command, size_t cmdNumber)
+{
+	std::string reason = command.size() > cmdNumber ? command[cmdNumber] : "";
+	int i = 0;
+	while (_pollfds[i].fd != client.getSocketFD())
+		i++;
+	std::cout << GRAY << "Disconnect client with fd: " << client.getSocketFD() << " | Reason: " << reason << DEFAULT << std::endl;
+	handleClientDisconnections(i);
+	return 0;
 }
 
 void	Server::testAllNumericReplies(int clientFD, Client &client)
