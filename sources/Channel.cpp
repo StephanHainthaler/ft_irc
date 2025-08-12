@@ -20,7 +20,7 @@ Channel::Channel(const std::string &name, Client &creator): _name(name)
 	_topic = "";
 	_modes = "";
 	_operators.push_back(&creator);
-	creator.joinChannel(_name);
+	creator.setChannelNumber(1);
 }
 
 Channel::~Channel(void)

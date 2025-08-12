@@ -18,7 +18,4 @@
 #include <sstream>
 #include <cstring> 
 
-# define DEFAULT "\x1b[0m"
-# define RED "\x1b[31m" // for errors
-# define YELLOW "\x1b[33m" // for warnings
-# define GRAY "\x1b[90m" // for general information
+
