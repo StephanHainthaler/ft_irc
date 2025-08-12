@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "../headers/Channel.hpp"
+#include <climits>
 
 Channel::Channel(const std::string &name, Client &creator): _name(name)
 {
@@ -58,7 +59,7 @@ void Channel::setMode(char mode, std::string modearg, bool enable)
 	// operator is handled in setOperator so not handled here
 	if (enable && _modes.find(mode) == std::string::npos)
 	{
-		if ((mode == 'k' || mode == 'l') && modearg.empty())
+		if ((mode == 'k') && modearg.empty())
 			return;
 		_modes += mode;
 		if (mode == 'k')
@@ -66,11 +67,23 @@ void Channel::setMode(char mode, std::string modearg, bool enable)
 		else if (mode == 'l')
 			_userLimit = std::atoi(modearg.c_str());
 	}
+	else if (enable && _modes.find(mode) != std::string::npos)
+    {
+        // Mode already exists, just update the value
+        if (mode == 'k')
+            _channelKey = modearg;
+        else if (mode == 'l')
+            _userLimit = std::atoi(modearg.c_str());
+	}
 	else if (!enable)
 	{
 		std::string::size_type pos = _modes.find(mode);
 		if (pos != std::string::npos)
+		{
 			_modes.erase(pos, 1);
+			if (mode == 'l')
+                _userLimit = UINT_MAX;
+		}
 	}
 }
 

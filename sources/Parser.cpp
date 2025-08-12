@@ -116,6 +116,13 @@ int	Server::user(Client &client, std::vector<std::string> command, size_t cmdNum
 	return (0);
 }
 
+std::string uintToString(unsigned int value)
+{
+    std::ostringstream oss;
+    oss << value;
+    return (oss.str());
+}
+
 int	Server::join(Client &client, std::vector<std::string> command, size_t cmdNumber) //JOIN <channel>{,<channel>} [<key>{,<key>}]
 {
 	std::vector<std::string>	channelNames, keyNames;
@@ -168,10 +175,9 @@ int	Server::join(Client &client, std::vector<std::string> command, size_t cmdNum
 			}
 			else if (toJoinTo->hasMode('l') == true)
 			{
-				if (toJoinTo->getChannelUsers().size() >= toJoinTo->getUserLimit())
+				if (toJoinTo->getChannelUsers().size() + toJoinTo->getOperators().size() >= toJoinTo->getUserLimit())
 				{
-					sendMessageToClient(client.getSocketFD(), ERR_CHANNELISFULL(getName(), client.getNickname(), channelNames[i]));
-					continue ;
+					return (sendMessageToClient(client.getSocketFD(), ERR_CHANNELISFULL(getName(), client.getNickname(), channelNames[i])), 1);
 				}
 			}
 			else if (toJoinTo->hasMode('i') == true)
@@ -293,6 +299,8 @@ int Server::part(Client &client, std::vector<std::string> command, size_t cmdNum
             sendMessageToClient(client.getSocketFD(), ERR_NOTONCHANNEL(getName(), client.getNickname(), channelName));
             continue;
         }
+		sendMessageToClient(client.getSocketFD(), "Users in Channel: " + uintToString(toPartFrom->getChannelUsers().size()));
+
         toPartFrom->removeUser(&client);
 	
         if (comment.empty())
@@ -301,7 +309,7 @@ int Server::part(Client &client, std::vector<std::string> command, size_t cmdNum
             sendMessageToClient(client.getSocketFD(), MSG_PART_WITH_COMMENT(client.getClientName(), channelName, comment));
         
         sendMessageToChannel(&client, toPartFrom, MSG_PART(client.getClientName(), channelName));
-		if (toPartFrom->getChannelUsers().size() == 0)
+		if (toPartFrom->getChannelUsers().size() + toPartFrom->getOperators().size() == 0)
 		{
 			removeChannel(toPartFrom);
 			delete toPartFrom;
@@ -384,6 +392,13 @@ int	Server::invite(Client &client, std::vector<std::string> command, size_t cmdN
 	if (toInviteTo == NULL)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NOSUCHCHANNEL(getName(), client.getClientName(), channelName)), 1);
 
+	else if (toInviteTo->hasMode('l') == true)
+	{
+		if (toInviteTo->getChannelUsers().size() + toInviteTo->getOperators().size() >= toInviteTo->getUserLimit())
+		{
+			return (sendMessageToClient(client.getSocketFD(), ERR_CHANNELISFULL(getName(), client.getNickname(), channelName)), 1);
+		}
+	}
 	//CHECK IF COMMAND ISSUER PART OF THAT CHANNEL
 	else if (toInviteTo->getUser(client.getNickname()) == NULL)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NOTONCHANNEL(getName(), client.getClientName(), channelName)), 1);
@@ -519,7 +534,7 @@ int	Server::mode(Client &client, std::vector<std::string> command, size_t cmdNum
 			sendMessageToChannel(&client, toChangeMode, RPL_CHANNELMODEIS(getName(), client.getNickname(), channelName, toChangeMode->getModes(), toChangeMode->getModeArguments()));
 		}
 	}
-	
+	MSG_MODE(client.getClientName(),channelName, toChangeMode->getModes(), toChangeMode->getModeArguments());
 	// ERR_NOTONCHANNEL (442)
 
 	return (0);
