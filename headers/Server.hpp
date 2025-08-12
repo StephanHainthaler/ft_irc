@@ -19,6 +19,9 @@
 # include <poll.h>
 # include <errno.h> // - number of last error
 
+#include <iomanip>
+#include <sstream>
+
 # include <unistd.h>
 # include <exception>
 # include <vector>
@@ -28,12 +31,18 @@
 # include <cstring> // for strncpy, strcmp
 # include <signal.h>
 
-# include "main.hpp"
 # include "Client.hpp"
 # include "Channel.hpp"
 # include "Replies.hpp"
 
+# define DEFAULT "\x1b[0m"
+# define RED "\x1b[31m" // for errors
+# define YELLOW "\x1b[33m" // for warnings
+# define GRAY "\x1b[90m" // for general information
+
+
 # define MAX_MSG_LEN 512
+# define MAX_CHAN_NUM 100
 
 // Server states
 # define RUNNING 1
@@ -71,20 +80,21 @@ class Server
 
 		// Member functions - server actions
 		void 					handleClientConnections(void); // like addClient
-		void 					sendMessageToClient(int clientFD, std::string message);
 		void					handleSendingToClient(int i);
-		void					sendMessageToChannel(Client* client, Channel* channel, const std::string& message);
+		void 					sendMessageToClient(int clientFD, std::string message);
+		void					sendMessageToChannel(Channel* channel, const std::string& message);
+		void					sendMessageToChannel(Client* excludedSender, Channel* channel, const std::string& message);
 		void 					handleClientMessage(int clientFd);
 		void 					handleClientDisconnections(int i);  // like removeClient
 		void 					handleEvents(void);
 		void 					run(void);
 
 		// Member functions - user triggered actions
-		void 					addChannel(Channel *channel);
+		void					createChannel(std::string &newChannelName, Client &founder);
 		void 					removeChannel(Channel *channel);
 
 		// ADDED BY STEPHAN - maybe let the Server be the ONLY one to have these functions
-		void					createChannel(std::string &newChannelName, Client &founder);
+		
 
 		// Nickname availability checks
 		bool 					isNicknameAvailable(const std::string& nickname, const Client* targetClient) const;
@@ -93,17 +103,17 @@ class Server
 		// PARSER
 		void					handleInput(Client &client, std::string input);
 		void					parseStringToVector(std::string input, std::vector<std::string> *vector, const char *delimiters);
-		void					parseVectorToString(std::vector<std::string> &vector, std::string &input, size_t startIndex);
+		size_t					getInputPosition(std::string &input, size_t numberOfArguments);
 		void					executeCommand(Client &client, std::vector<std::string> command, std::string &input);
 		void					printVector(std::vector<std::string> vector);
 		int						pass(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						nick(Client &client, std::vector<std::string> command, size_t cmdNumber);
-		int						user(Client &client, std::vector<std::string> command, size_t cmdNumber);
+		int						user(Client &client, std::vector<std::string> command, std::string &input, size_t cmdNumber);
 		int						join(Client &client, std::vector<std::string> command, size_t cmdNumber);
-		int						part(Client &client, std::vector<std::string> command, size_t cmdNumber);
-		int						kick(Client &client, std::vector<std::string> command, size_t cmdNumber);
+		int						part(Client &client, std::vector<std::string> command, std::string &input, size_t cmdNumber);
+		int						kick(Client &client, std::vector<std::string> command, std::string &input, size_t cmdNumber);
 		int						invite(Client &client, std::vector<std::string> command, size_t cmdNumber);
-		int						topic(Client &client, std::vector<std::string> command, size_t cmdNumber);
+		int						topic(Client &client, std::vector<std::string> command, std::string &input, size_t cmdNumber);
 		int						mode(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						privMsg(Client &client, std::vector<std::string> command, std::string input, size_t cmdNumber);
 		int 					quit(Client &client, std::vector<std::string> command, size_t cmdNumber);

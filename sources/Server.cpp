@@ -163,16 +163,27 @@ void Server::handleSendingToClient(int i)
 	}
 }
 
-void Server::sendMessageToChannel(Client* client, Channel* channel, const std::string& message)
+
+void Server::sendMessageToChannel(Channel* channel, const std::string& message)
 {
 	std::vector<Client*> usersInChannel = channel->getOperators();
 
-	(void)client;
+	for (size_t i = 0; i < usersInChannel.size(); i++)
+		sendMessageToClient(usersInChannel[i]->getSocketFD(), message);
+	usersInChannel = channel->getChannelUsers();
+	for (size_t i = 0; i < usersInChannel.size(); i++)
+		sendMessageToClient(usersInChannel[i]->getSocketFD(), message);
+}
+
+void Server::sendMessageToChannel(Client* excludedSender, Channel* channel, const std::string& message)
+{
+	std::vector<Client*> usersInChannel = channel->getOperators();
+
 	for (size_t i = 0; i < usersInChannel.size(); i++)
 	{
 		Client* targetClient = usersInChannel[i];
 		
-		if (targetClient != client)
+		if (targetClient != excludedSender)
 			sendMessageToClient(targetClient->getSocketFD(), message);
 	}
 	usersInChannel = channel->getChannelUsers();
@@ -180,7 +191,7 @@ void Server::sendMessageToChannel(Client* client, Channel* channel, const std::s
 	{
 		Client* targetClient = usersInChannel[i];
 		
-		if (targetClient != client)
+		if (targetClient != excludedSender)
 			sendMessageToClient(targetClient->getSocketFD(), message);
 	}
 }
@@ -392,6 +403,7 @@ void Server::removeChannel(Channel *channel)
 		if (*it == channel)
 		{
 			_channels.erase(it);
+			delete channel;
 			break;
 		}
 	}
@@ -410,6 +422,8 @@ void	Server::createChannel(std::string &newChannelName, Client &founder)
 	sendMessageToClient(founder.getSocketFD(), RPL_NAMREPLY(getName(), founder.getNickname(), "=", newChannelName, newChannel->getNamesOfChannelMembers()));
 	sendMessageToClient(founder.getSocketFD(), RPL_ENDOFNAMES(getName(), founder.getNickname(), newChannelName));
 }
+
+
 
 
 

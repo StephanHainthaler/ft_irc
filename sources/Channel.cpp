@@ -19,7 +19,7 @@ Channel::Channel(const std::string &name, Client &creator): _name(name)
 	_topic = "";
 	_modes = "";
 	_operators.push_back(&creator);
-	creator.joinChannel(_name);
+	creator.setChannelNumber(1);
 }
 
 Channel::~Channel(void)
@@ -58,8 +58,6 @@ void Channel::setMode(char mode, std::string modearg, bool enable)
 	// operator is handled in setOperator so not handled here
 	if (enable && _modes.find(mode) == std::string::npos)
 	{
-		if ((mode == 'k' || mode == 'l') && modearg.empty())
-			return;
 		_modes += mode;
 		if (mode == 'k')
 			_channelKey = modearg;
