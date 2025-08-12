@@ -42,6 +42,7 @@
 
 
 # define MAX_MSG_LEN 1042
+# define MAX_CHAN_NUM 100
 
 // Server states
 # define RUNNING 1
@@ -107,7 +108,7 @@ class Server
 		void					printVector(std::vector<std::string> vector);
 		int						pass(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						nick(Client &client, std::vector<std::string> command, size_t cmdNumber);
-		int						user(Client &client, std::vector<std::string> command, size_t cmdNumber);
+		int						user(Client &client, std::vector<std::string> command, std::string &input, size_t cmdNumber);
 		int						join(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						part(Client &client, std::vector<std::string> command, std::string &input, size_t cmdNumber);
 		int						kick(Client &client, std::vector<std::string> command, std::string &input, size_t cmdNumber);

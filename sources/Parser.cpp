@@ -61,7 +61,7 @@ void	Server::executeCommand(Client &client, std::vector<std::string> command, st
 	else if (command[0].compare("NICK") == 0)
 		nick(client, command, 1);
 	else if (command[0].compare("USER") == 0)
-		user(client, command, 1);
+		user(client, command, input, 1);
 	else if (command[0].compare("JOIN") == 0)
 		join(client, command, 1);
 	else if (command[0].compare("PRIVMSG") == 0)
@@ -108,15 +108,23 @@ int	Server::nick(Client &client, std::vector<std::string> command, size_t cmdNum
 	return (0);
 }
 
-int	Server::user(Client &client, std::vector<std::string> command, size_t cmdNumber)
+int	Server::user(Client &client, std::vector<std::string> command, std::string &input, size_t cmdNumber)
 {
+	std::string	realname;
+
 	if (command.size() < 5)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NEEDMOREPARAMS(getName(), client.getClientName(), "USER")), 1);
 	else if (client.getState() >= REGISTERED)
 		return (sendMessageToClient(client.getSocketFD(), ERR_ALREADYREGISTERED(getName(), client.getClientName())), 1);
 
 	//  DO CHECKS FOR 0 an *
-	client.setUser(command[cmdNumber], 0, '*', command[cmdNumber + 3]);
+
+	cmdNumber = 4;
+	if (command[cmdNumber][0] != ':')
+		realname = command[cmdNumber];
+	else
+		realname = input.substr(getInputPosition(input, 5) + 1);
+	client.setUser(command[cmdNumber], 0, '*', realname);
 	return (0);
 }
 
