@@ -154,7 +154,7 @@ int	Server::join(Client &client, std::vector<std::string> command, size_t cmdNum
 		// 	//PART WIH ALL CHANNELS
 		// }	
 		toJoinTo = getChannel(channelNames[i]);
-		if (toJoinTo == NULL && _channels.size() >= 10) //CHANNEL_NUMBER_LIMIT
+		if (toJoinTo == NULL && _channels.size() >= MAX_CHAN_NUM)
 		{
 			sendMessageToClient(client.getSocketFD(), ERR_NOSUCHCHANNEL(getName(), client.getClientName(), channelNames[i]));
 			continue ;
@@ -472,7 +472,9 @@ int	Server::mode(Client &client, std::vector<std::string> command, size_t cmdNum
 	toChangeMode = getChannel(channelName);
 	if (toChangeMode == NULL)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NOSUCHCHANNEL(getName(), client.getClientName(), channelName)), 1);
-	if (command.size() == 2)
+	else if (toChangeMode->getUser(client.getNickname()) == NULL)
+		return (sendMessageToClient(client.getSocketFD(), ERR_NOTONCHANNEL(getName(), client.getClientName(), channelName)), 1);
+	else if (command.size() == 2)
 	{
 		//RPL_CREATIONTIME (329)
 		return (sendMessageToClient(client.getSocketFD(), RPL_CHANNELMODEIS(getName(), client.getNickname(), channelName, toChangeMode->getModes(), toChangeMode->getModeArguments())), 1);
@@ -494,16 +496,20 @@ int	Server::mode(Client &client, std::vector<std::string> command, size_t cmdNum
 					doEnable = true;
 				continue ;
 			}
-			else if ((modeString[i] == 'k' || modeString[i] == 'o' || modeString[i] == 'l') && !(cmdNumber < command.size()))
+			else if (((modeString[i] == 'l' && doEnable == true) || (modeString[i] == 'k' && doEnable == true) || modeString[i] == 'o') && !(cmdNumber < command.size()))
 				continue ;
 			else if (modeString[i] == 'i')
 				toChangeMode->setMode('i', "", doEnable);
 			else if (modeString[i] == 't')
 				toChangeMode->setMode('t', "", doEnable);
-			else if (modeString[i] == 'l')
+			else if (modeString[i] == 'l' && doEnable == true)
 				toChangeMode->setMode('l', command[cmdNumber++], doEnable);
-			else if (modeString[i] == 'k')
+			else if (modeString[i] == 'l' && doEnable == false)
+				toChangeMode->setMode('l', "", doEnable);
+			else if (modeString[i] == 'k' && doEnable == true)
 				toChangeMode->setMode('k', command[cmdNumber++], doEnable);
+			else if (modeString[i] == 'k' && doEnable == false)
+				toChangeMode->setMode('k', "", doEnable);
 			else if (modeString[i] == 'o')
 				toChangeMode->setOperator(command[cmdNumber++], doEnable);
 			else
@@ -512,9 +518,6 @@ int	Server::mode(Client &client, std::vector<std::string> command, size_t cmdNum
 		}
 		sendMessageToChannel(toChangeMode, MSG_MODE(client.getClientName(), channelName, toChangeMode->getModes(), toChangeMode->getModeArguments()));
 	}
-	
-	// ERR_NOTONCHANNEL (442)
-
 	return (0);
 }
 
@@ -526,7 +529,7 @@ int Server::quit(Client &client, std::vector<std::string> command, size_t cmdNum
 		i++;
 	std::cout << GRAY << "Disconnect client with fd: " << client.getSocketFD() << " | Reason: " << reason << DEFAULT << std::endl;
 	handleClientDisconnections(i);
-	return 0;
+	return (0);
 }
 
 void	Server::testAllNumericReplies(int clientFD, Client &client)
