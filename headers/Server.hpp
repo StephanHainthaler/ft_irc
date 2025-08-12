@@ -33,7 +33,7 @@
 # include "Channel.hpp"
 # include "Replies.hpp"
 
-# define MAX_MSG_LEN 1042
+# define MAX_MSG_LEN 512
 
 // Server states
 # define RUNNING 1
