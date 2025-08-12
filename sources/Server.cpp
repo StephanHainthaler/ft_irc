@@ -173,7 +173,7 @@ void Server::handleSendingToClient(int i)
 	}
 
 	if (buffer.empty())
-		_pollfds[i].events &= ~POLLOUT; // remove POLLOUT event
+		_pollfds[i].events = POLLIN | POLLHUP; // remove POLLOUT
 }
 
 
