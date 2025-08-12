@@ -148,6 +148,16 @@ void Server::sendMessageToClient(int clientFD, std::string message)
 
     // Add message to the outgoing buffer for this client
     _outgoingMessages[clientFD] += message + "\r\n";
+
+	// set pollout
+	for (size_t i = 0; i < _pollfds.size(); ++i)
+	{
+		if (_pollfds[i].fd == clientFD)
+		{
+			_pollfds[i].events |= POLLOUT; // start checking for the POLLOUT event too
+			break;
+		}
+	}
 }
 
 void Server::handleSendingToClient(int i)
@@ -161,6 +171,9 @@ void Server::handleSendingToClient(int i)
 		if (sent > 0)
 			buffer.erase(0, sent); // remove sent bytes
 	}
+
+	if (buffer.empty())
+		_pollfds[i].events &= ~POLLOUT; // remove POLLOUT event
 }
 
 
@@ -222,7 +235,7 @@ void Server::handleClientConnections(void)
 	*/
 	pollfd pfd = {};
 	pfd.fd = clientFd;
-	pfd.events = POLLIN | POLLOUT | POLLHUP;
+	pfd.events = POLLIN | POLLHUP;
 	pfd.revents = 0; // initially no events
 
 	_pollfds.push_back(pfd);
@@ -295,7 +308,7 @@ void Server::handleEvents(void)
 		// else: if one or more sockets / fds are ready for reading or writing
 
 		// Check for events on each client socket
-		for (int i = 0; i <= poll_count; ++i)
+		for (size_t i = 0; i < _pollfds.size(); ++i)
 		{
 			//std::cout << GRAY << "Checking pollfd[" << i << "] with fd: " << _pollfds[i].fd << " revents: " << _pollfds[i].revents <<  DEFAULT << std::endl;
 
