@@ -80,6 +80,9 @@ Server::~Server(void)
 	// Clear outgoing messages
 	_outgoingMessages.clear();
 
+	// Clear incoming messages
+	_incomingMessages.clear();
+
 	// Clear channels
 	if (!_channels.empty())
 	{
@@ -176,7 +179,6 @@ void Server::handleSendingToClient(int i)
 		_pollfds[i].events = POLLIN | POLLHUP; // remove POLLOUT
 }
 
-
 void Server::sendMessageToChannel(Channel* channel, const std::string& message)
 {
 	std::vector<Client*> usersInChannel = channel->getOperators();
@@ -243,6 +245,7 @@ void Server::handleClientConnections(void)
 	Client *newClient = new Client(clientFd, _port); // create a new Client object
 	_clients.insert(std::make_pair(clientFd, newClient)); // add the new client to the map
 	_outgoingMessages.insert(std::make_pair(clientFd, "")); // initialize the outgoing buffer for the new client
+	_incomingMessages.insert(std::make_pair(clientFd, "")); // initialize the incoming buffer for the new client
 
 	sendMessageToClient(clientFd, "Please enter the password to access the StePiaAn IRC server!"); // send welcome message to IRC client
 }
@@ -255,15 +258,37 @@ If you encounter an empty message, silently ignore it.
 void	Server::handleClientMessage(int clientFd)
 {
 	char 	buffer[MAX_MSG_LEN];
+	bzero(buffer, sizeof(buffer));
 
-	bzero(buffer, MAX_MSG_LEN);
-    int bytesReceived = recv(clientFd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT); // Flag which makes the call non-blocking
-    if (bytesReceived > 0)
-    {
-		std::cout << GRAY << "Client (fd = " << clientFd << "): " << buffer << DEFAULT << std::endl; // first one is IRC client
-		std::map<int, Client *>::iterator it = _clients.find(clientFd);
-		Client	*client = it->second;
-		handleInput(*client, buffer);
+	// call recv once per poll event
+	int bytesReceived = recv(clientFd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT); // Flag which makes the call non-blocking
+    if (bytesReceived <= 0)
+		return ;
+    
+	buffer[bytesReceived] = '\0';
+	_incomingMessages[clientFd] += std::string(buffer); // add data to the client's incoming buffer
+	
+	/*
+	every time when recieving data, check if a complete message (incl \r\n) has been received.
+	If it was, extract it from the _incomingMessages buffer 
+	Since it is extracted and subsequently being processed, 
+	it can already be removed (incl \r\n) from the _incomingMessages buffer
+	*/
+	size_t pos;
+	while((pos = _incomingMessages[clientFd].find("\r\n")) != std::string::npos)
+	{
+		std::string message = _incomingMessages[clientFd].substr(0, pos);
+		_incomingMessages[clientFd].erase(0, pos + 2); // remove the processed message from the buffer (incl \r\n)
+		
+		// when encountering ctrl+d, remove it from the message
+		//message.erase(std::remove(message.begin(), message.end(), 4), message.end());
+
+		if (!message.empty())
+		{
+			std::cout << GRAY << "Client (fd = " << clientFd << "): " << message << DEFAULT << std::endl; // first one is IRC client
+			Client *client = _clients[clientFd];
+			handleInput(*client, message);
+		}
 	}
 }
 
@@ -277,6 +302,7 @@ void Server::handleClientDisconnections(int i)
 		_clients.erase(_pollfds[i].fd); // remove client from the map
 		_pollfds.erase(_pollfds.begin() + i); // remove client from pollfds
 		_outgoingMessages.erase(_pollfds[i].fd); // remove client's outgoing buffer
+		_incomingMessages.erase(_pollfds[i].fd); // remove client's incoming buffer
 		delete client; // delete Client object
 	}
 }

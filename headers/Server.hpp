@@ -149,6 +149,7 @@ class Server
 		std::map<int, Client *>		_clients;	// List of connected clients (ClientClass objs)
 		std::vector<pollfd>			_pollfds; // +1 for the server socket
 		std::map<int, std::string>	_outgoingMessages; // Buffer for outgoing messages
+		std::map<int, std::string>	_incomingMessages; // Buffer for incoming messages
 		std::vector<Channel *>		_channels;	// List of channels (ChannelClass objs)
 		//std::vector<std::string>	_users; // auf 10 users limitieren
 
