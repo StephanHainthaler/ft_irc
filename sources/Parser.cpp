@@ -312,10 +312,7 @@ int Server::part(Client &client, std::vector<std::string> command, std::string &
         
         sendMessageToChannel(&client, toPartFrom, MSG_PART(client.getClientName(), channelNames[i]));
 		if (toPartFrom->getChannelUsers().size() + toPartFrom->getOperators().size() == 0)
-		{
 			removeChannel(toPartFrom);
-			//delete toPartFrom;
-		}
     }
     return (0);
 }
@@ -519,7 +516,7 @@ int	Server::mode(Client &client, std::vector<std::string> command, size_t cmdNum
 					doEnable = true;
 				continue ;
 			}
-			else if ((modeString[i] == 'k' || modeString[i] == 'o' || (modeString[i] == 'l' && doEnable == true)) && !(cmdNumber < command.size()))
+			else if (((modeString[i] == 'k' && doEnable == true) || modeString[i] == 'o' || (modeString[i] == 'l' && doEnable == true)) && !(cmdNumber < command.size()))
 				continue ;
 			else if (modeString[i] == 'i')
 				toChangeMode->setMode('i', "", doEnable);
@@ -531,7 +528,7 @@ int	Server::mode(Client &client, std::vector<std::string> command, size_t cmdNum
 				toChangeMode->setMode('l', "", doEnable);
 			else if (modeString[i] == 'l' && doEnable == false)
 				toChangeMode->setMode('l', "", doEnable);
-			else if (modeString[i] == 'k')
+			else if (modeString[i] == 'k' && doEnable == true)
 				toChangeMode->setMode('k', command[cmdNumber++], doEnable);
 			else if (modeString[i] == 'k' && doEnable == false)
 				toChangeMode->setMode('k', "", doEnable);
@@ -539,7 +536,7 @@ int	Server::mode(Client &client, std::vector<std::string> command, size_t cmdNum
 				toChangeMode->setOperator(command[cmdNumber++], doEnable);
 			else
 				sendMessageToClient(client.getSocketFD(), ERR_UNKNOWNMODE(getName(), client.getClientName(), modeString[i]));
-			sendMessageToChannel(&client, toChangeMode, RPL_CHANNELMODEIS(getName(), client.getNickname(), channelName, toChangeMode->getModes(), toChangeMode->getModeArguments()));
+			sendMessageToChannel(toChangeMode, RPL_CHANNELMODEIS(getName(), client.getNickname(), channelName, toChangeMode->getModes(), toChangeMode->getModeArguments()));
 		}
 		sendMessageToChannel(toChangeMode, MSG_MODE(client.getClientName(), channelName, toChangeMode->getModes(), toChangeMode->getModeArguments()));
 	}
