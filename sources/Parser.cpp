@@ -78,8 +78,6 @@ void	Server::executeCommand(Client &client, std::vector<std::string> command, st
 		mode(client, command, 1);
 	else if (command[0].compare("QUIT") == 0)
 		quit(client, command, 1);
-	else if (command[0].compare("WHO") == 0)
-		return ;
 	else if (command[0].compare("TEST") == 0)
 		testAllNumericReplies(client.getSocketFD(), client);
 	else
