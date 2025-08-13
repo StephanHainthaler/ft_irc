@@ -349,21 +349,26 @@ int	Server::kick(Client &client, std::vector<std::string> command, std::string &
 	//Looping through the channels and users to be toBeKicked
 	for (size_t i = 0; i < users.size(); i++)
 	{
-		//CHECK IF USER IST ON THAT CHANNEL
 		toBeKicked = toKickFrom->getUser(users[i]);
 		if (toBeKicked == NULL)
 		{
 			sendMessageToClient(client.getSocketFD(), ERR_USERNOTINCHANNEL(getName(), client.getClientName(), users[i], channelName));
 			continue ;
 		}
-
-		//SAME AS IN PART
-		toKickFrom->removeUser(&client);
+		toKickFrom->removeUser(toBeKicked);
 		toBeKicked->setChannelNumber(-1);
 		if (comment.empty() == true)
-			sendMessageToClient(client.getSocketFD(), MSG_KICK(client.getClientName(), channelName, users[i]));
+		{
+			sendMessageToClient(toBeKicked->getSocketFD(), MSG_KICK(client.getClientName(), channelName, toBeKicked->getNickname()));
+			sendMessageToChannel(toKickFrom, MSG_KICK(client.getClientName(), channelName, toBeKicked->getNickname()));
+		}
 		else
-			sendMessageToClient(client.getSocketFD(), MSG_KICK_WITH_COMMENT(client.getClientName(), channelName, users[i], comment));
+		{
+			sendMessageToClient(toBeKicked->getSocketFD(), MSG_KICK_WITH_COMMENT(client.getClientName(), channelName, toBeKicked->getNickname(), comment));
+			sendMessageToChannel(toKickFrom, MSG_KICK_WITH_COMMENT(client.getClientName(), channelName, toBeKicked->getNickname(), comment));
+		}
+		sendMessageToChannel(toKickFrom, RPL_NAMREPLY(getName(), toBeKicked->getNickname(), "=", channelName, toKickFrom->getNamesOfChannelMembers()));
+		sendMessageToChannel(toKickFrom, RPL_ENDOFNAMES(getName(), toBeKicked->getNickname(), channelName));
 		if (toKickFrom->getOperators().size() + toKickFrom->getChannelUsers().size() == 0)
 			removeChannel(toKickFrom);
 	}
@@ -404,8 +409,6 @@ int	Server::invite(Client &client, std::vector<std::string> command, size_t cmdN
 		return (sendMessageToClient(client.getSocketFD(), ERR_NOSUCHNICK(getName(), client.getClientName(), nickname)), 1);
 	sendMessageToClient(client.getSocketFD(), RPL_INVITING(getName(), client.getClientName(), nickname, channelName));
 	sendMessageToClient(client.getSocketFD(), MSG_INVITE(client.getClientName(), nickname, channelName));
-
-	//SAME AS IN JOIN
 	toInviteTo->addUser(toBeInvited);
 	sendMessageToClient(toBeInvited->getSocketFD(), MSG_JOIN(toBeInvited->getNickname(), channelName));
 	if (toInviteTo->getTopic().empty() == true)
