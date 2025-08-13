@@ -80,6 +80,9 @@ Server::~Server(void)
 	// Clear outgoing messages
 	_outgoingMessages.clear();
 
+	// Clear incoming messages
+	_incomingMessages.clear();
+
 	// Clear channels
 	if (!_channels.empty())
 	{
@@ -148,6 +151,16 @@ void Server::sendMessageToClient(int clientFD, std::string message)
 
     // Add message to the outgoing buffer for this client
     _outgoingMessages[clientFD] += message + "\r\n";
+
+	// set pollout
+	for (size_t i = 0; i < _pollfds.size(); ++i)
+	{
+		if (_pollfds[i].fd == clientFD)
+		{
+			_pollfds[i].events |= POLLOUT; // start checking for the POLLOUT event too
+			break;
+		}
+	}
 }
 
 void Server::handleSendingToClient(int i)
@@ -161,8 +174,10 @@ void Server::handleSendingToClient(int i)
 		if (sent > 0)
 			buffer.erase(0, sent); // remove sent bytes
 	}
-}
 
+	if (buffer.empty())
+		_pollfds[i].events = POLLIN | POLLHUP; // remove POLLOUT
+}
 
 void Server::sendMessageToChannel(Channel* channel, const std::string& message)
 {
@@ -222,7 +237,7 @@ void Server::handleClientConnections(void)
 	*/
 	pollfd pfd = {};
 	pfd.fd = clientFd;
-	pfd.events = POLLIN | POLLOUT | POLLHUP;
+	pfd.events = POLLIN | POLLHUP;
 	pfd.revents = 0; // initially no events
 
 	_pollfds.push_back(pfd);
@@ -230,6 +245,7 @@ void Server::handleClientConnections(void)
 	Client *newClient = new Client(clientFd, _port); // create a new Client object
 	_clients.insert(std::make_pair(clientFd, newClient)); // add the new client to the map
 	_outgoingMessages.insert(std::make_pair(clientFd, "")); // initialize the outgoing buffer for the new client
+	_incomingMessages.insert(std::make_pair(clientFd, "")); // initialize the incoming buffer for the new client
 
 	sendMessageToClient(clientFd, "Please enter the password to access the StePiaAn IRC server!"); // send welcome message to IRC client
 }
@@ -242,15 +258,43 @@ If you encounter an empty message, silently ignore it.
 void	Server::handleClientMessage(int clientFd)
 {
 	char 	buffer[MAX_MSG_LEN];
+	bzero(buffer, sizeof(buffer));
 
-	bzero(buffer, MAX_MSG_LEN);
-    int bytesReceived = recv(clientFd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT); // Flag which makes the call non-blocking
-    if (bytesReceived > 0)
-    {
-		std::cout << GRAY << "Client (fd = " << clientFd << "): " << buffer << DEFAULT << std::endl; // first one is IRC client
-		std::map<int, Client *>::iterator it = _clients.find(clientFd);
-		Client	*client = it->second;
-		handleInput(*client, buffer);
+	// call recv once per poll event
+	int bytesReceived = recv(clientFd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT); // Flag which makes the call non-blocking
+    if (bytesReceived <= 0)
+		return ;
+
+	buffer[bytesReceived] = '\0';
+	_incomingMessages[clientFd] += std::string(buffer); // add data to the client's incoming buffer
+		
+	std::cout << "recv: " << buffer <<  " | incoming buffer : " << _incomingMessages[clientFd] << std::endl;
+		
+	/* https://labex.io/tutorials/linux-linux-nc-netcat-command-with-practical-examples-422835
+	in nc, ctrl+d is used to signal EOF, in which case the input is sent | lseek
+	BUT and IRC message is a single line delimited by \r\n, 
+	so ctrl+d should not be seen as end of the message
+	=>
+	every time when recieving data, check if a complete message (incl \r\n) has been received.
+	If it was, extract it from the _incomingMessages buffer 
+	Since it is extracted and subsequently being processed already, 
+	it can already be removed (incl \r\n) from the _incomingMessages buffer
+	*/
+	size_t pos;
+	while((pos = _incomingMessages[clientFd].find("\r\n")) != std::string::npos)
+	{
+		std::string message = _incomingMessages[clientFd].substr(0, pos);
+		_incomingMessages[clientFd].erase(0, pos + 2); // remove the processed message from the buffer (incl \r\n)
+		
+		// when encountering ctrl+d, remove it from the message
+		//message.erase(std::remove(message.begin(), message.end(), 4), message.end());
+
+		if (!message.empty())
+		{
+			std::cout << GRAY << "Client (fd = " << clientFd << "): " << message << DEFAULT << std::endl; // first one is IRC client
+			Client *client = _clients[clientFd];
+			handleInput(*client, message);
+		}
 	}
 }
 
@@ -261,9 +305,11 @@ void Server::handleClientDisconnections(int i)
 	{
 		client->disconnect(); // also closes the "hotel room" (socket)
 		std::cout << YELLOW << "Client disconnected: " << _pollfds[i].fd << DEFAULT << std::endl;
+		close(_pollfds[i].fd);
 		_clients.erase(_pollfds[i].fd); // remove client from the map
 		_pollfds.erase(_pollfds.begin() + i); // remove client from pollfds
 		_outgoingMessages.erase(_pollfds[i].fd); // remove client's outgoing buffer
+		_incomingMessages.erase(_pollfds[i].fd); // remove client's incoming buffer
 		delete client; // delete Client object
 	}
 }
@@ -295,7 +341,7 @@ void Server::handleEvents(void)
 		// else: if one or more sockets / fds are ready for reading or writing
 
 		// Check for events on each client socket
-		for (int i = 0; i <= poll_count; ++i)
+		for (size_t i = 0; i < _pollfds.size(); ++i)
 		{
 			//std::cout << GRAY << "Checking pollfd[" << i << "] with fd: " << _pollfds[i].fd << " revents: " << _pollfds[i].revents <<  DEFAULT << std::endl;
 
