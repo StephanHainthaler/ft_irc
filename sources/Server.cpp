@@ -270,9 +270,10 @@ void	Server::handleClientMessage(int clientFd)
 		
 	std::cout << "recv: " << buffer <<  " | incoming buffer : " << _incomingMessages[clientFd] << std::endl;
 		
-	/* in nc, ctrl+d is used to signal EOF, in which case the input is sent | lseek
+	/* https://labex.io/tutorials/linux-linux-nc-netcat-command-with-practical-examples-422835
+	in nc, ctrl+d is used to signal EOF, in which case the input is sent | lseek
 	BUT and IRC message is a single line delimited by \r\n, 
-	so ctrl+d should not be seen as not end of the message
+	so ctrl+d should not be seen as end of the message
 	=>
 	every time when recieving data, check if a complete message (incl \r\n) has been received.
 	If it was, extract it from the _incomingMessages buffer 
