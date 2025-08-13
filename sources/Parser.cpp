@@ -312,7 +312,7 @@ int Server::part(Client &client, std::vector<std::string> command, std::string &
 		if (toPartFrom->getChannelUsers().size() + toPartFrom->getOperators().size() == 0)
 		{
 			removeChannel(toPartFrom);
-			delete toPartFrom;
+			//delete toPartFrom;
 		}
     }
     return (0);
