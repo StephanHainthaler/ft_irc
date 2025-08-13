@@ -163,7 +163,7 @@ int	Server::join(Client &client, std::vector<std::string> command, size_t cmdNum
 		// 	//PART WIH ALL CHANNELS
 		// }	
 		toJoinTo = getChannel(channelNames[i]);
-		if (toJoinTo == NULL && _channels.size() >= 10) //CHANNEL_NUMBER_LIMIT
+		if (toJoinTo == NULL && _channels.size() >= MAX_CHAN_NUM)
 		{
 			sendMessageToClient(client.getSocketFD(), ERR_NOSUCHCHANNEL(getName(), client.getClientName(), channelNames[i]));
 			continue ;
@@ -362,21 +362,24 @@ int	Server::kick(Client &client, std::vector<std::string> command, std::string &
 	//Looping through the channels and users to be toBeKicked
 	for (size_t i = 0; i < users.size(); i++)
 	{
-		//CHECK IF USER IST ON THAT CHANNEL
 		toBeKicked = toKickFrom->getUser(users[i]);
 		if (toBeKicked == NULL)
 		{
 			sendMessageToClient(client.getSocketFD(), ERR_USERNOTINCHANNEL(getName(), client.getClientName(), users[i], channelName));
 			continue ;
 		}
-
-		//SAME AS IN PART
-		toKickFrom->removeUser(&client);
+		toKickFrom->removeUser(toBeKicked);
 		toBeKicked->setChannelNumber(-1);
 		if (comment.empty() == true)
-			sendMessageToClient(client.getSocketFD(), MSG_KICK(client.getClientName(), channelName, users[i]));
+		{
+			sendMessageToClient(toBeKicked->getSocketFD(), MSG_KICK(client.getClientName(), channelName, toBeKicked->getNickname()));
+			sendMessageToChannel(toKickFrom, MSG_KICK(client.getClientName(), channelName, toBeKicked->getNickname()));
+		}
 		else
-			sendMessageToClient(client.getSocketFD(), MSG_KICK_WITH_COMMENT(client.getClientName(), channelName, users[i], comment));
+		{
+			sendMessageToClient(toBeKicked->getSocketFD(), MSG_KICK_WITH_COMMENT(client.getClientName(), channelName, toBeKicked->getNickname(), comment));
+			sendMessageToChannel(toKickFrom, MSG_KICK_WITH_COMMENT(client.getClientName(), channelName, toBeKicked->getNickname(), comment));
+		}
 		sendMessageToChannel(toKickFrom, RPL_NAMREPLY(getName(), toBeKicked->getNickname(), "=", channelName, toKickFrom->getNamesOfChannelMembers()));
 		sendMessageToChannel(toKickFrom, RPL_ENDOFNAMES(getName(), toBeKicked->getNickname(), channelName));
 		if (toKickFrom->getOperators().size() + toKickFrom->getChannelUsers().size() == 0)
@@ -426,8 +429,6 @@ int	Server::invite(Client &client, std::vector<std::string> command, size_t cmdN
 		return (sendMessageToClient(client.getSocketFD(), ERR_NOSUCHNICK(getName(), client.getClientName(), nickname)), 1);
 	sendMessageToClient(client.getSocketFD(), RPL_INVITING(getName(), client.getClientName(), nickname, channelName));
 	sendMessageToClient(client.getSocketFD(), MSG_INVITE(client.getClientName(), nickname, channelName));
-
-	//SAME AS IN JOIN
 	toInviteTo->addUser(toBeInvited);
 	sendMessageToClient(toBeInvited->getSocketFD(), MSG_JOIN(toBeInvited->getNickname(), channelName));
 	if (toInviteTo->getTopic().empty() == true)
@@ -494,7 +495,9 @@ int	Server::mode(Client &client, std::vector<std::string> command, size_t cmdNum
 	toChangeMode = getChannel(channelName);
 	if (toChangeMode == NULL)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NOSUCHCHANNEL(getName(), client.getClientName(), channelName)), 1);
-	if (command.size() == 2)
+	else if (toChangeMode->getUser(client.getNickname()) == NULL)
+		return (sendMessageToClient(client.getSocketFD(), ERR_NOTONCHANNEL(getName(), client.getClientName(), channelName)), 1);
+	else if (command.size() == 2)
 	{
 		//RPL_CREATIONTIME (329)
 		return (sendMessageToClient(client.getSocketFD(), RPL_CHANNELMODEIS(getName(), client.getNickname(), channelName, toChangeMode->getModes(), toChangeMode->getModeArguments())), 1);
@@ -523,11 +526,14 @@ int	Server::mode(Client &client, std::vector<std::string> command, size_t cmdNum
 			else if (modeString[i] == 't')
 				toChangeMode->setMode('t', "", doEnable);
 			else if (modeString[i] == 'l' && doEnable == true)
+			else if (modeString[i] == 'l' && doEnable == true)
 				toChangeMode->setMode('l', command[cmdNumber++], doEnable);
 			else if (modeString[i] == 'l' && doEnable == false)
 				toChangeMode->setMode('l', "", doEnable);
 			else if (modeString[i] == 'k')
 				toChangeMode->setMode('k', command[cmdNumber++], doEnable);
+			else if (modeString[i] == 'k' && doEnable == false)
+				toChangeMode->setMode('k', "", doEnable);
 			else if (modeString[i] == 'o')
 				toChangeMode->setOperator(command[cmdNumber++], doEnable);
 			else
@@ -537,7 +543,6 @@ int	Server::mode(Client &client, std::vector<std::string> command, size_t cmdNum
 		sendMessageToChannel(toChangeMode, MSG_MODE(client.getClientName(), channelName, toChangeMode->getModes(), toChangeMode->getModeArguments()));
 	}
 	MSG_MODE(client.getClientName(),channelName, toChangeMode->getModes(), toChangeMode->getModeArguments());
-	// ERR_NOTONCHANNEL (442)
 
 	return (0);
 }
@@ -550,7 +555,7 @@ int Server::quit(Client &client, std::vector<std::string> command, size_t cmdNum
 		i++;
 	std::cout << GRAY << "Disconnect client with fd: " << client.getSocketFD() << " | Reason: " << reason << DEFAULT << std::endl;
 	handleClientDisconnections(i);
-	return 0;
+	return (0);
 }
 
 void	Server::testAllNumericReplies(int clientFD, Client &client)
