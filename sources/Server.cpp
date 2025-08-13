@@ -264,14 +264,16 @@ void	Server::handleClientMessage(int clientFd)
 	int bytesReceived = recv(clientFd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT); // Flag which makes the call non-blocking
     if (bytesReceived <= 0)
 		return ;
-    
+
 	buffer[bytesReceived] = '\0';
 	_incomingMessages[clientFd] += std::string(buffer); // add data to the client's incoming buffer
-	
+		
+	std::cout << "recv: " << buffer <<  " | incoming buffer : " << _incomingMessages[clientFd] << std::endl;
+		
 	/*
 	every time when recieving data, check if a complete message (incl \r\n) has been received.
 	If it was, extract it from the _incomingMessages buffer 
-	Since it is extracted and subsequently being processed, 
+	Since it is extracted and subsequently being processed already, 
 	it can already be removed (incl \r\n) from the _incomingMessages buffer
 	*/
 	size_t pos;
