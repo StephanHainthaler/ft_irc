@@ -80,9 +80,10 @@ void Channel::setMode(char mode, std::string modearg, bool enable)
 		std::string::size_type pos = _modes.find(mode);
 		if (pos != std::string::npos)
 		{
-			_modes.erase(pos, 1);
-			if (mode == 'l')
-                _userLimit = UINT_MAX;
+			if (mode == 'l') /* || mode == 'k') && !(modearg.empty())) */
+				_modes.erase(pos, 1);
+		/* 	if (mode == 'l')
+                _userLimit = UINT_MAX; */
 		}
 	}
 }
