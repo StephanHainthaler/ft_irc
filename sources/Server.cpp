@@ -482,7 +482,7 @@ std::string toLowercase(const std::string& str)
 
 void signalHandler(int sig)
 {
-    if (sig == SIGINT || sig == SIGTERM)
+    if (sig == SIGINT || sig == SIGTERM || sig == SIGQUIT)
 	{
         g_shutdown = 1;
     }
@@ -492,6 +492,7 @@ void Server::setupSignals()
 {
 	signal(SIGINT, signalHandler);
 	signal(SIGTERM, signalHandler);
+	signal(SIGQUIT, signalHandler);
 	signal(SIGPIPE, SIG_IGN);
 }
 
