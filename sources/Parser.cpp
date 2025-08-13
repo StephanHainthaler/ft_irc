@@ -375,6 +375,8 @@ int	Server::kick(Client &client, std::vector<std::string> command, std::string &
 			sendMessageToClient(client.getSocketFD(), MSG_KICK(client.getClientName(), channelName, users[i]));
 		else
 			sendMessageToClient(client.getSocketFD(), MSG_KICK_WITH_COMMENT(client.getClientName(), channelName, users[i], comment));
+		sendMessageToChannel(toKickFrom, RPL_NAMREPLY(getName(), toBeKicked->getNickname(), "=", channelName, toKickFrom->getNamesOfChannelMembers()));
+		sendMessageToChannel(toKickFrom, RPL_ENDOFNAMES(getName(), toBeKicked->getNickname(), channelName));
 		if (toKickFrom->getOperators().size() + toKickFrom->getChannelUsers().size() == 0)
 			removeChannel(toKickFrom);
 	}
