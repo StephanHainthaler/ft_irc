@@ -526,8 +526,9 @@ int	Server::mode(Client &client, std::vector<std::string> command, size_t cmdNum
 			else if (modeString[i] == 't')
 				toChangeMode->setMode('t', "", doEnable);
 			else if (modeString[i] == 'l' && doEnable == true)
-			else if (modeString[i] == 'l' && doEnable == true)
 				toChangeMode->setMode('l', command[cmdNumber++], doEnable);
+			else if (modeString[i] == 'l' && doEnable == true)
+				toChangeMode->setMode('l', "", doEnable);
 			else if (modeString[i] == 'l' && doEnable == false)
 				toChangeMode->setMode('l', "", doEnable);
 			else if (modeString[i] == 'k')
