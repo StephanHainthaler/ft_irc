@@ -50,9 +50,6 @@
 # define NOT_RUNNING 0
 # define ERROR -1
 
-void signalHandler(int sig);
-std::string toLowercase(const std::string& str);
-
 class Client;
 class Channel;
 
@@ -159,37 +156,6 @@ class Server
 		std::string				_name;
 };
 
-bool	isPositiveNumber(std::string string);
-
-/*/
-***USED FUNCTIONS:
-socket(AF_INET, SOCK_STREAM, 0)
-close(fd)
-connect(sockfd, (sockaddr*)&addr, sizeof(addr))
-bind(sockfd, (sockaddr*)&addr, sizeof(addr))
-listen(sockfd, SOMAXCONN)
-accept(sockfd, NULL, NULL)
-htons()
-fcntl(sockfd, F_SETFL, O_NONBLOCK)
-send(client_fd, buffer, len, 0)
-recv(client_fd, buffer, sizeof(buffer), 0)
-poll(fds, nfds, timeout)
-setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes))
-- signal(SIGINT, handle_sigint)
-- sigaction(SIGINT, &sa, NULL)
-
-***MIGHT BE USEFUL:
-lseek(fd, 0, SEEK_END)
-
-***UNUSED FUNCTIONS:
-getsockname(sockfd, (sockaddr*)&addr, &len)getprotobyname("tcp")
-gethostbyname("irc.example.com")
-getaddrinfo("localhost", "6667", &hints, &res)
-freeaddrinfo()
-ntohs()
-htonl()
-ntohl(addr.sin_addr.s_addr)
-inet_addr("127.0.0.1")
-inet_ntoa(addr.sin_addr)
-fstat(fd, &info)
-*/
+void 		signalHandler(int sig);
+std::string	toLowercase(const std::string& str);
+bool		isPositiveNumber(std::string string);

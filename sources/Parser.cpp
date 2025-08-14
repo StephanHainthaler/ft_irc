@@ -288,30 +288,22 @@ int	Server::kick(Client &client, std::vector<std::string> command, std::string &
 	Channel						*toKickFrom;
 	Client						*toBeKicked;
 
-	//CHECK NUMBER OF NECESSARY PARAMETERS
 	if (command.size() < 3)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NEEDMOREPARAMS(getName(), client.getClientName(), "KICK")), 1);
 
-	//CHECK THE NAME FORMAT FOR CHANNELS
 	channelName = command[cmdNumber++];
-	if (channelName[0] != '#')
-		return (sendMessageToClient(client.getSocketFD(), ERR_BADCHANMASK(getName(), client.getClientName(), channelName)), 1);
-
-	//CHECK IF CHANNEL EXISTS
 	toKickFrom = getChannel(channelName);
-	if (toKickFrom == NULL)
+	parseStringToVector(command[cmdNumber++], &users, ",");
+	if (users.size() == 0)
+		return (1);
+	else if (channelName[0] != '#')
+		return (sendMessageToClient(client.getSocketFD(), ERR_BADCHANMASK(getName(), client.getClientName(), channelName)), 1);
+	else if (toKickFrom == NULL)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NOSUCHCHANNEL(getName(), client.getClientName(), channelName)), 1);
 	else if (toKickFrom->getUser(client.getNickname()) == NULL)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NOTONCHANNEL(getName(), client.getClientName(), channelName)), 1);
 	else if (toKickFrom->isOperator(&client) == false)
 		return (sendMessageToClient(client.getSocketFD(), ERR_CHANOPRIVSNEEDED(getName(), client.getClientName(), channelName)), 1);
-
-	//Parsing the command argument into user name(s) stored in a vector
-	parseStringToVector(command[cmdNumber++], &users, ",");
-	if (users.size() == 0)
-		return (1);
-
-	//Check for a KICK message (that starts with ':')
 	if (cmdNumber < command.size())
 	{
 		if (command[cmdNumber][0] != ':')
@@ -319,8 +311,6 @@ int	Server::kick(Client &client, std::vector<std::string> command, std::string &
 		else
 			comment = input.substr(getInputPosition(input, 4) + 1);
 	}
-
-	//Looping through the channels and users to be toBeKicked
 	for (size_t i = 0; i < users.size(); i++)
 	{
 		toBeKicked = toKickFrom->getUser(users[i]);
@@ -351,24 +341,20 @@ int	Server::kick(Client &client, std::vector<std::string> command, std::string &
 
 int	Server::privMsg(Client &client, std::vector<std::string> command, std::string input, size_t cmdNumber)
 {
-	std::vector<std::string> targets;
-	std::string message = "";
+	std::vector<std::string>	targets;
+	std::string 				message = "";
 
 	if (command.size() < 2)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NEEDMOREPARAMS(getName(), client.getNickname(), "PRIVMSG")), 1);
-
 	parseStringToVector(command[cmdNumber++], &targets, ",");
 	if (targets.size() == 0)
-		return (1);
-		
-	if (cmdNumber >= command.size())
-	return (sendMessageToClient(client.getSocketFD(), ERR_NOTEXTTOSEND(getName(), client.getClientName())), 1);
-	
+		return (1);	
+	else if (cmdNumber >= command.size())
+		return (sendMessageToClient(client.getSocketFD(), ERR_NOTEXTTOSEND(getName(), client.getClientName())), 1);
 	if (command[cmdNumber][0] != ':')
 		message = command[cmdNumber];
 	else
 		message = input.substr(getInputPosition(input, 3) + 1);
-
 	for (size_t i = 0; i < targets.size(); i++)
 	{
 		if (targets[i][0] == '#')
@@ -408,8 +394,7 @@ int	Server::topic(Client &client, std::vector<std::string> command, std::string 
 		return (sendMessageToClient(client.getSocketFD(), ERR_NOSUCHCHANNEL(getName(), client.getClientName(), channelName)), 1);
 	else if (toTakeTopicFrom->getUser(client.getNickname()) == NULL)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NOTONCHANNEL(getName(), client.getClientName(), channelName)), 1);
-	
-	if (command.size() == 2)
+	else if (command.size() == 2)
 	{
 		if (toTakeTopicFrom->getTopic().empty() == true)
 			sendMessageToClient(client.getSocketFD(), RPL_NOTOPIC(getName(), client.getNickname(), channelName));
@@ -454,41 +439,37 @@ int	Server::mode(Client &client, std::vector<std::string> command, size_t cmdNum
 		return (sendMessageToClient(client.getSocketFD(), ERR_NOTONCHANNEL(getName(), client.getClientName(), channelName)), 1);
 	else if (command.size() == 2)
 		return (sendMessageToClient(client.getSocketFD(), RPL_CHANNELMODEIS(getName(), client.getNickname(), channelName, toChangeMode->getModes(), toChangeMode->getModeArguments())), 1);
-	else
+	else if (toChangeMode->isOperator(&client) == false)
+		return (sendMessageToClient(client.getSocketFD(), ERR_CHANOPRIVSNEEDED(getName(), client.getNickname(), channelName)), 1);
+	modeString = command[cmdNumber++];
+	for (size_t i = 0; i < modeString.length(); i++)
 	{
-		//CHECK FOR CHANNEL PERMISSIONS
-		if (toChangeMode->isOperator(&client) == false)
-			return (sendMessageToClient(client.getSocketFD(), ERR_CHANOPRIVSNEEDED(getName(), client.getNickname(), channelName)), 1);
-
-		modeString = command[cmdNumber++];
-		for (size_t i = 0; i < modeString.length(); i++)
+		if (modeString[i] == '+' || modeString[i] == '-')
 		{
-			if (modeString[i] == '+' || modeString[i] == '-')
-			{
-				if (modeString[i] == '-')
-					doEnable = false;
-				else
-					doEnable = true;
-				continue ;
-			}
-			if (!(cmdNumber < command.size()))
-				command.push_back("");
-			if (toChangeMode->isValidChannelMode(modeString[i]) == false)
-			{
-				sendMessageToClient(client.getSocketFD(), ERR_UNKNOWNMODE(getName(), client.getClientName(), modeString[i]));
-				continue ;
-			}
-			if (toChangeMode->setMode(modeString[i], command[cmdNumber], doEnable, comment) == 1)
-			{
-				sendMessageToClient(client.getSocketFD(), ERR_INVALIDMODEPARAM(getName(), client.getClientName(), channelName, modeString[i], command[cmdNumber], comment));
-				continue;
-			}
-			if (modeString[i] == 'o' || (modeString[i] == 'k' && doEnable == true) || (modeString[i] == 'l' && doEnable == true))
-				cmdNumber++;
-			sendMessageToChannel(toChangeMode, RPL_CHANNELMODEIS(getName(), client.getNickname(), channelName, toChangeMode->getModes(), toChangeMode->getModeArguments()));
+			if (modeString[i] == '-')
+				doEnable = false;
+			else
+				doEnable = true;
+			continue ;
 		}
-		sendMessageToChannel(toChangeMode, MSG_MODE(client.getClientName(), channelName, toChangeMode->getModes(), toChangeMode->getModeArguments()));
+		if (!(cmdNumber < command.size()))
+			command.push_back("");
+		if (toChangeMode->isValidChannelMode(modeString[i]) == false)
+		{
+			sendMessageToClient(client.getSocketFD(), ERR_UNKNOWNMODE(getName(), client.getClientName(), modeString[i]));
+			continue ;
+		}
+		else if (toChangeMode->setMode(modeString[i], command[cmdNumber], doEnable, comment) == 1)
+		{
+			sendMessageToClient(client.getSocketFD(), ERR_INVALIDMODEPARAM(getName(), client.getClientName(), channelName, modeString[i], command[cmdNumber], comment));
+			continue;
+		}
+		if (modeString[i] == 'o' || (modeString[i] == 'k' && doEnable == true) || (modeString[i] == 'l' && doEnable == true))
+			cmdNumber++;
+		sendMessageToChannel(toChangeMode, RPL_CHANNELMODEIS(getName(), client.getNickname(), channelName, toChangeMode->getModes(), toChangeMode->getModeArguments()));
 	}
+	sendMessageToChannel(toChangeMode, MSG_MODE(client.getClientName(), channelName, toChangeMode->getModes(), toChangeMode->getModeArguments()));
+	
 	return (0);
 }
 
@@ -501,19 +482,6 @@ int Server::quit(Client &client, std::vector<std::string> command, size_t cmdNum
 	std::cout << GRAY << "Disconnect client with fd: " << client.getSocketFD() << " | Reason: " << reason << DEFAULT << std::endl;
 	handleClientDisconnections(i);
 	return (0);
-}
-
-void	Server::printVector(std::vector<std::string> vector)
-{
-	if (vector.size() == 0)
-	{
-		std::cout << "EMPTY VECTOR!!" << std::endl;
-		return ;
-	}
-	for (size_t i = 0; i < vector.size(); i++)
-	{			
-		std::cout << vector[i] << std::endl;
-	}
 }
 
 bool	isPositiveNumber(std::string string)

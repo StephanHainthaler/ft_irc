@@ -462,7 +462,7 @@ void	Server::createChannel(std::string &newChannelName, Client &founder)
 
 
 
-std::string toLowercase(const std::string& str)
+std::string toLowercase(const std::string &str)
 {
 	std::string result = str;
 	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
