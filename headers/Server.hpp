@@ -28,21 +28,10 @@
 # include "Channel.hpp"
 # include "Replies.hpp"
 
-//# include <iomanip>
-//# include <sys/socket.h> // for socket, bind, listen, accept
-//# include <fcntl.h> // to set socket to non-blocking mode
-//# include <errno.h> // - number of last error
-//# include <unistd.h>
-//# include <exception>
-//# include <string>
-//# include <stdio.h>
-//# include <cstddef>
-//# include <climits>
-
-# define DEFAULT "\x1b[0m" // for standard output
-# define RED "\x1b[31m" // for errors
-# define YELLOW "\x1b[33m" // for warnings
-# define GRAY "\x1b[90m" // for debug information
+# define DEFAULT 	"\x1b[0m" // for standard output
+# define RED 		"\x1b[31m" // for errors
+# define YELLOW 	"\x1b[33m" // for warnings
+# define GRAY 		"\x1b[90m" // for debug information
 
 # define MAX_MSG_LEN 512
 # define MAX_CHAN_NUM 100
@@ -60,7 +49,6 @@ class Server
 	public:
 		Server(const std::string &portString, const std::string &password);
 		~Server(void);
-
 
 		// Signals
 		void setupSignals();
@@ -91,7 +79,6 @@ class Server
 
 		// Nickname availability checks
 		bool 		isNicknameAvailable(const std::string& nickname, const Client* targetClient) const;
-		void 		handleNickCommand(Client* client, const std::string& newNickname);
 
 		// PARSER
 		void		handleInput(Client &client, std::string input);
@@ -123,33 +110,24 @@ class Server
 		};
 
 	private:
-		Server(void);
-		Server(const Server &other);
-		Server					&operator=(const Server &other);
-	
 		std::string				_name;
-		int						_serverFd; // Server Socket FD - Listening socket, can be negative
-		const unsigned int 		_port; // Port number - "door to the server"
-		struct sockaddr_in 		_serverAddress; // for IPv4 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
-		// struct sockaddr_in6 	_serverAddress; // for IPv6 - holds network info - like IP address and port number - that the server uses to know where to listen or connect
+		int						_serverFd;
+		const unsigned int 		_port;
+		struct sockaddr_in 		_serverAddress;
+		
+
 		/*
 		server creates sockaddr_in "serverAddress" to specify its own IP address and port to bind to
 		client takes this sockaddr_in "serverAddress" to specify the server's IP address and port to connect to
 		*/
 		
+		int							_state; // Server state - 0: not running, 1: running, -1: error (?)_
 		const std::string			_password;
-		std::map<int, Client *>		_clients;	// List of connected clients (ClientClass objs)
-		std::vector<pollfd>			_pollfds; // +1 for the server socket
-		std::map<int, std::string>	_outgoingMessages; // Buffer for outgoing messages
-		std::map<int, std::string>	_incomingMessages; // Buffer for incoming messages
-		std::vector<Channel *>		_channels;	// List of channels (ChannelClass objs)
-		//std::vector<std::string>	_users; // auf 10 users limitieren
-
-		// clients must be unique within a channel
-
-		int						_state; // Server state - 0: not running, 1: running, -1: error (?)_
-
-		
+		std::map<int, Client *>		_clients;
+		std::vector<Channel *>		_channels;
+		std::vector<pollfd>			_pollfds;
+		std::map<int, std::string>	_outgoingMessages;
+		std::map<int, std::string>	_incomingMessages;		
 };
 
 void 		signalHandler(int sig);
