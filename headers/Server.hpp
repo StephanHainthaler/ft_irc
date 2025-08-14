@@ -115,12 +115,6 @@ class Server
 		const unsigned int 		_port;
 		struct sockaddr_in 		_serverAddress;
 		
-
-		/*
-		server creates sockaddr_in "serverAddress" to specify its own IP address and port to bind to
-		client takes this sockaddr_in "serverAddress" to specify the server's IP address and port to connect to
-		*/
-		
 		int							_state; // Server state - 0: not running, 1: running, -1: error (?)_
 		const std::string			_password;
 		std::map<int, Client *>		_clients;
