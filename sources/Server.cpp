@@ -452,15 +452,10 @@ void	Server::createChannel(std::string &newChannelName, Client &founder)
 	_channels.push_back(newChannel);
 
 	sendMessageToClient(founder.getSocketFD(), MSG_JOIN(founder.getNickname(), newChannelName));
-	sendMessageToClient(founder.getSocketFD(), MSG_MODE(getName(), newChannelName, "+o", founder.getNickname()));
 	sendMessageToClient(founder.getSocketFD(), RPL_NOTOPIC(getName(), founder.getNickname(), newChannelName));
 	sendMessageToClient(founder.getSocketFD(), RPL_NAMREPLY(getName(), founder.getNickname(), "=", newChannelName, newChannel->getNamesOfChannelMembers()));
 	sendMessageToClient(founder.getSocketFD(), RPL_ENDOFNAMES(getName(), founder.getNickname(), newChannelName));
 }
-
-
-
-
 
 std::string toLowercase(const std::string &str)
 {

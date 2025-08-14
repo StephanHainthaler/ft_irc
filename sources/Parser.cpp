@@ -193,6 +193,7 @@ int	Server::join(Client &client, std::vector<std::string> command, size_t cmdNum
 				sendMessageToClient(client.getSocketFD(), RPL_NOTOPIC(getName(), client.getNickname(), channelNames[i]));
 			else
 				sendMessageToClient(client.getSocketFD(), RPL_TOPIC(getName(), client.getNickname(), channelNames[i], toJoinTo->getTopic()));
+			sendMessageToClient(client.getSocketFD(), RPL_CHANNELMODEIS(getName(), client.getClientName(), channelNames[i], toJoinTo->getModes(), toJoinTo->getModeArguments()));
 			sendMessageToChannel(toJoinTo, RPL_NAMREPLY(getName(), client.getNickname(), "=", channelNames[i], toJoinTo->getNamesOfChannelMembers()));
 			sendMessageToChannel(toJoinTo, RPL_ENDOFNAMES(getName(), client.getNickname(), channelNames[i]));
 		}
