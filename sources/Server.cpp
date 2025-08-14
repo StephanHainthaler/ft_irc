@@ -192,12 +192,6 @@ void Server::sendMessageToChannel(Channel* channel, const std::string& message)
 
 void Server::sendMessageToChannel(Client* excludedSender, Channel* channel, const std::string& message)
 {
-	if (channel->getUser(excludedSender->getNickname()) == NULL)
-	{
-		sendMessageToClient(excludedSender->getSocketFD(), ERR_NOTONCHANNEL(getName(), excludedSender->getNickname(), channel->getName()));
-		return;
-	}
-	
 	std::vector<Client*> usersInChannel = channel->getOperators();
 
 	for (size_t i = 0; i < usersInChannel.size(); i++)
