@@ -3,31 +3,31 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: juitz <juitz@student.42.fr>                +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2025/08/12 15:50:40 by juitz            ###   ########.fr       */
+/*   Created: 2025/07/16 09:21:05 by juitz             #+#    #+#             */
+/*   Updated: 2025/08/14 17:05:41 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#ifndef CLIENT_HPP
+# define CLIENT_HPP
 
-#pragma once
+# include <iostream>
+# include <string>
+# include <netinet/in.h>
+# include <vector>
+# include <algorithm>
+# include <cctype>
+# include <unistd.h>
+# include <arpa/inet.h>
+# include <errno.h>
+# include <algorithm>
 
-#include "Server.hpp"
-#include <cstddef>
-#include <iostream>
-#include <string>
-#include <netinet/in.h>
-#include <vector>
-#include <algorithm>
-#include <cctype>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <errno.h>
-#include <algorithm>
+# include "Server.hpp"
 
-#define CHANLIMIT 10
-#define USERLEN 15
+# define CHANLIMIT 10
+# define USERLEN 15
 
 enum ClientState
 {
@@ -37,74 +37,48 @@ enum ClientState
 	DISCONNECTED
 };
 
-class Channel;
-
 class Client
-{
-	private:
-		int							_socketFD;
-		int							_port;
-		std::string					_IP;
-		std::string					_nickname;
-		std::string					_userName;
-		std::string 				_hostname;
-		std::string					_realName;
-		std::string					_modes;
-		ClientState 				_state;
-		size_t						_numberOfChannels;
-
-		static	std::string truncName(const std::string& name);
-		
+{	
 	public:
-
-		// Format checks
-		bool		isNickValid(const std::string& nickname) const;
-		bool		isRealNameValid(const std::string& realName) const;
-		int			isUserValid(std::string& userName);
-		std::string getFullIdentifier() const;
-		
-		// Connection
-		void 						disconnect(void);
-
-		// Modes
-		bool	isValidUserMode(char mode) const;
-		bool 	hasMode(char mode) const;
-
-		
-		// States
-		void	isFullyRegistered();
-		
-		// Setters
-		void	setNick(const std::string& nickname);
-		void	setUser(std::string& userName, int zero, char asterisk, std::string& realName); // 2nd parameter should always be zero and 3rd "*"
-		void	setState(ClientState newState);
-		void	setSocketFD(int socketFD);
-		void	setIP(const std::string& ip);
-		void	setHostname(const std::string& hostname);
-		int 	setMode(char mode, bool enable);
-		void	setChannelNumber(int number);
-	
-
-		// Getters
-		std::string 				getNickname(void) const;
-		std::string 				getUsername(void) const;
-		std::string 				getRealname(void) const;
-		ClientState 				getState(void) const;
-		int							getSocketFD() const;
-		std::string 				getIP(void) const;
-		std::string					getHostname(void) const;
-		size_t						getChannelNumber() const;
-		std::string 				getModes(void) const;
-		
-
-		//ADDED BY STEPHAN
-		std::string					getClientName(void) const;
-	
-		
-		Client(int socketFD, int port);
 		Client(void);
+		Client(int socketFD, int port);
 		~Client(void);
-		
-		// Client(const Client &other);
-		// Client& operator=(const Client &copy);
+
+		// Setters & Getters
+		std::string		getClientName(void) const;
+		void			setNickname(const std::string &nickname);
+		std::string 	getNickname(void) const;
+		void			setUsername(const std::string &userName);
+		std::string 	getUsername(void) const;
+		void			setHostname(const std::string &hostname);
+		std::string		getHostname(void) const;
+		void			setRealname(const std::string &realName);
+		std::string 	getRealname(void) const;
+		void			setSocketFD(int socketFD);
+		int				getSocketFD() const;
+		void			setIP(const std::string &ip);
+		std::string 	getIP(void) const;
+		void			setState(ClientState newState);
+		ClientState 	getState(void) const;
+		void			setChannelNumber(int number);
+		size_t			getChannelNumber(void) const;
+
+		bool			isNicknameValid(const std::string& nickname) const;
+		bool			isUsernameValid(const std::string& userName);
+		bool			isRealnameValid(const std::string& realName) const;
+		void 			disconnect(void);
+
+	private:
+		std::string		_nickname;
+		std::string		_userName;
+		std::string 	_hostname;
+		std::string		_realName;
+		int				_socketFD;
+		int				_port;
+		std::string		_IP;
+		ClientState 	_state;
+		size_t			_numberOfChannels;
+
 };
+
+#endif

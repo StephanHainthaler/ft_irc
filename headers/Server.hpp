@@ -31,6 +31,13 @@
 # include <cstring> // for strncpy, strcmp
 # include <signal.h>
 # include <climits>
+# include <iostream>
+# include <vector>
+# include <string>
+# include <sstream>
+# include <cstdlib>
+# include <cstddef>
+
 
 # include "Client.hpp"
 # include "Channel.hpp"
@@ -64,7 +71,7 @@ class Server
 		// Signals
 		void setupSignals();
 		
-		// Getters
+		// Setter & Getters
 		std::string 			getPassword(void) const;
 		Channel 				*getChannel(const std::string &channel_name) const;
 		sockaddr_in 			getServerAddress(void) const; // bc client will need it to connect to server
@@ -88,6 +95,7 @@ class Server
 		// Member functions - user triggered actions
 		void					createChannel(std::string &newChannelName, Client &founder);
 		void 					removeChannel(Channel *channel);
+		
 
 		
 

@@ -12,7 +12,6 @@
 
 #include "../headers/Channel.hpp"
 
-
 Channel::Channel(const std::string &name, Client &creator): _name(name)
 {
 	_userLimit = 1;
@@ -51,26 +50,28 @@ std::string Channel::getModes(void) const
 
 bool Channel::isValidChannelMode(char mode) const
 {
-	return (mode == 'i' || mode == 't' || mode == 'k' || mode == 'l');
+	return (mode == 'i' || mode == 't' || mode == 'k' || mode == 'l'  || mode == 'o');
 }
 
-int Channel::setMode(char mode, std::string modearg, bool doEnable, std::string &comment)
+int Channel::setMode(char mode, std::string modearg, bool doEnable, std::string &comment, size_t &cmdNumber)
 {
-	if (doEnable == true)
+	if (mode == 'o' || (mode == 'k' && doEnable == true) || (mode == 'l' && doEnable == true))
+		cmdNumber++;
+	if (mode == 'o')
 	{
-		if ((mode == 'o' || mode == 'k' || mode == 'l') && modearg.empty())
-			return (comment = "Empty Argument", 1);
-		else if (mode == 'o')
-		{
-			if (setOperator(modearg, doEnable) == 1)
-				return (comment = "User does NOT exist on channel", 1);
-		}	
+		if (setOperator(modearg, doEnable, comment) == 1)
+			return (1);
+	}
+	else if (doEnable == true)
+	{
+		if ((mode == 'k' || mode == 'l') && modearg.empty())
+			return (comment = "Empty Argument", 1);	
 		else if (mode == 'k')
 			_channelKey = modearg;
 		else if (mode == 'l')
 		{
 			if (isPositiveNumber(modearg) == false)
-				return (comment = "Invalid number", 1);
+				return (cmdNumber++, comment = "Invalid number", 1);
 			_userLimit = std::atoi(modearg.c_str());
 		}
 		if (hasMode(mode) == false)
@@ -120,7 +121,10 @@ std::vector<Client *> Channel::getChannelUsers(void) const
 void Channel::addUser(Client *client)
 {
 	if (client && std::find(_channelUsers.begin(), _channelUsers.end(), client) == _channelUsers.end())
+	{
 		_channelUsers.push_back(client);
+		client->setChannelNumber(1);
+	}
 }
 
 void Channel::removeUser(Client *client)
@@ -131,13 +135,20 @@ void Channel::removeUser(Client *client)
 		{
 			std::vector<Client *>::iterator it = std::find(_operators.begin(), _operators.end(), client);
 			if (it != _operators.end())
+			{
 				_operators.erase(it);
+				client->setChannelNumber(-1);
+			}
+				
 		}
 		else
 		{
 			std::vector<Client *>::iterator it = std::find(_channelUsers.begin(), _channelUsers.end(), client);
 			if (it != _channelUsers.end())
+			{
 				_channelUsers.erase(it);
+				client->setChannelNumber(-1);
+			}
 		}
 	}
 }
@@ -165,13 +176,15 @@ bool Channel::isOperator(Client *client) const
 	return (std::find(_operators.begin(), _operators.end(), client) != _operators.end());
 }
 
-int	Channel::setOperator(std::string &nickname, bool enable)
+int	Channel::setOperator(std::string &nickname, bool enable, std::string &comment)
 {
+	Client *client; 
 	
-	Client *client = getUser(nickname);
+	if (nickname.empty() == true)
+		return (comment = "No username given", 1);
+	client = getUser(nickname);
 	if (!client)
-		return (1);
-
+		return (comment = "User does NOT exist on channel", 1);
 	if (enable && std::find(_operators.begin(), _operators.end(), client) == _operators.end())
 	{
 		_operators.push_back(client);
@@ -199,17 +212,16 @@ void Channel::setChannelKey(const std::string &key)
 	_channelKey = key;
 }
 
-unsigned int Channel::getUserLimit(void) const
+size_t Channel::getUserLimit(void) const
 {
 	return _userLimit;
 }
 
-void Channel::setUserLimit(unsigned int limit)
+void Channel::setUsernameLimit(size_t limit)
 {
 	_userLimit = limit;
 }
 
-//ADDED BY STEPHAN
 std::string	Channel::getNamesOfChannelMembers(void) const
 {
 	std::string namesOfUsers = "";
