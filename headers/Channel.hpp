@@ -56,15 +56,6 @@ class Channel
 		std::string				_topic;
 		std::string				_channelKey;
 		size_t 					_userLimit;
-
-		/* Mode flags
-		MODE <channel> +/-i  				| Invite-only
-		MODE <channel> +/-t  				| Restrict topic changes to channel operators
-		MODE <channel> +/-k <password> 		| Channel key (password)
-		MODE <channel> +/-o <nickname> 		| Channel operator privilege
-		MODE <channel> +/-l <limit> 		| User limit to channel
-		*/
-		
 };
 
 #endif

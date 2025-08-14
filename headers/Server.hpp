@@ -28,10 +28,10 @@
 # include "Channel.hpp"
 # include "Replies.hpp"
 
-# define DEFAULT 	"\x1b[0m" // for standard output
-# define RED 		"\x1b[31m" // for errors
-# define YELLOW 	"\x1b[33m" // for warnings
-# define GRAY 		"\x1b[90m" // for debug information
+# define DEFAULT "\x1b[0m" // for standard output
+# define RED "\x1b[31m" // for errors
+# define YELLOW "\x1b[33m" // for warnings
+# define GRAY "\x1b[90m" // for debug information
 
 # define MAX_MSG_LEN 512
 # define MAX_CHAN_NUM 100
@@ -59,7 +59,6 @@ class Server
 		std::string getPassword(void) const;
 		Channel 	*getChannel(const std::string &channel_name) const;
 		sockaddr_in getServerAddress(void) const; // bc client will need it to connect to server
-		int 		getState(void) const;
 		Client 		*getClient(std::string nickname) const;
 
 		// Member functions - server actions
@@ -110,25 +109,22 @@ class Server
 		};
 
 	private:
-		std::string				_name;
-		int						_serverFd;
-		const unsigned int 		_port;
-		struct sockaddr_in 		_serverAddress;
-		
-
-		/*
-		server creates sockaddr_in "serverAddress" to specify its own IP address and port to bind to
-		client takes this sockaddr_in "serverAddress" to specify the server's IP address and port to connect to
-		*/
-		
-		int							_state; // Server state - 0: not running, 1: running, -1: error (?)_
+		std::string					_name;
+		int							_serverFd;
+		const unsigned int 			_port;
+		struct sockaddr_in 			_serverAddress;
 		const std::string			_password;
 		std::map<int, Client *>		_clients;
 		std::vector<Channel *>		_channels;
 		std::vector<pollfd>			_pollfds;
 		std::map<int, std::string>	_outgoingMessages;
-		std::map<int, std::string>	_incomingMessages;		
+		std::map<int, std::string>	_incomingMessages;
 };
+
+/*
+server creates sockaddr_in "serverAddress" to specify its own IP address and port to bind to
+client takes this sockaddr_in "serverAddress" to specify the server's IP address and port to connect to
+*/
 
 void 		signalHandler(int sig);
 std::string	toLowercase(const std::string& str);
