@@ -10,64 +10,52 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef CHANNEL_HPP
+# define CHANNEL_HPP
 
-# include <iostream>
-# include <vector>
-# include <string>
-# include <sstream>
-
-# include "Client.hpp"
+# include "Server.hpp"
 
 class Client;
-class Server;
+
 class Channel
 {
 	public:
 		Channel(const std::string &name, Client &creator);
 		~Channel(void);
 
-		std::string					getName(void) const;
+		// Getters & Setters
+		void					setName(const std::string &name);
+		std::string				getName(void) const;
+		int						setOperator(std::string &nickname, bool enable, std::string &comment);
+		std::vector<Client *>	getOperators(void) const;
+		std::vector<Client *>	getChannelUsers(void) const;
+		std::string				getNamesOfChannelMembers(void) const;
+		Client					*getUser(const std::string &nickname) const;
+		int						setMode(char mode, std::string modearg, bool enable, std::string &comment, size_t &cmdNumber);
+		std::string				getModes(void) const;
+		std::string				getModeArguments(void) const;
+		void					setTopic(std::string topic);
+		std::string				getTopic(void) const;
+		void					setChannelKey(const std::string &key);
+		std::string				getChannelKey(void);
+		void					setUserLimit(const size_t &limit);
+		size_t					getUserLimit(void) const;
 
-		std::string					getTopic(void) const;
-		void						setTopic(std::string topic);
-
-		std::string					getModes(void) const;
-		bool						isValidChannelMode(char mode) const;
-		void						setMode(char mode, std::string modearg, bool enable);
-		bool 						hasMode(char mode) const;
-		std::string					getModeArguments(void) const;
-
-		std::vector<Client *>		getChannelUsers(void) const;
-		void						addUser(Client *client);
-		void						removeUser(Client *client);
-		Client						*getUser(const std::string &nickname) const;
+		bool					isOperator(Client *client) const;
+		bool					isValidChannelMode(char mode) const;
+		bool 					hasMode(char mode) const;
 		
-		std::vector<Client *>		getOperators(void) const;
-		bool						isOperator(Client *client) const;
-		void						setOperator(std::string &nickname, bool enable);
-
-		std::string					getChannelKey(void);
-		void						setChannelKey(const std::string &key);
-
-		unsigned int				getUserLimit(void) const;
-		void						setUserLimit(unsigned int limit);
-
-		std::string					getNamesOfChannelMembers(void) const;
+		void					addUser(Client *client);
+		void					removeUser(Client *client);
 
 	private:
-		Channel(void);
-		Channel(const Channel &other);
-		Channel	&operator=(const Channel &other);
-
-		std::string					_name;
-		std::string					_topic;
-		std::string					_modes;
-		std::vector<Client *>		_channelUsers;
-		std::vector<Client *>		_operators; // (ClientClass objs with operator status)
-
-		std::string					_channelKey; // Channel key (password)
-		unsigned int 				_userLimit; // User limit to channel
+		std::string				_name;
+		std::vector<Client *>	_operators;
+		std::vector<Client *>	_channelUsers;
+		std::string				_modes;
+		std::string				_topic;
+		std::string				_channelKey;
+		size_t 					_userLimit;
 
 		/* Mode flags
 		MODE <channel> +/-i  				| Invite-only
@@ -75,14 +63,8 @@ class Channel
 		MODE <channel> +/-k <password> 		| Channel key (password)
 		MODE <channel> +/-o <nickname> 		| Channel operator privilege
 		MODE <channel> +/-l <limit> 		| User limit to channel
-		
-		CHANNEL_KEY
-		https://modern.ircdocs.horse/#topic-message
-		If this mode is set, its’ value is the key that is required. 
-		Servers may validate the value (eg. to forbid spaces, as they make it harder to use the key in JOIN messages). 
-		If the value is invalid, they SHOULD return ERR_INVALIDMODEPARAM
-
-		if the channel has a key, can join only if the key is provided, meaning with
-		JOIN #foo key
 		*/
+		
 };
+
+#endif

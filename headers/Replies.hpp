@@ -18,34 +18,35 @@
 //COMMAND REPLIES
 
 //":<source>/<oldNick>!<user>@<host> NICK :<newNick>"
-# define MSG_NICK(source, newNick)		                        ":" + source + " NICK :" + newNick
+# define MSG_NICK(source, newNick)		                        						":" + source + " NICK :" + newNick
 
 //":<source>/<nick>!<user>@<host> JOIN :<channel>"
-# define MSG_JOIN(source, channel)								":" + source + " JOIN :" + channel
+# define MSG_JOIN(source, channel)														":" + source + " JOIN :" + channel
 
 //":<client>/<nick>!<user>@<host> PART :<channel>"
-# define MSG_PART(source, channel)								":" + source + " PART " + channel
-# define MSG_PART_WITH_COMMENT(source, channel, comment)		":" + source + " PART " + channel + " " + comment
+# define MSG_PART(source, channel)														":" + source + " PART " + channel
+# define MSG_PART_WITH_COMMENT(source, channel, comment)								":" + source + " PART " + channel + " " + comment
 
 //":<source> PRIVMSG <channel/user> :<message>
-# define MSG_PRIVMSG(source, target, messsage)                  ":" + source + " PRIVMSG " + target + " " + message
+# define MSG_PRIVMSG(source, target, messsage)                 							":" + source + " PRIVMSG " + target + " " + message
 
 //":<source> KICK <channel> <nick> [:<comment>]
-# define MSG_KICK(source, channel, nick)						":" + source + " KICK " + channel + " " + nick
-# define MSG_KICK_WITH_COMMENT(source, channel, nick, comment)	":" + source + " KICK " + channel + " " + nick + " :" + comment
+# define MSG_KICK(source, channel, nick)												":" + source + " KICK " + channel + " " + nick
+# define MSG_KICK_WITH_COMMENT(source, channel, nick, comment)							":" + source + " KICK " + channel + " " + nick + " :" + comment
 
 //:<source> INVITE <nick> <channel>
-# define MSG_INVITE(source, nick, channel)						":" + source + " INVITE " + nick + " " + channel
+# define MSG_INVITE(source, nick, channel)												":" + source + " INVITE " + nick + " " + channel
 
 //":<source> TOPIC <channel> [:<newTopic>]"
-# define MSG_TOPIC(source, channel, newTopic)	                ":" + source + " TOPIC " + channel + " :" + newTopic
-# define MSG_CLEAR_TOPIC(source, channel)						":" + source + " TOPIC " + channel + " :"
+# define MSG_TOPIC(source, channel, newTopic)											":" + source + " TOPIC " + channel + " :" + newTopic
+# define MSG_CLEAR_TOPIC(source, channel)												":" + source + " TOPIC " + channel + " :"
 
 //":<source> MODE <channel> <modeString> <modeArguments>"
-# define MSG_MODE(source, channel, modeString, modeArguments)	":" + source + " MODE " + channel + " " + modeString + " " + modeArguments
+# define MSG_MODE(source, channel, plusminus, modeString)                               ":" + source + " MODE " + channel + " " + plusminus + modeString
+# define MSG_MODE_WITH_ARGS(source, channel, plusminus, modeString, modeArguments)      ":" + source + " MODE " + channel + " " + plusminus + modeString + " " + modeArguments
 
 //":<source> QUIT <channel> <modeString> <modeArguments>"
-# define MSG_QUIT(source)	                                    ":" + source + " QUIT :Leaving"
+# define MSG_QUIT(source)																":" + source + " QUIT :Leaving"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -165,7 +166,7 @@
 # define ERR_INVALIDKEY(source, client, channel)				":" + source + " 525 " + client + " " + channel + " :Key is not well-formed"
 
 //":<source> 696 <client> <target chan/user> <mode char> <parameter> :<description>"
-# define ERR_INVALIDMODEPARAM(source, client, channel, modeChar, parameter, notes)	":" + source + " 696 " + client + " " + channel + " " + modeChar + " " + parameter + " :" + notes 
+# define ERR_INVALIDMODEPARAM(source, client, channel, plusminus, modeChar, parameter, notes)	":" + source + " 696 " + client + " " + channel + " " + plusminus + modeChar + " " + parameter + " :" + notes 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
