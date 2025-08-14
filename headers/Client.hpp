@@ -6,23 +6,12 @@
 /*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:21:05 by juitz             #+#    #+#             */
-/*   Updated: 2025/08/14 17:05:41 by marvin           ###   ########.fr       */
+/*   Updated: 2025/08/14 17:13:14 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CLIENT_HPP
 # define CLIENT_HPP
-
-# include <iostream>
-# include <string>
-# include <netinet/in.h>
-# include <vector>
-# include <algorithm>
-# include <cctype>
-# include <unistd.h>
-# include <arpa/inet.h>
-# include <errno.h>
-# include <algorithm>
 
 # include "Server.hpp"
 
