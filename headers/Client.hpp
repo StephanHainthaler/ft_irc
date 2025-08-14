@@ -64,9 +64,6 @@ class Client
 		std::string getFullIdentifier() const;
 		
 		// Connection
-		int 						connectToServer(const std::string& serverIP, int serverPort);
-		int							sendMessageToChannel(Channel* channel, std::string message);
-		std::vector<std::string> 	receiveCompleteMessages(void);
 		void 						disconnect(void);
 
 		// Modes
