@@ -19,9 +19,9 @@ void	Server::handleInput(Client &client, std::string input)
 	parseStringToVector(input, &command, " \f\n\r\t\v");
 	if (command.empty() == true)
 		return ;
-	else if (client.getState() < AUTHENTICATED && command[0] != "PASS")
+	else if (client.getState() < AUTHENTICATED && command[0] != "PASS" && command[0] != "QUIT")
 		sendMessageToClient(client.getSocketFD(), "Authentication required! Please enter the server password with command PASS.");
-	else if (client.getState() == AUTHENTICATED && command[0] != "PASS" && command[0] != "NICK" && command[0] != "USER")
+	else if (client.getState() == AUTHENTICATED && command[0] != "PASS" && command[0] != "QUIT" && command[0] != "NICK" && command[0] != "USER")
 		sendMessageToClient(client.getSocketFD(), ERR_NOTREGISTERED(getName(), client.getClientName()));
 	else
 		executeCommand(client, command, input);
