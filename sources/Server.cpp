@@ -21,9 +21,9 @@ subject: "communication between client and server has to be done via TCP/IP (v4 
 the IP address is specified by the computer I am running the server code on,
 and the port number is specified by the user (as a command line argument)
 */
-Server::Server(const unsigned int &port, const std::string &password): _port(port), _password(password)
+Server::Server(const std::string &portString, const std::string &password): _port(std::atoi(portString.c_str())), _password(password)
 {
-	if (port <= 0 || port > 65535)
+	if (isPositiveNumber(portString) == false || _port > 65535)
 		throw ServerException("Error. Invalid port number.");
 	// AF_INET specifies IPv4 protocol family, SOCK_STREAM specifies TCP protocol
     _serverFd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0); // Create a TCP/IPv4 socket
@@ -33,9 +33,9 @@ Server::Server(const unsigned int &port, const std::string &password): _port(por
     
 	_serverAddress.sin_family = AF_INET; // set the address family to IPv4 addresses
 	_serverAddress.sin_addr.s_addr = INADDR_ANY; // server should accept connections from any IPv4 address, used when we don't want to bind our socket to any particular IP, to mak eit listen to all available IPs
-	_serverAddress.sin_port = htons(port); // defines the port number the socket will use to communicate on server side (the value has to be in network byte order)
+	_serverAddress.sin_port = htons(_port); // defines the port number the socket will use to communicate on server side (the value has to be in network byte order)
 
-	std::cout << GRAY << "Server created with socket fd: " << _serverFd << ", port: " << port << ", password: " << password << DEFAULT << std::endl;
+	std::cout << GRAY << "Server created with socket fd: " << _serverFd << ", port: " << _port << ", password: " << password << DEFAULT << std::endl;
 	
 	// _clients and _channels remain empty at this point (?) - will get filled later
 
@@ -427,17 +427,6 @@ void Server::run(void)
 		handleEvents();
 	throw ServerException("Server shutdown complete.");
 }
-
-// Member functions - user triggered actions
-// void Server::addChannel(Channel *channel, Client &founder)
-// {
-// 	if (channel == NULL)
-// 		return;
-// 	for (std::vector<Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
-// 		if (*it == channel)
-// 			return; 
-// 	_channels.push_back(channel);
-// }
 
 void Server::removeChannel(Channel *channel)
 {

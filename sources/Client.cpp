@@ -6,13 +6,12 @@
 /*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by codespace         #+#    #+#             */
-/*   Updated: 2025/08/11 23:36:23 by marvin           ###   ########.fr       */
+/*   Updated: 2025/08/14 10:52:11 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../headers/Client.hpp"
 #include "../headers/Server.hpp"
-#include "../headers/main.hpp"
 
 
 Client::Client() : _socketFD(-1), _port(0), _state(CONNECTING)
@@ -249,8 +248,6 @@ size_t	Client::getChannelNumber() const
 	return (_numberOfChannels);
 }
 
-
-//ADDED BY STEPHAN
 std::string	Client::getClientName(void) const
 {
 	std::string clientName = "*";
@@ -267,133 +264,3 @@ std::string	Client::getClientName(void) const
 	}
 	return (clientName);
 }
-
-/*
-void Server::handleNickCommand(Client* client, const std::string& newNickname)
-{
-	// First check format using Client's validation
-	if (client->isNickFormatValid(newNickname) != 0)
-	{
-		// Send format error to client
-		return ;
-	}
-	
-	// Then check uniqueness using Server's validation
-	if (!isNicknameAvailable(newNickname, client))
-	{
-		// Send ERR_NICKNAMEINUSE (433) to client
-		return ;
-	}
-	
-	// Nickname is valid and available
-	client->setNick(newNickname);
-} */
-
-/* int Client::connectToServer(const std::string& serverIP, int serverPort)
-{
-	// Create socket
-	_socketFD = socket(AF_INET, SOCK_STREAM, 0);
-	if (_socketFD == -1)
-	{
-		std::cerr << "Error: Failed to create socket" << std::endl;
-		return (-1);
-	}
-	
-	// Set up server address
-	struct sockaddr_in serverAddr;
-	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_port = htons(serverPort);
-	
-	// Convert IP address
-	serverAddr.sin_addr.s_addr = inet_addr(serverIP.c_str());
-	if (serverAddr.sin_addr.s_addr == INADDR_NONE)
-	{
-		std::cerr << "Error: Invalid IP address format: " << serverIP << std::endl;
-		close(_socketFD);
-		return (-1);
-	}
-	
-	// Connect to server
-	if (connect(_socketFD, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
-	{
-		std::cerr << "Error: Failed to connect to server " << serverIP << ":" << serverPort << std::endl;
-		close(_socketFD);
-		return (-1);
-	}
-	
-	_IP = serverIP;
-	_port = serverPort;
-	setState(CONNECTING);
-	
-	std::cout << "Connected to server " << serverIP << ":" << serverPort << std::endl;
-	return (_socketFD);
-} */
-
-/* int Client::sendMessage(const std::string& message)
-{
-	if (_socketFD == -1)
-		return (-1);
-	
-	std::string fullMessage = message + "\r\n"; 
-	int bytesSent = send(_socketFD, fullMessage.c_str(), fullMessage.length(), 0);
-	
-	if (bytesSent > 512)
-		return (std::cerr <<  "<client> :Input line was too long" << std::endl, ERR_INPUTTOOLONG);
-	if (bytesSent == -1)
-		std::cerr << "Error: Failed to send message" << std::endl;
-	
-	return (bytesSent);
-}
-
-std::vector<std::string> Client::receiveCompleteMessages()
-{
-	std::vector<std::string> completeMessages;
-	
-	if (_socketFD == -1)
-		return (completeMessages);
-	
-	char buffer[1024];
-	int bytesReceived = recv(_socketFD, buffer, sizeof(buffer) - 1, MSG_DONTWAIT); // Flag for non-blocking
-	
-	if (bytesReceived > 0)
-	{
-		buffer[bytesReceived] = '\0';
-		_messageBuffer += std::string(buffer);
-		
-		// Prevent buffer from growing too large
-		if (_messageBuffer.length() > 4096)
-		{
-			std::cerr <<  "<client> :Input line was too long" << std::endl;
-			_messageBuffer.clear();
-			return (completeMessages);
-		}
-		
-		// Extract complete messages
-		std::string::size_type pos = 0;
-		while ((pos = _messageBuffer.find("\r\n")) != std::string::npos)
-		{
-			std::string message = _messageBuffer.substr(0, pos);
-			
-			// Skip empty messages
-			if (!message.empty())
-				completeMessages.push_back(message);
-			
-			_messageBuffer.erase(0, pos + 2);
-		}
-	}
-	else if (bytesReceived == 0)
-	{
-		std::cout << "Server disconnected" << std::endl;
-		setState(DISCONNECTED);
-	}
-	else if (bytesReceived == -1)
-	{
-		// Check if it's just "would block" (no data available)
-		if (errno != EAGAIN && errno != EWOULDBLOCK)
-		{
-			std::cerr << "Error: Failed to receive message" << std::endl;
-		}
-	}
-	
-	return (completeMessages);
-} */

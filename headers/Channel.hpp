@@ -34,7 +34,7 @@ class Channel
 
 		std::string					getModes(void) const;
 		bool						isValidChannelMode(char mode) const;
-		void						setMode(char mode, std::string modearg, bool enable);
+		int							setMode(char mode, std::string modearg, bool enable, std::string &comment);
 		bool 						hasMode(char mode) const;
 		std::string					getModeArguments(void) const;
 
@@ -45,7 +45,7 @@ class Channel
 		
 		std::vector<Client *>		getOperators(void) const;
 		bool						isOperator(Client *client) const;
-		void						setOperator(std::string &nickname, bool enable);
+		int							setOperator(std::string &nickname, bool enable);
 
 		std::string					getChannelKey(void);
 		void						setChannelKey(const std::string &key);

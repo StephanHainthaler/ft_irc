@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #include "../headers/Channel.hpp"
-#include <climits>
+
 
 Channel::Channel(const std::string &name, Client &creator): _name(name)
 {
@@ -54,38 +54,32 @@ bool Channel::isValidChannelMode(char mode) const
 	return (mode == 'i' || mode == 't' || mode == 'k' || mode == 'l');
 }
 
-void Channel::setMode(char mode, std::string modearg, bool enable)
+int Channel::setMode(char mode, std::string modearg, bool doEnable, std::string &comment)
 {
-	// operator is handled in setOperator so not handled here
-	if (enable && _modes.find(mode) == std::string::npos)
+	if (doEnable == true)
 	{
-		if ((mode == 'k') && modearg.empty())
-			return;
-		_modes += mode;
-		if (mode == 'k')
+		if ((mode == 'o' || mode == 'k' || mode == 'l') && modearg.empty())
+			return (comment = "Empty Argument", 1);
+		else if (mode == 'o')
+		{
+			if (setOperator(modearg, doEnable) == 1)
+				return (comment = "User does NOT exist on channel", 1);
+		}	
+		else if (mode == 'k')
 			_channelKey = modearg;
 		else if (mode == 'l')
-			_userLimit = std::atoi(modearg.c_str());
-	}
-	else if (enable && _modes.find(mode) != std::string::npos)
-    {
-        // Mode already exists, just update the value
-        if (mode == 'k')
-            _channelKey = modearg;
-        else if (mode == 'l')
-            _userLimit = std::atoi(modearg.c_str());
-	}
-	else if (!enable)
-	{
-		std::string::size_type pos = _modes.find(mode);
-		if (pos != std::string::npos)
 		{
-			/*if (mode == 'l') || mode == 'k') && !(modearg.empty())) */
-			_modes.erase(pos, 1);
-		/* 	if (mode == 'l')
-                _userLimit = UINT_MAX; */
+			if (isPositiveNumber(modearg) == false)
+				return (comment = "Invalid number", 1);
+			_userLimit = std::atoi(modearg.c_str());
 		}
+		if (hasMode(mode) == false)
+			_modes += mode;
 	}
+	else
+		if (hasMode(mode) == true)
+			_modes.erase(_modes.find(mode), 1);
+	return (0);
 }
 
 bool Channel::hasMode(char mode) const
@@ -171,14 +165,12 @@ bool Channel::isOperator(Client *client) const
 	return (std::find(_operators.begin(), _operators.end(), client) != _operators.end());
 }
 
-void Channel::setOperator(std::string &nickname, bool enable)
+int	Channel::setOperator(std::string &nickname, bool enable)
 {
-	if (nickname.empty())
-		return ;
-
+	
 	Client *client = getUser(nickname);
 	if (!client)
-		return ;
+		return (1);
 
 	if (enable && std::find(_operators.begin(), _operators.end(), client) == _operators.end())
 	{
@@ -194,6 +186,7 @@ void Channel::setOperator(std::string &nickname, bool enable)
 		if (it != _operators.end())
 			_operators.erase(it);
 	}
+	return (0);
 }
 
 std::string Channel::getChannelKey(void)

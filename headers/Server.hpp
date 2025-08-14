@@ -30,6 +30,7 @@
 # include <string>
 # include <cstring> // for strncpy, strcmp
 # include <signal.h>
+# include <climits>
 
 # include "Client.hpp"
 # include "Channel.hpp"
@@ -59,7 +60,7 @@ class Channel;
 class Server
 {
 	public:
-		Server(const unsigned int &port, const std::string &password);
+		Server(const std::string &portString, const std::string &password);
 		~Server(void);
 
 
@@ -73,8 +74,6 @@ class Server
 		int 					getState(void) const;
 		Client 					*getClient(std::string nickname) const;
 
-
-		//ADDED BY STEPHAN
 		void					setName(std::string name);
 		std::string				getName(void) const;
 
@@ -93,7 +92,6 @@ class Server
 		void					createChannel(std::string &newChannelName, Client &founder);
 		void 					removeChannel(Channel *channel);
 
-		// ADDED BY STEPHAN - maybe let the Server be the ONLY one to have these functions
 		
 
 		// Nickname availability checks
@@ -117,7 +115,6 @@ class Server
 		int						mode(Client &client, std::vector<std::string> command, size_t cmdNumber);
 		int						privMsg(Client &client, std::vector<std::string> command, std::string input, size_t cmdNumber);
 		int 					quit(Client &client, std::vector<std::string> command, size_t cmdNumber);
-		void					testAllNumericReplies(int clientFD, Client &client);
 
 		// Exception
 		class ServerException: public std::exception
@@ -161,6 +158,8 @@ class Server
 		//ADDED BY STEPHAN
 		std::string				_name;
 };
+
+bool	isPositiveNumber(std::string string);
 
 /*/
 ***USED FUNCTIONS:
