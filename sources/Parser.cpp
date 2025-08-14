@@ -478,7 +478,6 @@ int Server::quit(Client &client, std::vector<std::string> command, size_t cmdNum
 
 	while (_pollfds[i].fd != client.getSocketFD())
 		i++;
-	std::cout << GRAY << "Disconnect client with fd: " << client.getSocketFD() << " | Reason: " << reason << DEFAULT << std::endl;
 	handleClientDisconnections(i);
 	return (0);
 }
