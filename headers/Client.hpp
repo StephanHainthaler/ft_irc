@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: shaintha <shaintha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:21:05 by juitz             #+#    #+#             */
-/*   Updated: 2025/08/14 17:13:14 by marvin           ###   ########.fr       */
+/*   Updated: 2025/08/15 09:44:36 by shaintha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,11 +29,11 @@ enum ClientState
 class Client
 {	
 	public:
-		Client(void);
-		Client(int socketFD, int port);
+		Client(int socketFD);
 		~Client(void);
 
 		// Setters & Getters
+
 		std::string		getClientName(void) const;
 		void			setNickname(const std::string &nickname);
 		std::string 	getNickname(void) const;
@@ -63,7 +63,6 @@ class Client
 		std::string 	_hostname;
 		std::string		_realName;
 		int				_socketFD;
-		int				_port;
 		std::string		_IP;
 		ClientState 	_state;
 		size_t			_numberOfChannels;
