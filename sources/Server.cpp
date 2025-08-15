@@ -118,7 +118,7 @@ void	Server::run(void)
 		close(_serverFd);
 		throw ServerException("Error. Failed to bind socket.");
 	}
-	if (listen(_serverFd, SOMAXCONN) == -1) // SOMAXCONN - defines max number of pending connections in the queue
+	if (listen(_serverFd, MAXCONN) == -1) // MAXCONN - max possible number of pending connection requests for the socket
 	{
 		close(_serverFd);
 		throw ServerException("Error. Failed to listen on socket.");

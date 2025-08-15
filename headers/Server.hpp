@@ -23,10 +23,13 @@
 # include <signal.h>
 # include <netinet/in.h> // for sockaddr_in
 # include <poll.h>
+# include <sys/socket.h>
 
 # include "Client.hpp"
 # include "Channel.hpp"
 # include "Replies.hpp"
+
+# define MAXCONN 100
 
 # define DEFAULT	"\x1b[0m"	// for standard output
 # define RED		"\x1b[31m" 	// for errors
