@@ -239,7 +239,7 @@ int	Server::invite(Client &client, std::vector<std::string> command, size_t cmdN
 		return (sendMessageToClient(client.getSocketFD(), ERR_CHANNELISFULL(getName(), client.getClientName(), channelName)), 1);
 	else if (toInviteTo->getUser(client.getNickname()) == NULL)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NOTONCHANNEL(getName(), client.getClientName(), channelName)), 1);
-	else if (toInviteTo->hasMode('i') == true && toInviteTo->isOperator(&client) == false)
+	else if (toInviteTo->isOperator(&client) == false)
 		return (sendMessageToClient(client.getSocketFD(), ERR_CHANOPRIVSNEEDED(getName(), client.getClientName(), channelName)), 1);
 	else if (toInviteTo->getUser(nickname) != NULL)
 		return (sendMessageToClient(client.getSocketFD(), ERR_USERONCHANNEL(getName(), client.getClientName(), nickname, channelName)), 1);
