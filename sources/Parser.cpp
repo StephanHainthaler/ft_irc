@@ -32,28 +32,6 @@ void	Server::handleInput(Client &client, std::string input)
 	}
 }
 
-void    Server::parseStringToVector(std::string input, std::vector<std::string> *vector, const char *delimiters)
-{
-	for (char* token = std::strtok((char *)input.c_str(), delimiters); token; token = std::strtok(NULL, delimiters))
-		vector->push_back(token);
-}
-
-size_t	Server::getInputPosition(std::string &input, size_t numberOfArguments)
-{
-	size_t pos = 0;
-
-	for (size_t i = 0; i < numberOfArguments; i++)
-	{
-		while (input[pos] == ' ')
-			input[pos++];
-		if (i + 1 == numberOfArguments)
-			return (pos);
-		while (input[pos] != ' ')
-			input[pos++];
-	}
-	return (pos);
-}
-
 void	Server::executeCommand(Client &client, std::vector<std::string> command, std::string &input)
 {
 	if (command[0].compare("PASS") == 0)
@@ -121,7 +99,7 @@ int	Server::user(Client &client, std::vector<std::string> command, std::string &
 	if (command[cmdNumber][0] != ':')
 		realName = command[cmdNumber];
 	else
-		realName = input.substr(getInputPosition(input, 5) + 1);	
+		realName = input.substr(getStringPosition(input, 5) + 1);	
 	client.setUsername(userName);
 	client.setRealname(realName);
 	return (0);
@@ -146,10 +124,6 @@ int	Server::join(Client &client, std::vector<std::string> command, size_t cmdNum
 
 	for (size_t i = 0; i < channelNames.size(); i++)
 	{
-		// if (channelNames.size() == 1 && channelNames[i].compare("0") == 0)
-		// {
-		// 	//PART WIH ALL CHANNELS
-		// }
 		toJoinTo = getChannel(channelNames[i]);
 		if (toJoinTo == NULL && _channels.size() >= MAX_CHAN_NUM)
 		{
@@ -217,7 +191,7 @@ int Server::part(Client &client, std::vector<std::string> command, std::string &
         if (command[cmdNumber][0] != ':')
             comment = command[cmdNumber];
 		else
-			comment = input.substr(getInputPosition(input, 3) + 1);
+			comment = input.substr(getStringPosition(input, 3) + 1);
         cmdNumber++;
     }
     for (size_t i = 0; i < channelNames.size(); i++)
@@ -310,7 +284,7 @@ int	Server::kick(Client &client, std::vector<std::string> command, std::string &
 		if (command[cmdNumber][0] != ':')
             comment = command[cmdNumber];
 		else
-			comment = input.substr(getInputPosition(input, 4) + 1);
+			comment = input.substr(getStringPosition(input, 4) + 1);
 	}
 	for (size_t i = 0; i < users.size(); i++)
 	{
@@ -354,7 +328,7 @@ int	Server::privMsg(Client &client, std::vector<std::string> command, std::strin
 	if (command[cmdNumber][0] != ':')
 		message = command[cmdNumber];
 	else
-		message = input.substr(getInputPosition(input, 3) + 1);
+		message = input.substr(getStringPosition(input, 3) + 1);
 	for (size_t i = 0; i < targets.size(); i++)
 	{
 		if (targets[i][0] == '#')
@@ -409,7 +383,7 @@ int	Server::topic(Client &client, std::vector<std::string> command, std::string 
 		else if (topic[0] == ':' && topic.length() == 1)
 			toTakeTopicFrom->setTopic("");
 		else if (topic[0] == ':')
-			toTakeTopicFrom->setTopic(input.substr(getInputPosition(input, 3) + 1));
+			toTakeTopicFrom->setTopic(input.substr(getStringPosition(input, 3) + 1));
 		else
 			toTakeTopicFrom->setTopic(topic);
 		if (toTakeTopicFrom->getTopic().empty() == false)
@@ -480,27 +454,4 @@ int Server::quit(Client &client, std::vector<std::string> command, size_t cmdNum
 		i++;
 	handleClientDisconnections(i);
 	return (0);
-}
-
-bool	isPositiveNumber(std::string string)
-{
-	const char	*cString = string.c_str();
-	size_t	i = 0, end = std::strlen(cString);
-
-	if (cString[i] == '\0' || cString == NULL)
-		return (false);
-	while (isspace(cString[i]) == true)
-		i++;
-	if (cString[i] == '-')
-		return (false);
-	if (cString[i] == '+')
-		i++;
-	if (!(cString[i] >= '0' && cString[i] <= '9'))
-		return (false);
-	for ( ; (cString[i] >= '0' && cString[i] <= '9'); i++)
-	{
-	}
-	if (i != end)
-		return (false);
-	return (true);
 }
