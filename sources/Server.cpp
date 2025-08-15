@@ -18,6 +18,8 @@ Server::Server(const std::string &portString, const std::string &password): _nam
 {
 	if (isPositiveNumber(portString) == false || _port > 65535)
 		throw ServerException("Error. Invalid port number.");
+	else if (password.empty() == true)
+		throw ServerException("Error. Empty password.");
 
 	// AF_INET specifies IPv4 protocol family, SOCK_STREAM specifies TCP protocol
     _serverFd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0); // Create a TCP/IPv4 socket

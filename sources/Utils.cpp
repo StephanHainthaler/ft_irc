@@ -6,7 +6,7 @@
 /*   By: shaintha <shaintha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by juitz             #+#    #+#             */
-/*   Updated: 2025/08/15 09:24:00 by shaintha         ###   ########.fr       */
+/*   Updated: 2025/08/15 10:50:47 by shaintha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,11 +54,11 @@ size_t  Server::getStringPosition(std::string &string, size_t numberOfArguments)
 
 	for (size_t i = 0; i < numberOfArguments; i++)
 	{
-		while (string[pos] == ' ')
+		while (std::isspace(string[pos]) == true)
 			string[pos++];
 		if (i + 1 == numberOfArguments)
 			return (pos);
-		while (string[pos] != ' ')
+		while (std::isspace(string[pos]) == false)
 			string[pos++];
 	}
 	return (pos);
