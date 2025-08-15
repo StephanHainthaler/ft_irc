@@ -243,7 +243,7 @@ int	Server::invite(Client &client, std::vector<std::string> command, size_t cmdN
 		return (sendMessageToClient(client.getSocketFD(), ERR_CHANOPRIVSNEEDED(getName(), client.getClientName(), channelName)), 1);
 	else if (toInviteTo->getUser(nickname) != NULL)
 		return (sendMessageToClient(client.getSocketFD(), ERR_USERONCHANNEL(getName(), client.getClientName(), nickname, channelName)), 1);
-	else if (toBeInvited == NULL)
+	else if (toBeInvited == NULL || toBeInvited->getState() < REGISTERED)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NOSUCHNICK(getName(), client.getClientName(), nickname)), 1);
 	sendMessageToClient(client.getSocketFD(), RPL_INVITING(getName(), client.getClientName(), nickname, channelName));
 	sendMessageToClient(client.getSocketFD(), MSG_INVITE(client.getClientName(), nickname, channelName));
