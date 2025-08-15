@@ -16,7 +16,6 @@
 # include <iostream>
 # include <cstdlib>
 # include <cstring>
-# include <cctype>
 # include <sstream>
 # include <algorithm>
 # include <vector>
@@ -24,7 +23,6 @@
 # include <signal.h>
 # include <netinet/in.h> // for sockaddr_in
 # include <poll.h>
-# include <sys/socket.h>
 
 # include "Client.hpp"
 # include "Channel.hpp"
@@ -37,7 +35,6 @@
 
 # define MAX_MSG_LEN 512
 # define MAX_CHAN_NUM 100
-# define MAXCONN 100
 
 class Channel;
 class Client;
