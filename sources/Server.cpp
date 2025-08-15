@@ -14,76 +14,41 @@
 
 volatile sig_atomic_t g_shutdown = 0;
 
-/* sockaddr_in / sockaddr_in6 
-is a structure specifically for handling IPv4 addresses
-subject: "communication between client and server has to be done via TCP/IP (v4 or v6)"
-
-the IP address is specified by the computer I am running the server code on,
-and the port number is specified by the user (as a command line argument)
-*/
-Server::Server(const std::string &portString, const std::string &password): _port(std::atoi(portString.c_str())), _password(password)
+Server::Server(const std::string &portString, const std::string &password): _name("localhost"), _port(std::atoi(portString.c_str())), _password(password)
 {
 	if (isPositiveNumber(portString) == false || _port > 65535)
 		throw ServerException("Error. Invalid port number.");
+
 	// AF_INET specifies IPv4 protocol family, SOCK_STREAM specifies TCP protocol
     _serverFd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0); // Create a TCP/IPv4 socket
     if (_serverFd == -1) 
 		throw ServerException("Error. Failed to create socket.");
-
-    
-	_serverAddress.sin_family = AF_INET; // set the address family to IPv4 addresses
-	_serverAddress.sin_addr.s_addr = INADDR_ANY; // server should accept connections from any IPv4 address, used when we don't want to bind our socket to any particular IP, to mak eit listen to all available IPs
-	_serverAddress.sin_port = htons(_port); // defines the port number the socket will use to communicate on server side (the value has to be in network byte order)
-
-	std::cout << GRAY << "Server created with socket fd: " << _serverFd << ", port: " << _port << ", password: " << password << DEFAULT << std::endl;
 	
-	// _clients and _channels remain empty at this point (?) - will get filled later
-
-	_state = NOT_RUNNING; // Server state - 0: not running
-
-
-	//ADDED BY STEPHAN
-	_name = "localhost";
-
+	// sockaddr_in "serverAddress" to specify its own IP address and port to bind to
+	// client takes this sockaddr_in "serverAddress" to specify the server's IP address and port to connect to
+	_serverAddress.sin_family = AF_INET;			// set the address family to IPv4 addresses
+	_serverAddress.sin_addr.s_addr = INADDR_ANY;	// server should accept connections from any IPv4 address, used when we don't want to bind our socket to any particular IP, to mak eit listen to all available IPs
+	_serverAddress.sin_port = htons(_port);			// defines the port number the socket will use to communicate on server side (the value has to be in network byte order)
+	std::cout << YELLOW << "[SERVER] created with socket fd: " << _serverFd << ", port: " << _port << ", password: " << password << DEFAULT << std::endl;
 }
 
 Server::~Server(void)
 {
-	std::cout << YELLOW << "\n[SERVER] Starting graceful shutdown..." << DEFAULT << std::endl;
+	std::cout << YELLOW << "[SERVER] is shutting down." << DEFAULT << std::endl;
 	
-	// Notify all connected clients about server shutdown
-	std::string shutdownMsg = "ERROR: Server shutting down";
-	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
-	{
-		sendMessageToClient(it->first, shutdownMsg);
-		std::cout << GRAY << "Notified client " << it->first << " about shutdown" << DEFAULT << std::endl;
-	}
-	
-	// Give clients a moment to receive the message
-	usleep(100000); // 100ms
-	
-	// Close the server socket
 	if (_serverFd != -1)
 		close(_serverFd);
-
-	// Close all client connections
 	if (!_clients.empty())
 	{
 		for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 		{
-			close(it->first); // close the socket
+			close(it->first);
 			delete it->second;
 		}
 		_clients.clear();
 	}
-
-	// Clear outgoing messages
 	_outgoingMessages.clear();
-
-	// Clear incoming messages
 	_incomingMessages.clear();
-
-	// Clear channels
 	if (!_channels.empty())
 	{
 		for (std::vector<Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
@@ -91,8 +56,6 @@ Server::~Server(void)
 
 		_channels.clear();
 	}
-	
-	// close all in pollfds
 	if (!_pollfds.empty())
 	{
 		for (size_t i = 0; i < _pollfds.size(); ++i)
@@ -104,33 +67,27 @@ Server::~Server(void)
 	}
 }
 
-// Getters
-std::string Server::getPassword(void) const
+void	Server::setName(std::string name)
 {
-	return _password;
+	_name = name;
 }
 
-Channel *Server::getChannel(const std::string &channel_name) const
+std::string	Server::getName(void) const
 {
-	for (std::vector<Channel *>::const_iterator it = _channels.begin(); it != _channels.end(); ++it)
-	{
-		if ((*it)->getName() == channel_name)
-			return *it;
-	}
-	return NULL;
+	return (_name);
 }
 
-sockaddr_in Server::getServerAddress(void) const
+std::string	Server::getPassword(void) const
 {
-	return _serverAddress;
+	return (_password);
 }
 
-int Server::getState(void) const
+sockaddr_in	Server::getServerAddress(void) const
 {
-	return _state;
+	return (_serverAddress);
 }
 
-Client *Server::getClient(std::string nickname) const
+Client	*Server::getClient(std::string nickname) const
 {
 	for (std::map<int, Client *>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
 	{
@@ -140,78 +97,105 @@ Client *Server::getClient(std::string nickname) const
 	return NULL;
 }
 
-// Member functions - server actions
-void Server::sendMessageToClient(int clientFD, std::string message)
+Channel	*Server::getChannel(const std::string &channel_name) const
 {
-    if (clientFD < 0)
-    {
-        std::cerr << RED << "Error. Invalid client fd." << DEFAULT << std::endl;
-        return;
-    }
-
-    // Add message to the outgoing buffer for this client
-    _outgoingMessages[clientFD] += message + "\r\n";
-
-	// set pollout
-	for (size_t i = 0; i < _pollfds.size(); ++i)
+	for (std::vector<Channel *>::const_iterator it = _channels.begin(); it != _channels.end(); ++it)
 	{
-		if (_pollfds[i].fd == clientFD)
+		if ((*it)->getName() == channel_name)
+			return *it;
+	}
+	return NULL;
+}
+
+void	Server::run(void)
+{
+	// to manipulate options at the sockets API level, "level" is specified as SOL_SOCKET
+	int yes = 1;
+	if (setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0)
+        throw ServerException("Error. Failed to configure socket.");
+	if (bind(_serverFd, (struct sockaddr *)&_serverAddress, sizeof(_serverAddress)) == -1)
+	{
+		close(_serverFd);
+		throw ServerException("Error. Failed to bind socket.");
+	}
+	if (listen(_serverFd, SOMAXCONN) == -1) // SOMAXCONN - defines max number of pending connections in the queue
+	{
+		close(_serverFd);
+		throw ServerException("Error. Failed to listen on socket.");
+	}
+	setupSignals();
+	while (g_shutdown == 0)
+		handleEvents();
+}
+
+void	Server::setupSignals()
+{
+	signal(SIGINT, signalHandler);
+	signal(SIGTERM, signalHandler);
+	signal(SIGQUIT, signalHandler);
+	signal(SIGPIPE, SIG_IGN);
+}
+
+void	signalHandler(int sig)
+{
+    if (sig == SIGINT || sig == SIGTERM || sig == SIGQUIT)
+	{
+        g_shutdown = 1;
+    }
+}
+
+void	Server::handleEvents(void)
+{
+	pollfd	sfd;
+
+	sfd.fd = _serverFd;
+	sfd.events = POLLIN; // POLLIN = ready to read, POLLOUT = ready to write but server is a listening socket, so we only care about POLLIN
+	sfd.revents = 0; // initially no events
+	_pollfds.push_back(sfd);
+	std::cout << YELLOW << "[SERVER] is now running and waiting for events..." << DEFAULT << std::endl;
+	while (!g_shutdown) // while server is running and no shutdown signal
+	{
+		int poll_count = poll(_pollfds.begin().base(), _pollfds.size(), -1);
+		if (poll_count < 0) // number of fds, which are ready to read, because of POLLIN
+			std::cout << GRAY << "No (more) poll events." << DEFAULT << std::endl;
+		else if (poll_count == 0) // no events occurred
 		{
-			_pollfds[i].events |= POLLOUT; // start checking for the POLLOUT event too
-			break;
+			std::cout << GRAY << "No events occurred." << DEFAULT << std::endl;
+			continue; // retry polling
+		}
+		// else: if one or more sockets / fds are ready for reading (or writing)
+		for (size_t i = 0; i < _pollfds.size(); ++i)
+		{
+			// Case 1: there was no event with that fd
+			if (_pollfds[i].revents == 0)
+				continue;
+
+			// Case 2: the client disconnected
+			if ((_pollfds[i].revents & POLLHUP) == POLLHUP) // if the client closed the connection
+			{
+				handleClientDisconnections(i);
+				break;
+			}
+			// Case 3: there was an event with that fd
+			if ((_pollfds[i].revents & POLLIN) == POLLIN) // if there's data to read
+			{
+				// for the server socket, data to read can be a new client connection
+				if (_pollfds[i].fd == _serverFd)
+				{
+					handleClientConnections();
+					break;
+				}
+				// for client sockets, data to read can be a message from another client
+				handleClientMessage(_pollfds[i].fd);
+			}
+			// Case 4: there is data to send to the client => check if reverts caught POLLOUT
+			if ((_pollfds[i].revents & POLLOUT) == POLLOUT)
+				handleSendingToClient(i);
 		}
 	}
 }
 
-void Server::handleSendingToClient(int i)
-{
-	std::string &buffer = _outgoingMessages[_pollfds[i].fd];
-
-	if (!buffer.empty())
-	{
-		ssize_t sent = send(_pollfds[i].fd, buffer.c_str(), buffer.size(), MSG_DONTWAIT); // makes the call non-blocking
-
-		if (sent > 0)
-			buffer.erase(0, sent); // remove sent bytes
-	}
-
-	if (buffer.empty())
-		_pollfds[i].events = POLLIN | POLLHUP; // remove POLLOUT
-}
-
-void Server::sendMessageToChannel(Channel* channel, const std::string& message)
-{
-	std::vector<Client*> usersInChannel = channel->getOperators();
-
-	for (size_t i = 0; i < usersInChannel.size(); i++)
-		sendMessageToClient(usersInChannel[i]->getSocketFD(), message);
-	usersInChannel = channel->getChannelUsers();
-	for (size_t i = 0; i < usersInChannel.size(); i++)
-		sendMessageToClient(usersInChannel[i]->getSocketFD(), message);
-}
-
-void Server::sendMessageToChannel(Client* excludedSender, Channel* channel, const std::string& message)
-{
-	std::vector<Client*> usersInChannel = channel->getOperators();
-
-	for (size_t i = 0; i < usersInChannel.size(); i++)
-	{
-		Client* targetClient = usersInChannel[i];
-		
-		if (targetClient != excludedSender)
-			sendMessageToClient(targetClient->getSocketFD(), message);
-	}
-	usersInChannel = channel->getChannelUsers();
-	for (size_t i = 0; i < usersInChannel.size(); i++)
-	{
-		Client* targetClient = usersInChannel[i];
-		
-		if (targetClient != excludedSender)
-			sendMessageToClient(targetClient->getSocketFD(), message);
-	}
-}
-
-void Server::handleClientConnections(void)
+void	Server::handleClientConnections(void)
 {
 	/*
 	accept is like a reception desk that waits for clients to come in
@@ -219,15 +203,14 @@ void Server::handleClientConnections(void)
 	accept blocks until a client connects, unless the server socket is set to non-blocking mode
 	*/
 	int clientFd = accept(_serverFd, NULL, NULL);
-	if (clientFd < 0) // if a new client connected
+	if (clientFd < 0) 
 	{
 		std::cerr << RED << "Error. Failed to accept client connection." << DEFAULT << std::endl;
 		return ;
 	}
 	std::cout << GRAY << "Client connected with fd: " << clientFd << DEFAULT << std::endl;
 
-	/* pollfd  (useful: https://www.ibm.com/docs/en/i/7.4.0?topic=ssw_ibm_i_74/apis/poll.htm)
-	is a structure used by poll() to monitor fds for readiness (for reading, writing, or errors)
+	/* pollfd = structure used by poll() to monitor fds for readiness (for reading, writing, or errors)
 	It contains:
 	struct pollfd {
 		int fd	// file descriptor to monitor, 
@@ -242,18 +225,50 @@ void Server::handleClientConnections(void)
 
 	_pollfds.push_back(pfd);
 
-	Client *newClient = new Client(clientFd, _port); // create a new Client object
-	_clients.insert(std::make_pair(clientFd, newClient)); // add the new client to the map
-	_outgoingMessages.insert(std::make_pair(clientFd, "")); // initialize the outgoing buffer for the new client
-	_incomingMessages.insert(std::make_pair(clientFd, "")); // initialize the incoming buffer for the new client
+	// create and register a new client
+	Client *newClient = new Client(clientFd);
+	_clients.insert(std::make_pair(clientFd, newClient));
+	_outgoingMessages.insert(std::make_pair(clientFd, ""));
+	_incomingMessages.insert(std::make_pair(clientFd, ""));
 
 	sendMessageToClient(clientFd, "Please enter the password to access the StePiaAn IRC server!"); // send welcome message to IRC client
 }
 
+void	Server::handleClientDisconnections(int i)
+{
+	Client *client = _clients[_pollfds[i].fd];
+	if (client)
+	{
+		client->disconnect(); // also closes the "hotel room" (socket)
+		std::cout << GRAY << "Client disconnected with fd: " << _pollfds[i].fd << DEFAULT << std::endl;
+		close(_pollfds[i].fd);
+		_clients.erase(_pollfds[i].fd);
+		_pollfds.erase(_pollfds.begin() + i);
+		_outgoingMessages.erase(_pollfds[i].fd);
+		_incomingMessages.erase(_pollfds[i].fd);
+		delete client;
+	}
+}
+
+void	Server::handleSendingToClient(int i)
+{
+	std::string &buffer = _outgoingMessages[_pollfds[i].fd];
+
+	if (!buffer.empty())
+	{
+		ssize_t sent = send(_pollfds[i].fd, buffer.c_str(), buffer.size(), MSG_DONTWAIT); // makes the call non-blocking
+
+		if (sent > 0)
+			buffer.erase(0, sent); // remove sent bytes
+	}
+
+	if (buffer.empty())
+		_pollfds[i].events = POLLIN | POLLHUP; // stop checking for POLLOUT
+}
+
 /* https://modern.ircdocs.horse/
 When reading messages from a stream, read the incoming data into a buffer. 
-Only parse and process a message once you encounter the \r\n at the end of it. 
-If you encounter an empty message, silently ignore it.
+Only parse and process a message once you encounter the \r\n at the end of it.
 */
 void	Server::handleClientMessage(int clientFd)
 {
@@ -261,24 +276,16 @@ void	Server::handleClientMessage(int clientFd)
 	bzero(buffer, sizeof(buffer));
 
 	// call recv once per poll event
-	int bytesReceived = recv(clientFd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT); // Flag which makes the call non-blocking
+	int bytesReceived = recv(clientFd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT); // Flag makes the call non-blocking
     if (bytesReceived <= 0)
 		return ;
 
 	buffer[bytesReceived] = '\0';
 	_incomingMessages[clientFd] += std::string(buffer); // add data to the client's incoming buffer
 		
-	std::cout << "recv: " << buffer <<  " | incoming buffer : " << _incomingMessages[clientFd] << std::endl;
-		
-	/* https://labex.io/tutorials/linux-linux-nc-netcat-command-with-practical-examples-422835
-	in nc, ctrl+d is used to signal EOF, in which case the input is sent | lseek
-	BUT and IRC message is a single line delimited by \r\n, 
-	so ctrl+d should not be seen as end of the message
-	=>
-	every time when recieving data, check if a complete message (incl \r\n) has been received.
-	If it was, extract it from the _incomingMessages buffer 
-	Since it is extracted and subsequently being processed already, 
-	it can already be removed (incl \r\n) from the _incomingMessages buffer
+	/* 
+	in nc, ctrl+d is used to signal EOF, in which case the input is sent
+	BUT and IRC message is a single line delimited by \r\n
 	*/
 	size_t pos;
 	while((pos = _incomingMessages[clientFd].find("\r\n")) != std::string::npos)
@@ -286,165 +293,68 @@ void	Server::handleClientMessage(int clientFd)
 		std::string message = _incomingMessages[clientFd].substr(0, pos);
 		_incomingMessages[clientFd].erase(0, pos + 2); // remove the processed message from the buffer (incl \r\n)
 		
-		// when encountering ctrl+d, remove it from the message
-		//message.erase(std::remove(message.begin(), message.end(), 4), message.end());
-
 		if (!message.empty())
 		{
-			std::cout << GRAY << "Client (fd = " << clientFd << "): " << message << DEFAULT << std::endl; // first one is IRC client
+			// std::cout << GRAY << "Client (fd = " << clientFd << "): " << message << DEFAULT << std::endl; // first one is IRC client
 			Client *client = _clients[clientFd];
 			handleInput(*client, message);
 		}
 	}
 }
 
-void Server::handleClientDisconnections(int i)
+void	Server::sendMessageToClient(int clientFD, std::string message)
 {
-	Client *client = _clients[_pollfds[i].fd];
-	if (client)
+    if (clientFD < 0)
+    {
+        std::cerr << RED << "Error. Invalid client fd." << DEFAULT << std::endl;
+        return;
+    }
+
+    // Add message to the outgoing buffer for this client
+    _outgoingMessages[clientFD] += message + "\r\n";
+
+	// start checking for the POLLOUT event too
+	for (size_t i = 0; i < _pollfds.size(); ++i)
 	{
-		client->disconnect(); // also closes the "hotel room" (socket)
-		std::cout << YELLOW << "Client disconnected: " << _pollfds[i].fd << DEFAULT << std::endl;
-		close(_pollfds[i].fd);
-		_clients.erase(_pollfds[i].fd); // remove client from the map
-		_pollfds.erase(_pollfds.begin() + i); // remove client from pollfds
-		_outgoingMessages.erase(_pollfds[i].fd); // remove client's outgoing buffer
-		_incomingMessages.erase(_pollfds[i].fd); // remove client's incoming buffer
-		delete client; // delete Client object
-	}
-}
-
-void Server::handleEvents(void)
-{
-	pollfd sfd;
-	sfd.fd = _serverFd; // server socket
-	sfd.events = POLLIN; // POLLIN = ready to read, POLLOUT = ready to write but server is a listening socket, so we only care about POLLIN
-	sfd.revents = 0; // initially no events
-	
-	_pollfds.push_back(sfd); // add server socket to pollfds
-
-	std::cout << GRAY << "Server is now running and waiting for events..." << DEFAULT << std::endl;
-
-	while (_state == RUNNING && !g_shutdown) // while server is running and no shutdown signal
-	{
-		// Handle client input with poll
-		int poll_count = poll(_pollfds.begin().base(), _pollfds.size(), -1);
-		if (poll_count < 0) // poll returns the number of fds, which are ready to read, because of POLLIN
-			throw ServerException("Error. Could not check sockets for events.");
-		
-		else if (poll_count == 0) // no events occurred
+		if (_pollfds[i].fd == clientFD)
 		{
-			std::cout << GRAY << "No events occurred." << DEFAULT << std::endl;
-			continue; // retry polling
-		}
-
-		// else: if one or more sockets / fds are ready for reading or writing
-
-		// Check for events on each client socket
-		for (size_t i = 0; i < _pollfds.size(); ++i)
-		{
-			//std::cout << GRAY << "Checking pollfd[" << i << "] with fd: " << _pollfds[i].fd << " revents: " << _pollfds[i].revents <<  DEFAULT << std::endl;
-
-			// Case 1: there was no event with that fd
-			if (_pollfds[i].revents == 0)
-				continue; // skip to next fd
-
-			// Case 2: the client disconnected
-			/*
-			Since revents is in binary, we can check for specific events using bitwise AND
-			if they have the 1 in common, it will have true as a return
-			*/
-			if ((_pollfds[i].revents & POLLHUP) == POLLHUP) // if the client closed the connection
-			{
-				handleClientDisconnections(i);
-				break ; // skip to next fd
-			}
-
-			// Case 3: there was an event with that fd
-			if ((_pollfds[i].revents & POLLIN) == POLLIN) // if there's data to read
-			{
-				// for the server socket, data to read can be a new client connection
-				if (_pollfds[i].fd == _serverFd) // if the server socket is
-				{
-					handleClientConnections(); // accept new client connection
-					break; // skip to next fd
-				}
-				
-				// for client sockets, data to read can be a message from another client
-				handleClientMessage(_pollfds[i].fd);
-			}
-
-			// Case 4: there is data to send to the client => check if reverts caught POLLOUT
-			if ((_pollfds[i].revents & POLLOUT) == POLLOUT)
-			{
-				handleSendingToClient(i);
-			}
-		}
-	}
-}
-
-void Server::run(void)
-{
-	/* linux.die.net/man/2/setsockopt AND https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-setsockopt
-	to manipulate options at the sockets API level, "level" is specified as SOL_SOCKET
-	SO_REUSEADDR 	BOOL 	Allows the socket to be bound to an address that is already in use- see bind.
-	*/
-	int yes = 1; // value to set the option to
-	if (setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0) // set socket option to allow address reuse
-        throw ServerException("Error. Failed to configure socket.");
-		
-	/* sockaddr_in vs sockaddr
-	sockaddr_in is specifically for handling IPv4 addresses
-	sockaddr is a generic structure that can be used for both IPv4 and IPv6 addresses
-	and it is what the bind function expects
-	*/
-	if (bind(_serverFd, (struct sockaddr *)&_serverAddress, sizeof(_serverAddress)) == -1)
-	{
-		close(_serverFd);
-		throw ServerException("Error. Failed to bind socket.");
-	}
-	
-	// Marks a bound socket as "listening socket"
-	// Server is on receiving end of data so needs to listen for incoming connections
-	if (listen(_serverFd, SOMAXCONN) == -1) // SOMAXCONN is a constant that defines the maximum number of pending connections in the queue, 128 in most systems
-	{
-		close(_serverFd);
-		throw ServerException("Error. Failed to listen on socket.");
-	}
-	_state = RUNNING; // Server state - 1: running
-	
-	// subject: "All I/O operations must be non-blocking" - set non-blocking at socket creation
-	// used SOCK_NONBLOCK flag in socket creation, which is equivalent to fcntl usage
-	/*if (fcntl(_serverFd, F_SETFL, O_NONBLOCK) == -1) // allow server to handle multiple clients at once
-	{
-		close(_serverFd);
-		throw ServerException("Error. Failed to set socket to non-blocking mode.");
-	}*/
-
-	// Now the server is ready to handle incoming connections and client input
-	setupSignals();
-	while (g_shutdown == 0)
-		handleEvents();
-	throw ServerException("Server shutdown complete.");
-}
-
-void Server::removeChannel(Channel *channel)
-{
-	if (channel == NULL)
-		return;
-
-	for (std::vector<Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
-	{
-		if (*it == channel)
-		{
-			_channels.erase(it);
-			delete channel;
+			_pollfds[i].events |= POLLOUT; 
 			break;
 		}
 	}
 }
 
-// ADDED BY STEPHAN
+void	Server::sendMessageToChannel(Channel* channel, const std::string& message)
+{
+	std::vector<Client*> usersInChannel = channel->getOperators();
+
+	for (size_t i = 0; i < usersInChannel.size(); i++)
+		sendMessageToClient(usersInChannel[i]->getSocketFD(), message);
+	usersInChannel = channel->getChannelUsers();
+	for (size_t i = 0; i < usersInChannel.size(); i++)
+		sendMessageToClient(usersInChannel[i]->getSocketFD(), message);
+}
+
+void	Server::sendMessageToChannel(Client* excludedSender, Channel* channel, const std::string& message)
+{
+	std::vector<Client*> usersInChannel = channel->getOperators();
+
+	for (size_t i = 0; i < usersInChannel.size(); i++)
+	{
+		Client* targetClient = usersInChannel[i];
+		
+		if (targetClient != excludedSender)
+			sendMessageToClient(targetClient->getSocketFD(), message);
+	}
+	usersInChannel = channel->getChannelUsers();
+	for (size_t i = 0; i < usersInChannel.size(); i++)
+	{
+		Client* targetClient = usersInChannel[i];
+		
+		if (targetClient != excludedSender)
+			sendMessageToClient(targetClient->getSocketFD(), message);
+	}
+}
 
 void	Server::createChannel(std::string &newChannelName, Client &founder)
 {
@@ -457,67 +367,30 @@ void	Server::createChannel(std::string &newChannelName, Client &founder)
 	sendMessageToClient(founder.getSocketFD(), RPL_ENDOFNAMES(getName(), founder.getNickname(), newChannelName));
 }
 
-std::string toLowercase(const std::string &str)
+void	Server::removeChannel(Channel *channel)
 {
-	std::string result = str;
-	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
-	return (result);
-}
-
-void signalHandler(int sig)
-{
-    if (sig == SIGINT || sig == SIGTERM)
+	if (channel == NULL)
+		return;
+	for (std::vector<Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
 	{
-        g_shutdown = 1;
-    }
+		if (*it == channel)
+		{
+			_channels.erase(it);
+			delete channel;
+			break;
+		}
+	}
 }
 
-void Server::setupSignals()
-{
-	signal(SIGINT, signalHandler);
-	signal(SIGTERM, signalHandler);
-	signal(SIGPIPE, SIG_IGN);
-}
-
-// For nickname changes within the same Client -- this will allow lower/upper case changes, for example: pia to Pia
-bool Server::isNicknameAvailable(const std::string& nickname, const Client* targetClient) const
-{
-    std::string targetNickNew = toLowercase(nickname);
-
-    for (std::map<int, Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
-    {
-		const Client* client = it->second;
-		std::string clientNick = toLowercase(client->getNickname());
-
-		// if the nickname or any case-variation of it is already taken by another client
-        if (client && client != targetClient && clientNick == targetNickNew)
-                return (false);		
-    }
-    return (true);
-}
-
-// Exception
 Server::ServerException::ServerException(const std::string &message): _message(message)
 {
-}
-
-const char* Server::ServerException::what() const throw()
-{
-	return _message.c_str();
 }
 
 Server::ServerException::~ServerException() throw() 
 {
 }
 
-
-//ADDED BY STEPHAN
-void	Server::setName(std::string name)
+const char*	Server::ServerException::what() const throw()
 {
-	_name = name;
-}
-
-std::string	Server::getName(void) const
-{
-	return (_name);
+	return (_message.c_str());
 }

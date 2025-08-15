@@ -3,25 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: shaintha <shaintha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by juitz             #+#    #+#             */
-/*   Updated: 2025/08/14 17:04:57 by marvin           ###   ########.fr       */
+/*   Updated: 2025/08/15 09:44:43 by shaintha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../headers/Client.hpp"
 
-Client::Client() : _socketFD(-1), _port(0)
-{
-	_state = CONNECTING;
-	_nickname = "*";
-	_userName = "*";
-	_hostname = "localhost";
-	_numberOfChannels = 0;
-}
-
-Client::Client(int socketFD, int port) : _socketFD(socketFD), _port(port)
+Client::Client(int socketFD) : _socketFD(socketFD)
 {
 	_state = CONNECTING;
 	_nickname = "*";
