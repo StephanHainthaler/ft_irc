@@ -29,7 +29,6 @@
 # include "Channel.hpp"
 # include "Replies.hpp"
 
-# define MAXCONN 100
 
 # define DEFAULT	"\x1b[0m"	// for standard output
 # define RED		"\x1b[31m" 	// for errors
@@ -38,6 +37,7 @@
 
 # define MAX_MSG_LEN 512
 # define MAX_CHAN_NUM 100
+# define MAXCONN 100
 
 class Channel;
 class Client;
