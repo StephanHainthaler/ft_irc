@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: shaintha <shaintha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: pgober <pgober@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by juitz             #+#    #+#             */
-/*   Updated: 2025/08/15 09:24:00 by shaintha         ###   ########.fr       */
+/*   Updated: 2025/08/15 12:40:11 by pgober           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ bool	isPositiveNumber(std::string string)
 
 	if (cString[i] == '\0' || cString == NULL)
 		return (false);
-	while (isspace(cString[i]) == true)
+	while (cString[i] == ' ' || cString[i] == '\f' || cString[i] == '\n' || cString[i] == '\r' || cString[i] == '\t' || cString[i] == '\v')
 		i++;
 	if (cString[i] == '-')
 		return (false);

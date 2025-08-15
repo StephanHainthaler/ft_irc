@@ -16,7 +16,7 @@ volatile sig_atomic_t g_shutdown = 0;
 
 Server::Server(const std::string &portString, const std::string &password): _name("localhost"), _port(std::atoi(portString.c_str())), _password(password)
 {
-	if (isPositiveNumber(portString) == false || _port > 65535)
+	if (isPositiveNumber(portString) == false || _port < 6665 || _port > 6669)
 		throw ServerException("Error. Invalid port number.");
 	else if (password.empty() == true)
 		throw ServerException("Error. Empty password.");
