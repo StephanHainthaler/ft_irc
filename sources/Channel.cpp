@@ -233,8 +233,7 @@ void Channel::removeUser(Client *client)
 			{
 				_operators.erase(it);
 				client->setChannelNumber(-1);
-			}
-				
+			}	
 		}
 		else
 		{
