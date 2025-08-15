@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: shaintha <shaintha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: pgober <pgober@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/16 09:22:12 by juitz             #+#    #+#             */
-/*   Updated: 2025/08/15 10:50:47 by shaintha         ###   ########.fr       */
+/*   Updated: 2025/08/15 11:46:01 by pgober           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ bool	isPositiveNumber(std::string string)
 
 	if (cString[i] == '\0' || cString == NULL)
 		return (false);
-	while (isspace(cString[i]) == true)
+	while (cString[i] == ' ' || cString[i] == '\f' || cString[i] == '\n' || cString[i] == '\r' || cString[i] == '\t' || cString[i] == '\v')
 		i++;
 	if (cString[i] == '-')
 		return (false);
@@ -54,11 +54,11 @@ size_t  Server::getStringPosition(std::string &string, size_t numberOfArguments)
 
 	for (size_t i = 0; i < numberOfArguments; i++)
 	{
-		while (std::isspace(string[pos]) == true)
+		while (string[i] == ' ' || string[i] == '\f' || string[i] == '\n' || string[i] == '\r' || string[i] == '\t' || string[i] == '\v')
 			string[pos++];
 		if (i + 1 == numberOfArguments)
 			return (pos);
-		while (std::isspace(string[pos]) == false)
+		while (string[i] != ' ' && string[i] != '\f' && string[i] != '\n' && string[i] != '\r' && string[i] != '\t' && string[i] != '\v')
 			string[pos++];
 	}
 	return (pos);
