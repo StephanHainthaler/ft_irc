@@ -24,8 +24,8 @@ Server::Server(const std::string &portString, const std::string &password): _nam
     if (_serverFd == -1) 
 		throw ServerException("Error. Failed to create socket.");
 	
-	// sockaddr_in "serverAddress" to specify its own IP address and port to bind to
-	// client takes this sockaddr_in "serverAddress" to specify the server's IP address and port to connect to
+	/* sockaddr_in "serverAddress" to specify its own IP address and port to bind to
+	client takes this sockaddr_in "serverAddress" to specify the server's IP address and port to connect to */
 	_serverAddress.sin_family = AF_INET;			// set the address family to IPv4 addresses
 	_serverAddress.sin_addr.s_addr = INADDR_ANY;	// server should accept connections from any IPv4 address, used when we don't want to bind our socket to any particular IP, to mak eit listen to all available IPs
 	_serverAddress.sin_port = htons(_port);			// defines the port number the socket will use to communicate on server side (the value has to be in network byte order)
@@ -197,11 +197,9 @@ void	Server::handleEvents(void)
 
 void	Server::handleClientConnections(void)
 {
-	/*
-	accept is like a reception desk that waits for clients to come in
+	/* accept is like a reception desk that waits for clients to come in
 	when they do, they get a new room (_clientFd) to communicate with the server
-	accept blocks until a client connects, unless the server socket is set to non-blocking mode
-	*/
+	accept blocks until a client connects, unless the server socket is set to non-blocking mode */
 	int clientFd = accept(_serverFd, NULL, NULL);
 	if (clientFd < 0) 
 	{
@@ -209,34 +207,29 @@ void	Server::handleClientConnections(void)
 		return ;
 	}
 	std::cout << GRAY << "Client connected with fd: " << clientFd << DEFAULT << std::endl;
-
 	/* pollfd = structure used by poll() to monitor fds for readiness (for reading, writing, or errors)
 	It contains:
 	struct pollfd {
 		int fd	// file descriptor to monitor, 
 		int events;	//the events to monitor: POLLIN, POLLOUT
 		int revents;	//what actually happened, which is set by poll()
-	};
-	*/
+	}; */
 	pollfd pfd = {};
 	pfd.fd = clientFd;
 	pfd.events = POLLIN | POLLHUP;
 	pfd.revents = 0; // initially no events
-
 	_pollfds.push_back(pfd);
-
-	// create and register a new client
-	Client *newClient = new Client(clientFd);
+	Client *newClient = new Client(clientFd); // create and register a new client
 	_clients.insert(std::make_pair(clientFd, newClient));
 	_outgoingMessages.insert(std::make_pair(clientFd, ""));
 	_incomingMessages.insert(std::make_pair(clientFd, ""));
-
 	sendMessageToClient(clientFd, "Please enter the password to access the StePiaAn IRC server!"); // send welcome message to IRC client
 }
 
 void	Server::handleClientDisconnections(int i)
 {
 	Client *client = _clients[_pollfds[i].fd];
+
 	if (client)
 	{
 		client->disconnect(); // also closes the "hotel room" (socket)
@@ -268,31 +261,25 @@ void	Server::handleSendingToClient(int i)
 
 /* https://modern.ircdocs.horse/
 When reading messages from a stream, read the incoming data into a buffer. 
-Only parse and process a message once you encounter the \r\n at the end of it.
-*/
+Only parse and process a message once you encounter the \r\n at the end of it. */
 void	Server::handleClientMessage(int clientFd)
 {
-	char 	buffer[MAX_MSG_LEN];
-	bzero(buffer, sizeof(buffer));
+	char	buffer[MAX_MSG_LEN];
+	size_t 	pos;
 
+	bzero(buffer, sizeof(buffer));
 	// call recv once per poll event
 	int bytesReceived = recv(clientFd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT); // Flag makes the call non-blocking
     if (bytesReceived <= 0)
 		return ;
-
 	buffer[bytesReceived] = '\0';
-	_incomingMessages[clientFd] += std::string(buffer); // add data to the client's incoming buffer
-		
-	/* 
-	in nc, ctrl+d is used to signal EOF, in which case the input is sent
-	BUT and IRC message is a single line delimited by \r\n
-	*/
-	size_t pos;
+	_incomingMessages[clientFd] += std::string(buffer); // add data to the client's incoming buffer	
+	/* in nc, ctrl+d is used to signal EOF, in which case the input is sent
+	BUT and IRC message is a single line delimited by \r\n */
 	while((pos = _incomingMessages[clientFd].find("\r\n")) != std::string::npos)
 	{
 		std::string message = _incomingMessages[clientFd].substr(0, pos);
 		_incomingMessages[clientFd].erase(0, pos + 2); // remove the processed message from the buffer (incl \r\n)
-		
 		if (!message.empty())
 		{
 			// std::cout << GRAY << "Client (fd = " << clientFd << "): " << message << DEFAULT << std::endl; // first one is IRC client
@@ -309,7 +296,6 @@ void	Server::sendMessageToClient(int clientFD, std::string message)
         std::cerr << RED << "Error. Invalid client fd." << DEFAULT << std::endl;
         return;
     }
-
     // Add message to the outgoing buffer for this client
     _outgoingMessages[clientFD] += message + "\r\n";
 

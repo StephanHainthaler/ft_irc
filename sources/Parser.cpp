@@ -60,7 +60,7 @@ void	Server::executeCommand(Client &client, std::vector<std::string> command, st
 		sendMessageToClient(client.getSocketFD(), ERR_UNKNOWNCOMMAND(getName(), client.getClientName(), command[0]));
 }
 
-int	Server::pass(Client &client, std::vector<std::string> command, size_t cmdNumber)
+int	Server::pass(Client &client, std::vector<std::string> command, size_t cmdNumber) //PASS <password>
 {
 	if (command.size() < 2)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NEEDMOREPARAMS(getName(), client.getNickname(), "PASS")), 1);
@@ -72,9 +72,9 @@ int	Server::pass(Client &client, std::vector<std::string> command, size_t cmdNum
 	return (sendMessageToClient(client.getSocketFD(), "Authentication complete! Please input your nickname & username with NICK/USER."), 0);
 }
 
-int	Server::nick(Client &client, std::vector<std::string> command, size_t cmdNumber)
+int	Server::nick(Client &client, std::vector<std::string> command, size_t cmdNumber) // NICK <newNickname>
 {
-	if (command.size() <= cmdNumber)
+	if (command.size() < 2)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NONICKNAMEGIVEN(getName(), client.getClientName())), 1);
 	else if (client.isNicknameValid(command[cmdNumber]) == false)
 		return (sendMessageToClient(client.getSocketFD(), ERR_ERRONEUSNICKNAME(getName(), client.getClientName(), command[cmdNumber])), 1);
@@ -86,7 +86,7 @@ int	Server::nick(Client &client, std::vector<std::string> command, size_t cmdNum
 	return (0);
 }
 
-int	Server::user(Client &client, std::vector<std::string> command, std::string &input, size_t cmdNumber)
+int	Server::user(Client &client, std::vector<std::string> command, std::string &input, size_t cmdNumber) //USER <userName> 0 * :<realName>
 {
 	std::string	userName, realName;
 
@@ -175,7 +175,7 @@ int	Server::join(Client &client, std::vector<std::string> command, size_t cmdNum
 	return (0);
 }
 
-int Server::part(Client &client, std::vector<std::string> command, std::string &input, size_t cmdNumber)
+int Server::part(Client &client, std::vector<std::string> command, std::string &input, size_t cmdNumber) //PART <channel>{,<channel>} [:<comment>]
 {
     std::vector<std::string>	channelNames;
     std::string 				comment = "";
@@ -313,12 +313,12 @@ int	Server::kick(Client &client, std::vector<std::string> command, std::string &
 	return (0);
 }
 
-int	Server::privMsg(Client &client, std::vector<std::string> command, std::string input, size_t cmdNumber)
+int	Server::privMsg(Client &client, std::vector<std::string> command, std::string input, size_t cmdNumber) //PRIVMSG <target>{,<target>} <message>
 {
 	std::vector<std::string>	targets;
 	std::string 				message = "";
 
-	if (command.size() < 2)
+	if (command.size() < 3)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NEEDMOREPARAMS(getName(), client.getNickname(), "PRIVMSG")), 1);
 	parseStringToVector(command[cmdNumber++], &targets, ",");
 	if (targets.size() == 0)
@@ -394,7 +394,7 @@ int	Server::topic(Client &client, std::vector<std::string> command, std::string 
 	return (0);
 }
 
-int	Server::mode(Client &client, std::vector<std::string> command, size_t cmdNumber)
+int	Server::mode(Client &client, std::vector<std::string> command, size_t cmdNumber) //MODE <target> [<modestring> [<mode arguments>...]]
 {
 	std::string	channelName, modeString, comment;
 	Channel		*toChangeMode;
@@ -445,7 +445,7 @@ int	Server::mode(Client &client, std::vector<std::string> command, size_t cmdNum
 	return (0);
 }
 
-int Server::quit(Client &client, std::vector<std::string> command, size_t cmdNumber)
+int Server::quit(Client &client, std::vector<std::string> command, size_t cmdNumber) //QUIT
 {
 	std::string	reason = command.size() > cmdNumber ? command[cmdNumber] : "";
 	int 		i = 0;
