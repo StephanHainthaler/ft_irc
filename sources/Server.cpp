@@ -16,12 +16,11 @@ volatile sig_atomic_t g_shutdown = 0;
 
 Server::Server(const std::string &portString, const std::string &password): _name("localhost"), _port(std::atoi(portString.c_str())), _password(password)
 {
-	std::cout << _port << std::endl;
 	if (isPositiveNumber(portString) == false || _port < 6665 || _port > 6669) // https://de.wikipedia.org/wiki/Liste_der_Portnummern
 		throw ServerException("Error. Invalid IRC port number.");
 	else if (password.empty() == true)
 		throw ServerException("Error. Empty password.");
-	for (int i = 0; i < password.size(); i++)
+	for (size_t i = 0; i < password.size(); i++)
 	{
 		if ((password[i] == ' ') || (!isprint(password[i])))
 			throw ServerException("Error. Password contains invalid characters.");
