@@ -21,10 +21,8 @@ Server::Server(const std::string &portString, const std::string &password): _nam
 	else if (password.empty() == true)
 		throw ServerException("Error. Empty password.");
 	for (size_t i = 0; i < password.size(); i++)
-	{
 		if ((password[i] == ' ') || (!isprint(password[i])))
 			throw ServerException("Error. Password contains invalid characters.");
-	}
 
 	// AF_INET specifies IPv4 protocol family, SOCK_STREAM specifies TCP protocol
     _serverFd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0); // Create a TCP/IPv4 socket
