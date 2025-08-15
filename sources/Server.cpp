@@ -14,24 +14,21 @@
 
 volatile sig_atomic_t g_shutdown = 0;
 
-Server::Server(const std::string &portString, const std::string &password): _port(std::atoi(portString.c_str())), _password(password)
+Server::Server(const std::string &portString, const std::string &password): _name("localhost"), _port(std::atoi(portString.c_str())), _password(password)
 {
 	if (isPositiveNumber(portString) == false || _port > 65535)
 		throw ServerException("Error. Invalid port number.");
-	
+
 	// AF_INET specifies IPv4 protocol family, SOCK_STREAM specifies TCP protocol
     _serverFd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0); // Create a TCP/IPv4 socket
     if (_serverFd == -1) 
 		throw ServerException("Error. Failed to create socket.");
-
+	
 	// sockaddr_in "serverAddress" to specify its own IP address and port to bind to
 	// client takes this sockaddr_in "serverAddress" to specify the server's IP address and port to connect to
-	_serverAddress.sin_family = AF_INET; // set the address family to IPv4 addresses
-	_serverAddress.sin_addr.s_addr = INADDR_ANY; // server should accept connections from any IPv4 address, used when we don't want to bind our socket to any particular IP, to mak eit listen to all available IPs
-	_serverAddress.sin_port = htons(_port); // defines the port number the socket will use to communicate on server side (the value has to be in network byte order)
-	
-	_name = "localhost";
-
+	_serverAddress.sin_family = AF_INET;			// set the address family to IPv4 addresses
+	_serverAddress.sin_addr.s_addr = INADDR_ANY;	// server should accept connections from any IPv4 address, used when we don't want to bind our socket to any particular IP, to mak eit listen to all available IPs
+	_serverAddress.sin_port = htons(_port);			// defines the port number the socket will use to communicate on server side (the value has to be in network byte order)
 	std::cout << YELLOW << "[SERVER] created with socket fd: " << _serverFd << ", port: " << _port << ", password: " << password << DEFAULT << std::endl;
 }
 
@@ -41,7 +38,6 @@ Server::~Server(void)
 	
 	if (_serverFd != -1)
 		close(_serverFd);
-
 	if (!_clients.empty())
 	{
 		for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
@@ -51,10 +47,8 @@ Server::~Server(void)
 		}
 		_clients.clear();
 	}
-
 	_outgoingMessages.clear();
 	_incomingMessages.clear();
-
 	if (!_channels.empty())
 	{
 		for (std::vector<Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
@@ -62,7 +56,6 @@ Server::~Server(void)
 
 		_channels.clear();
 	}
-	
 	if (!_pollfds.empty())
 	{
 		for (size_t i = 0; i < _pollfds.size(); ++i)
@@ -74,27 +67,27 @@ Server::~Server(void)
 	}
 }
 
-std::string Server::getPassword(void) const
+void	Server::setName(std::string name)
 {
-	return _password;
+	_name = name;
 }
 
-Channel *Server::getChannel(const std::string &channel_name) const
+std::string	Server::getName(void) const
 {
-	for (std::vector<Channel *>::const_iterator it = _channels.begin(); it != _channels.end(); ++it)
-	{
-		if ((*it)->getName() == channel_name)
-			return *it;
-	}
-	return NULL;
+	return (_name);
 }
 
-sockaddr_in Server::getServerAddress(void) const
+std::string	Server::getPassword(void) const
 {
-	return _serverAddress;
+	return (_password);
 }
 
-Client *Server::getClient(std::string nickname) const
+sockaddr_in	Server::getServerAddress(void) const
+{
+	return (_serverAddress);
+}
+
+Client	*Server::getClient(std::string nickname) const
 {
 	for (std::map<int, Client *>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
 	{
@@ -104,77 +97,105 @@ Client *Server::getClient(std::string nickname) const
 	return NULL;
 }
 
-void Server::sendMessageToClient(int clientFD, std::string message)
+Channel	*Server::getChannel(const std::string &channel_name) const
 {
-    if (clientFD < 0)
-    {
-        std::cerr << RED << "Error. Invalid client fd." << DEFAULT << std::endl;
-        return;
-    }
-
-    // Add message to the outgoing buffer for this client
-    _outgoingMessages[clientFD] += message + "\r\n";
-
-	// start checking for the POLLOUT event too
-	for (size_t i = 0; i < _pollfds.size(); ++i)
+	for (std::vector<Channel *>::const_iterator it = _channels.begin(); it != _channels.end(); ++it)
 	{
-		if (_pollfds[i].fd == clientFD)
+		if ((*it)->getName() == channel_name)
+			return *it;
+	}
+	return NULL;
+}
+
+void	Server::run(void)
+{
+	// to manipulate options at the sockets API level, "level" is specified as SOL_SOCKET
+	int yes = 1;
+	if (setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0)
+        throw ServerException("Error. Failed to configure socket.");
+	if (bind(_serverFd, (struct sockaddr *)&_serverAddress, sizeof(_serverAddress)) == -1)
+	{
+		close(_serverFd);
+		throw ServerException("Error. Failed to bind socket.");
+	}
+	if (listen(_serverFd, SOMAXCONN) == -1) // SOMAXCONN - defines max number of pending connections in the queue
+	{
+		close(_serverFd);
+		throw ServerException("Error. Failed to listen on socket.");
+	}
+	setupSignals();
+	while (g_shutdown == 0)
+		handleEvents();
+}
+
+void	Server::setupSignals()
+{
+	signal(SIGINT, signalHandler);
+	signal(SIGTERM, signalHandler);
+	signal(SIGQUIT, signalHandler);
+	signal(SIGPIPE, SIG_IGN);
+}
+
+void	signalHandler(int sig)
+{
+    if (sig == SIGINT || sig == SIGTERM || sig == SIGQUIT)
+	{
+        g_shutdown = 1;
+    }
+}
+
+void	Server::handleEvents(void)
+{
+	pollfd	sfd;
+
+	sfd.fd = _serverFd;
+	sfd.events = POLLIN; // POLLIN = ready to read, POLLOUT = ready to write but server is a listening socket, so we only care about POLLIN
+	sfd.revents = 0; // initially no events
+	_pollfds.push_back(sfd);
+	std::cout << YELLOW << "[SERVER] is now running and waiting for events..." << DEFAULT << std::endl;
+	while (!g_shutdown) // while server is running and no shutdown signal
+	{
+		int poll_count = poll(_pollfds.begin().base(), _pollfds.size(), -1);
+		if (poll_count < 0) // number of fds, which are ready to read, because of POLLIN
+			std::cout << GRAY << "No (more) poll events." << DEFAULT << std::endl;
+		else if (poll_count == 0) // no events occurred
 		{
-			_pollfds[i].events |= POLLOUT; 
-			break;
+			std::cout << GRAY << "No events occurred." << DEFAULT << std::endl;
+			continue; // retry polling
+		}
+		// else: if one or more sockets / fds are ready for reading (or writing)
+		for (size_t i = 0; i < _pollfds.size(); ++i)
+		{
+			// Case 1: there was no event with that fd
+			if (_pollfds[i].revents == 0)
+				continue;
+
+			// Case 2: the client disconnected
+			if ((_pollfds[i].revents & POLLHUP) == POLLHUP) // if the client closed the connection
+			{
+				handleClientDisconnections(i);
+				break;
+			}
+			// Case 3: there was an event with that fd
+			if ((_pollfds[i].revents & POLLIN) == POLLIN) // if there's data to read
+			{
+				// for the server socket, data to read can be a new client connection
+				if (_pollfds[i].fd == _serverFd)
+				{
+					handleClientConnections();
+					break;
+				}
+				// for client sockets, data to read can be a message from another client
+				handleClientMessage(_pollfds[i].fd);
+			}
+			// Case 4: there is data to send to the client => check if reverts caught POLLOUT
+			if ((_pollfds[i].revents & POLLOUT) == POLLOUT)
+				handleSendingToClient(i);
 		}
 	}
 }
 
-void Server::handleSendingToClient(int i)
-{
-	std::string &buffer = _outgoingMessages[_pollfds[i].fd];
-
-	if (!buffer.empty())
-	{
-		ssize_t sent = send(_pollfds[i].fd, buffer.c_str(), buffer.size(), MSG_DONTWAIT); // makes the call non-blocking
-
-		if (sent > 0)
-			buffer.erase(0, sent); // remove sent bytes
-	}
-
-	if (buffer.empty())
-		_pollfds[i].events = POLLIN | POLLHUP; // stop checking for POLLOUT
-}
-
-void Server::sendMessageToChannel(Channel* channel, const std::string& message)
-{
-	std::vector<Client*> usersInChannel = channel->getOperators();
-
-	for (size_t i = 0; i < usersInChannel.size(); i++)
-		sendMessageToClient(usersInChannel[i]->getSocketFD(), message);
-	usersInChannel = channel->getChannelUsers();
-	for (size_t i = 0; i < usersInChannel.size(); i++)
-		sendMessageToClient(usersInChannel[i]->getSocketFD(), message);
-}
-
-void Server::sendMessageToChannel(Client* excludedSender, Channel* channel, const std::string& message)
-{
-	std::vector<Client*> usersInChannel = channel->getOperators();
-
-	for (size_t i = 0; i < usersInChannel.size(); i++)
-	{
-		Client* targetClient = usersInChannel[i];
-		
-		if (targetClient != excludedSender)
-			sendMessageToClient(targetClient->getSocketFD(), message);
-	}
-	usersInChannel = channel->getChannelUsers();
-	for (size_t i = 0; i < usersInChannel.size(); i++)
-	{
-		Client* targetClient = usersInChannel[i];
-		
-		if (targetClient != excludedSender)
-			sendMessageToClient(targetClient->getSocketFD(), message);
-	}
-}
-
-void Server::handleClientConnections(void)
+void	Server::handleClientConnections(void)
 {
 	/*
 	accept is like a reception desk that waits for clients to come in
@@ -205,12 +226,44 @@ void Server::handleClientConnections(void)
 	_pollfds.push_back(pfd);
 
 	// create and register a new client
-	Client *newClient = new Client(clientFd, _port);
+	Client *newClient = new Client(clientFd);
 	_clients.insert(std::make_pair(clientFd, newClient));
 	_outgoingMessages.insert(std::make_pair(clientFd, ""));
 	_incomingMessages.insert(std::make_pair(clientFd, ""));
 
 	sendMessageToClient(clientFd, "Please enter the password to access the StePiaAn IRC server!"); // send welcome message to IRC client
+}
+
+void	Server::handleClientDisconnections(int i)
+{
+	Client *client = _clients[_pollfds[i].fd];
+	if (client)
+	{
+		client->disconnect(); // also closes the "hotel room" (socket)
+		std::cout << GRAY << "Client disconnected with fd: " << _pollfds[i].fd << DEFAULT << std::endl;
+		close(_pollfds[i].fd);
+		_clients.erase(_pollfds[i].fd);
+		_pollfds.erase(_pollfds.begin() + i);
+		_outgoingMessages.erase(_pollfds[i].fd);
+		_incomingMessages.erase(_pollfds[i].fd);
+		delete client;
+	}
+}
+
+void	Server::handleSendingToClient(int i)
+{
+	std::string &buffer = _outgoingMessages[_pollfds[i].fd];
+
+	if (!buffer.empty())
+	{
+		ssize_t sent = send(_pollfds[i].fd, buffer.c_str(), buffer.size(), MSG_DONTWAIT); // makes the call non-blocking
+
+		if (sent > 0)
+			buffer.erase(0, sent); // remove sent bytes
+	}
+
+	if (buffer.empty())
+		_pollfds[i].events = POLLIN | POLLHUP; // stop checking for POLLOUT
 }
 
 /* https://modern.ircdocs.horse/
@@ -249,118 +302,57 @@ void	Server::handleClientMessage(int clientFd)
 	}
 }
 
-void Server::handleClientDisconnections(int i)
+void	Server::sendMessageToClient(int clientFD, std::string message)
 {
-	Client *client = _clients[_pollfds[i].fd];
-	if (client)
+    if (clientFD < 0)
+    {
+        std::cerr << RED << "Error. Invalid client fd." << DEFAULT << std::endl;
+        return;
+    }
+
+    // Add message to the outgoing buffer for this client
+    _outgoingMessages[clientFD] += message + "\r\n";
+
+	// start checking for the POLLOUT event too
+	for (size_t i = 0; i < _pollfds.size(); ++i)
 	{
-		client->disconnect(); // also closes the "hotel room" (socket)
-		std::cout << GRAY << "Client disconnected with fd: " << _pollfds[i].fd << DEFAULT << std::endl;
-		close(_pollfds[i].fd);
-		_clients.erase(_pollfds[i].fd);
-		_pollfds.erase(_pollfds.begin() + i);
-		_outgoingMessages.erase(_pollfds[i].fd);
-		_incomingMessages.erase(_pollfds[i].fd);
-		delete client;
-	}
-}
-
-void Server::handleEvents(void)
-{
-	pollfd sfd;
-	sfd.fd = _serverFd;
-	sfd.events = POLLIN; // POLLIN = ready to read, POLLOUT = ready to write but server is a listening socket, so we only care about POLLIN
-	sfd.revents = 0; // initially no events
-	
-	_pollfds.push_back(sfd);
-
-	std::cout << YELLOW << "[SERVER] is now running and waiting for events..." << DEFAULT << std::endl;
-
-	while (!g_shutdown) // while server is running and no shutdown signal
-	{
-		int poll_count = poll(_pollfds.begin().base(), _pollfds.size(), -1);
-		if (poll_count < 0) // number of fds, which are ready to read, because of POLLIN
-			std::cout << GRAY << "No (more) poll events." << DEFAULT << std::endl;
-		
-		else if (poll_count == 0) // no events occurred
+		if (_pollfds[i].fd == clientFD)
 		{
-			std::cout << GRAY << "No events occurred." << DEFAULT << std::endl;
-			continue; // retry polling
-		}
-
-		// else: if one or more sockets / fds are ready for reading (or writing)
-		for (size_t i = 0; i < _pollfds.size(); ++i)
-		{
-			// Case 1: there was no event with that fd
-			if (_pollfds[i].revents == 0)
-				continue;
-
-			// Case 2: the client disconnected
-			if ((_pollfds[i].revents & POLLHUP) == POLLHUP) // if the client closed the connection
-			{
-				handleClientDisconnections(i);
-				break;
-			}
-
-			// Case 3: there was an event with that fd
-			if ((_pollfds[i].revents & POLLIN) == POLLIN) // if there's data to read
-			{
-				// for the server socket, data to read can be a new client connection
-				if (_pollfds[i].fd == _serverFd)
-				{
-					handleClientConnections();
-					break;
-				}
-				
-				// for client sockets, data to read can be a message from another client
-				handleClientMessage(_pollfds[i].fd);
-			}
-
-			// Case 4: there is data to send to the client => check if reverts caught POLLOUT
-			if ((_pollfds[i].revents & POLLOUT) == POLLOUT)
-				handleSendingToClient(i);
-
-		}
-	}
-}
-
-void Server::run(void)
-{
-	// to manipulate options at the sockets API level, "level" is specified as SOL_SOCKET
-	int yes = 1;
-	if (setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0)
-        throw ServerException("Error. Failed to configure socket.");
-		
-	if (bind(_serverFd, (struct sockaddr *)&_serverAddress, sizeof(_serverAddress)) == -1)
-	{
-		close(_serverFd);
-		throw ServerException("Error. Failed to bind socket.");
-	}
-	
-	if (listen(_serverFd, SOMAXCONN) == -1) // SOMAXCONN - defines max number of pending connections in the queue
-	{
-		close(_serverFd);
-		throw ServerException("Error. Failed to listen on socket.");
-	}
-	
-	setupSignals();
-	while (g_shutdown == 0)
-		handleEvents();
-}
-
-void Server::removeChannel(Channel *channel)
-{
-	if (channel == NULL)
-		return;
-
-	for (std::vector<Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
-	{
-		if (*it == channel)
-		{
-			_channels.erase(it);
-			delete channel;
+			_pollfds[i].events |= POLLOUT; 
 			break;
 		}
+	}
+}
+
+void	Server::sendMessageToChannel(Channel* channel, const std::string& message)
+{
+	std::vector<Client*> usersInChannel = channel->getOperators();
+
+	for (size_t i = 0; i < usersInChannel.size(); i++)
+		sendMessageToClient(usersInChannel[i]->getSocketFD(), message);
+	usersInChannel = channel->getChannelUsers();
+	for (size_t i = 0; i < usersInChannel.size(); i++)
+		sendMessageToClient(usersInChannel[i]->getSocketFD(), message);
+}
+
+void	Server::sendMessageToChannel(Client* excludedSender, Channel* channel, const std::string& message)
+{
+	std::vector<Client*> usersInChannel = channel->getOperators();
+
+	for (size_t i = 0; i < usersInChannel.size(); i++)
+	{
+		Client* targetClient = usersInChannel[i];
+		
+		if (targetClient != excludedSender)
+			sendMessageToClient(targetClient->getSocketFD(), message);
+	}
+	usersInChannel = channel->getChannelUsers();
+	for (size_t i = 0; i < usersInChannel.size(); i++)
+	{
+		Client* targetClient = usersInChannel[i];
+		
+		if (targetClient != excludedSender)
+			sendMessageToClient(targetClient->getSocketFD(), message);
 	}
 }
 
@@ -375,64 +367,30 @@ void	Server::createChannel(std::string &newChannelName, Client &founder)
 	sendMessageToClient(founder.getSocketFD(), RPL_ENDOFNAMES(getName(), founder.getNickname(), newChannelName));
 }
 
-std::string toLowercase(const std::string &str)
+void	Server::removeChannel(Channel *channel)
 {
-	std::string result = str;
-	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
-	return (result);
-}
-
-void signalHandler(int sig)
-{
-    if (sig == SIGINT || sig == SIGTERM || sig == SIGQUIT)
+	if (channel == NULL)
+		return;
+	for (std::vector<Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
 	{
-        g_shutdown = 1;
-    }
-}
-
-void Server::setupSignals()
-{
-	signal(SIGINT, signalHandler);
-	signal(SIGTERM, signalHandler);
-	signal(SIGQUIT, signalHandler);
-	signal(SIGPIPE, SIG_IGN);
-}
-
-bool Server::isNicknameAvailable(const std::string& nickname, const Client* targetClient) const
-{
-    std::string targetNickNew = toLowercase(nickname);
-
-    for (std::map<int, Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
-    {
-		const Client* client = it->second;
-		std::string clientNick = toLowercase(client->getNickname());
-
-		// if the nickname or any case-variation of it is already taken by another client
-        if (client && client != targetClient && clientNick == targetNickNew)
-                return (false);		
-    }
-    return (true);
+		if (*it == channel)
+		{
+			_channels.erase(it);
+			delete channel;
+			break;
+		}
+	}
 }
 
 Server::ServerException::ServerException(const std::string &message): _message(message)
 {
 }
 
-const char* Server::ServerException::what() const throw()
-{
-	return _message.c_str();
-}
-
 Server::ServerException::~ServerException() throw() 
 {
 }
 
-void	Server::setName(std::string name)
+const char*	Server::ServerException::what() const throw()
 {
-	_name = name;
-}
-
-std::string	Server::getName(void) const
-{
-	return (_name);
+	return (_message.c_str());
 }
