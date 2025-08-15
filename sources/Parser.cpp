@@ -320,6 +320,7 @@ int	Server::privMsg(Client &client, std::vector<std::string> command, std::strin
 	std::vector<std::string>	targets;
 	std::string 				message = "";
 
+	std::cout << input << std::endl;
 	if (command.size() < 3)
 		return (sendMessageToClient(client.getSocketFD(), ERR_NEEDMOREPARAMS(getName(), client.getNickname(), "PRIVMSG")), 1);
 	parseStringToVector(command[cmdNumber++], &targets, ",");
