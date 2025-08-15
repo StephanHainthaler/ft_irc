@@ -176,7 +176,7 @@ void	Server::handleEvents(void)
 				continue;
 
 			// Case 2: the client disconnected
-			if ((_pollfds[i].revents & POLLHUP) == POLLHUP) // if the client closed the connection
+			if ((_pollfds[i].revents & POLLHUP) == POLLHUP || (_pollfds[i].revents & POLLERR) == POLLERR || (_pollfds[i].revents & POLLNVAL) == POLLNVAL) // if the client closed the connection
 			{
 				handleClientDisconnections(i);
 				break;
@@ -221,7 +221,7 @@ void	Server::handleClientConnections(void)
 	}; */
 	pollfd pfd = {};
 	pfd.fd = clientFd;
-	pfd.events = POLLIN | POLLHUP;
+	pfd.events = POLLIN | POLLHUP | POLLERR | POLLNVAL;
 	pfd.revents = 0; // initially no events
 	_pollfds.push_back(pfd);
 	Client *newClient = new Client(clientFd); // create and register a new client
@@ -261,7 +261,7 @@ void	Server::handleSendingToClient(int i)
 	}
 
 	if (buffer.empty())
-		_pollfds[i].events = POLLIN | POLLHUP; // stop checking for POLLOUT
+		_pollfds[i].events = POLLIN | POLLHUP | POLLERR | POLLNVAL; // stop checking for POLLOUT
 }
 
 /* https://modern.ircdocs.horse/
