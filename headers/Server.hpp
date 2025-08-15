@@ -16,6 +16,7 @@
 # include <iostream>
 # include <cstdlib>
 # include <cstring>
+# include <cctype>
 # include <sstream>
 # include <algorithm>
 # include <vector>
