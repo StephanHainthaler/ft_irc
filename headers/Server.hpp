@@ -29,7 +29,6 @@
 # include "Channel.hpp"
 # include "Replies.hpp"
 
-
 # define DEFAULT	"\x1b[0m"	// for standard output
 # define RED		"\x1b[31m" 	// for errors
 # define YELLOW 	"\x1b[33m" 	// for important information

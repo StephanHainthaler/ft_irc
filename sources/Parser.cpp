@@ -124,6 +124,8 @@ int	Server::join(Client &client, std::vector<std::string> command, size_t cmdNum
 
 	for (size_t i = 0; i < channelNames.size(); i++)
 	{
+		if (channelNames[i].length() > 20)
+			channelNames[i] = channelNames[i].substr(0, 20);
 		toJoinTo = getChannel(channelNames[i]);
 		if (toJoinTo == NULL && _channels.size() >= MAX_CHAN_NUM)
 		{
